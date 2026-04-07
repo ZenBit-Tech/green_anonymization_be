@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
+import isMySqlError from '@common/utils/isMySqlError';
 import CreateAccountDto from './dto/createAccount.dto';
 
 @Injectable()
@@ -62,13 +63,13 @@ export default class UserService {
       // return the inserted user
       const insertedId = result.identifiers[0].uuid;
       return await this.userRepository.findOne({ where: { uuid: insertedId } });
-    } catch (err) {
+    } catch (error: unknown) {
       // check for duplicate key error
-      if (err?.code === 'ER_DUP_ENTRY') {
+      if (isMySqlError(error) && error.code === 'ER_DUP_ENTRY') {
         throw new ConflictException('Email already exists');
       }
       throw new InternalServerErrorException(
-        `Failed to create user, error: ${err}`,
+        `Failed to create user, error: ${error}`,
       );
     }
   }

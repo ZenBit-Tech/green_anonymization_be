@@ -9,5 +9,5 @@ export default class CreateExampleUserDto {
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(500)
-  email: string;
+  email: string = '';
 }

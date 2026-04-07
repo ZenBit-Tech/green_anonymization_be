@@ -4,10 +4,10 @@ import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 @Index('IDX_USER_EMAIL', ['email'])
 export default class User {
   @PrimaryGeneratedColumn('uuid')
-  uuid?: string;
+  uuid: string = '';
 
   @Column({ length: 500, unique: true, nullable: false })
-  email?: string;
+  email: string = '';
 
   @Column({ length: 255, nullable: true })
   firstName?: string;

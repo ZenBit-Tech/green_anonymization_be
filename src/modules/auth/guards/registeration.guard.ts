@@ -12,7 +12,6 @@ export default class RegistrationGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
     const isRegistered = req.user?.isRegistered;
-
     if (this.mode === 'registered' && !isRegistered) {
       throw new ForbiddenException('User not registered');
     }

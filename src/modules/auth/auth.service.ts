@@ -42,7 +42,6 @@ export default class AuthService {
 
     const user = await this.userService.findByEmail(email);
     const isRegistered = !!user;
-
     return { accessToken, refreshToken, isRegistered };
   }
 

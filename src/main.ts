@@ -47,7 +47,6 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
   });
 
-
   await app.listen(configService.getOrThrow<number>('PORT') ?? DEFAULT_PORT);
 }
 

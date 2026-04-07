@@ -7,5 +7,5 @@ export default class LoginRequestDto {
     description: 'Email address to send the magic login link to',
   })
   @IsEmail()
-  destination: string;
+  destination: string = '';
 }

@@ -18,54 +18,54 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import UserService from './example.user.service';
+import ExampleUserService from './example.user.service';
 import CreateUserDto from './dto/createExampleUser.dto';
-import ReturnUserDto from './dto/returnExampleUser.dto';
+import ReturnExampleUserDto from './dto/returnExampleUser.dto';
 
 @ApiTags('example-users')
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('example-users')
-export default class UserController {
-  constructor(private readonly userService: UserService) {}
+export default class ExampleUserController {
+  constructor(private readonly userService: ExampleUserService) {}
 
   @ApiOperation({ summary: 'Create a new ExampleUser from given email' })
   @ApiCreatedResponse({
     description: 'ExampleUser successfully created',
-    type: ReturnUserDto,
+    type: ReturnExampleUserDto,
   })
   @ApiBadRequestResponse({ description: 'Email is required' })
-  @SerializeOptions({ type: ReturnUserDto })
+  @SerializeOptions({ type: ReturnExampleUserDto })
   @Post()
-  async create(@Body() body: CreateUserDto): Promise<ReturnUserDto> {
+  async create(@Body() body: CreateUserDto): Promise<ReturnExampleUserDto> {
     return this.userService.create(body.email);
   }
 
   @ApiOperation({ summary: 'Get all ExampleUsers' })
   @ApiOkResponse({
     description: 'ExampleUsers retrieved successfully',
-    type: ReturnUserDto,
+    type: ReturnExampleUserDto,
     isArray: true,
   })
-  @SerializeOptions({ type: ReturnUserDto })
+  @SerializeOptions({ type: ReturnExampleUserDto })
   @Get()
-  async getAll(): Promise<ReturnUserDto[]> {
+  async getAll(): Promise<ReturnExampleUserDto[]> {
     return this.userService.findAll();
   }
 
   @ApiOperation({ summary: 'Get ExampleUser by their uuid' })
   @ApiFoundResponse({
     description: 'ExampleUser found successfully',
-    type: ReturnUserDto,
+    type: ReturnExampleUserDto,
   })
   @ApiNotFoundResponse({
     description: 'ExampleUser with specified uuid not found',
   })
   @ApiBadRequestResponse({ description: 'Invalid uuid parameter' })
-  @SerializeOptions({ type: ReturnUserDto })
+  @SerializeOptions({ type: ReturnExampleUserDto })
   @Get(':uuid')
   async getByUuid(
     @Param('uuid', new ParseUUIDPipe()) uuid: string,
-  ): Promise<ReturnUserDto> {
+  ): Promise<ReturnExampleUserDto> {
     return this.userService.findOne(uuid);
   }
 }
