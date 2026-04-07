@@ -50,7 +50,7 @@ export default class UserController {
     @UserEmail() email: string,
     @Body() dto: CreateAccountDto,
   ): Promise<User> {
-    return this.userService.completeRegistration({ ...dto, email });
+    return this.userService.register({ ...dto, email });
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })

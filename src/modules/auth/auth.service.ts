@@ -19,7 +19,7 @@ export default class AuthService {
     private configService: ConfigService,
   ) {}
 
-  // STEP 1: generate magic link token
+  // Step 1: generate magic link token
   async generateMagicToken(email: string): Promise<string> {
     const payload = { email, type: JWT_TOKEN_TYPE.MAGIC };
     const token = this.jwtService.sign(payload, {
@@ -36,7 +36,7 @@ export default class AuthService {
     return token;
   }
 
-  // STEP 2: generate normal access + refresh tokens
+  // Step 2: generate normal access + refresh tokens
   async generateAuthTokens(email: string) {
     const accessPayload = { email, type: JWT_TOKEN_TYPE.ACCESS };
     const refreshPayload = { email, type: JWT_TOKEN_TYPE.REFRESH };

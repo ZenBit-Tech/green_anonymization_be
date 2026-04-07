@@ -1,14 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { QueryFailedError, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   InternalServerErrorException,
   NotFoundException,
-  ConflictException,
   BadRequestException,
 } from '@nestjs/common';
 import User from '@common/db/entities/user.entity';
-import isMySqlError from '@common/utils/isMySqlError';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 
@@ -139,54 +137,7 @@ describe('UserService', () => {
     });
   });
 
-  describe('create', () => {
-    it('should create and return user', async () => {
-      const user = await service.create('new@example.com');
-      expect(user).toEqual(mockUser);
-    });
-
-    it('should throw ConflictException on duplicate email', async () => {
-      // Mock isMySqlError to return true
-      (
-        isMySqlError as jest.MockedFunction<typeof isMySqlError>
-      ).mockReturnValue(true);
-
-      // Create a proper QueryFailedError instance with a code
-      const error = new QueryFailedError(
-        'mock query',
-        [],
-        new Error('duplicate entry'),
-      ) as QueryFailedError & { code: string };
-      error.code = 'ER_DUP_ENTRY';
-
-      // Mock createQueryBuilder to throw that error
-      (repo.createQueryBuilder as jest.Mock).mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(service.create('duplicate@example.com')).rejects.toThrow(
-        ConflictException,
-      );
-    });
-
-    it('should throw InternalServerErrorException on other errors', async () => {
-      // Mock isMySqlError to return false
-      (
-        isMySqlError as jest.MockedFunction<typeof isMySqlError>
-      ).mockReturnValue(false);
-
-      const error = new Error('DB error');
-      (repo.createQueryBuilder as jest.Mock).mockImplementationOnce(() => {
-        throw error;
-      });
-
-      await expect(service.create('fail@example.com')).rejects.toThrow(
-        InternalServerErrorException,
-      );
-    });
-  });
-
-  describe('completeRegistration', () => {
+  describe('register', () => {
     const dto: CreateAccountDto = {
       email: 'test@example.com',
       firstName: 'Jane',
@@ -199,9 +150,9 @@ describe('UserService', () => {
     });
 
     it('should throw BadRequestException if email missing', async () => {
-      await expect(
-        service.completeRegistration({ ...dto, email: '' }),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.register({ ...dto, email: '' })).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should create user if not exists and update details', async () => {
@@ -230,7 +181,7 @@ describe('UserService', () => {
       // final fetch after transaction
       jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(mockUser);
 
-      const result = await service.completeRegistration(dto);
+      const result = await service.register(dto);
 
       expect(result).toEqual(mockUser);
       expect(repo.manager.transaction).toHaveBeenCalled();
@@ -253,7 +204,7 @@ describe('UserService', () => {
 
       jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(mockUser);
 
-      const result = await service.completeRegistration(dto);
+      const result = await service.register(dto);
 
       expect(result).toEqual(mockUser);
       expect(repo.manager.transaction).toHaveBeenCalled();
@@ -275,7 +226,7 @@ describe('UserService', () => {
 
       jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(null);
 
-      await expect(service.completeRegistration(dto)).rejects.toThrow(
+      await expect(service.register(dto)).rejects.toThrow(
         InternalServerErrorException,
       );
     });
@@ -285,7 +236,7 @@ describe('UserService', () => {
         new Error('Transaction failed'),
       );
 
-      await expect(service.completeRegistration(dto)).rejects.toThrow(
+      await expect(service.register(dto)).rejects.toThrow(
         InternalServerErrorException,
       );
     });

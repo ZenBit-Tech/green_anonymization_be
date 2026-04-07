@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -8,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
-import isMySqlError from '@common/utils/isMySqlError';
 import CreateAccountDto from './dto/createAccount.dto';
 
 @Injectable()
@@ -51,56 +49,7 @@ export default class UserService {
     }
   }
 
-  async create(email: string): Promise<User | null> {
-    try {
-      const result = await this.userRepository
-        .createQueryBuilder()
-        .insert()
-        .into(User)
-        .values({ email })
-        .execute();
-
-      // return the inserted user
-      const insertedId = result.identifiers[0].uuid;
-      return await this.userRepository.findOne({ where: { uuid: insertedId } });
-    } catch (error: unknown) {
-      // check for duplicate key error
-      if (isMySqlError(error) && error.code === 'ER_DUP_ENTRY') {
-        throw new ConflictException('Email already exists');
-      }
-      throw new InternalServerErrorException(
-        `Failed to create user, error: ${error}`,
-      );
-    }
-  }
-
-  //   async completeRegistration(dto: CreateAccountDto): Promise<User> {
-  //     if (!dto.email) throw new BadRequestException('Email is required');
-
-  //     let user = await this.findByEmail(dto.email);
-
-  //     if (!user) {
-  //       user = await this.create(dto.email);
-  //       if (!user) {
-  //         throw new InternalServerErrorException('Failed to create user');
-  //       }
-  //     }
-
-  //     // Update registration details
-  //     user.firstName = dto.firstName;
-  //     user.lastName = dto.lastName;
-  //     user.companyName = dto.companyName;
-
-  //     try {
-  //       return await this.userRepository.save(user);
-  //     } catch (err) {
-  //       throw new InternalServerErrorException(
-  //         `Failed to update user, error: ${err}`,
-  //       );
-  //     }
-  //   }
-
-  async completeRegistration(dto: CreateAccountDto): Promise<User> {
+  async register(dto: CreateAccountDto): Promise<User> {
     if (!dto.email) {
       throw new BadRequestException('Email is Required but was not provided');
     }
@@ -108,7 +57,7 @@ export default class UserService {
     let user: User | null = null;
 
     try {
-      // Execute everything in a transaction
+      // using transaction since there are several db calls here
       await this.userRepository.manager.transaction(
         async (transactionalEntityManager) => {
           // Step 1: Check if user exists
