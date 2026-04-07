@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { USER_REGISTRATION_STATUS } from '@common/constants';
 
 @Injectable()
 export default class RegistrationGuard implements CanActivate {
@@ -12,10 +13,10 @@ export default class RegistrationGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
     const isRegistered = req.user?.isRegistered;
-    if (this.mode === 'registered' && !isRegistered) {
+    if (this.mode === USER_REGISTRATION_STATUS.REGISTERED && !isRegistered) {
       throw new ForbiddenException('User not registered');
     }
-    if (this.mode === 'unregistered' && isRegistered) {
+    if (this.mode === USER_REGISTRATION_STATUS.UNREGISTERED && isRegistered) {
       throw new ForbiddenException('Already registered');
     }
 

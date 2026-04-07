@@ -4,14 +4,14 @@ export default class CreateAccountDto {
   @IsString()
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  email: string = '';
 
   @IsString()
-  firstName: string;
+  firstName: string = '';
 
   @IsString()
-  lastName: string;
+  lastName: string = '';
 
   @IsString()
-  companyName: string;
+  companyName: string = '';
 }

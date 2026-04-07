@@ -7,10 +7,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import UserService from './example.user.service';
+import ExampleUserService from './example.user.service';
+import ExampleUser from '@/common/db/entities/example.user.entity';
 
-describe('UserService', () => {
-  let service: UserService;
+describe('ExampleUserService', () => {
+  let service: ExampleUserService;
   let repo: Repository<ExampleUser>;
 
   const mockUser: ExampleUser = { uuid: '1234', email: 'test@example.com' };
@@ -32,12 +33,12 @@ describe('UserService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        UserService,
+        ExampleUserService,
         { provide: getRepositoryToken(ExampleUser), useValue: mockRepository },
       ],
     }).compile();
 
-    service = module.get<UserService>(UserService);
+    service = module.get<ExampleUserService>(ExampleUserService);
     repo = module.get<Repository<ExampleUser>>(getRepositoryToken(ExampleUser));
   });
 

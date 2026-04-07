@@ -3,6 +3,11 @@ import { JwtService } from '@nestjs/jwt';
 import UserService from '@modules/user/user.service';
 import MailService from '@modules/mail/mail.service';
 import { ConfigService } from '@nestjs/config';
+import {
+  ACCESS_TOKEN_EXPIRATION,
+  MAGIC_LINK_EXPIRATION,
+  REFRESH_TOKEN_EXPIRATION,
+} from '@common/constants';
 
 @Injectable()
 export default class AuthService {
@@ -16,7 +21,9 @@ export default class AuthService {
   // STEP 1: generate magic link token
   async generateMagicToken(email: string): Promise<string> {
     const payload = { email, type: 'magic' };
-    const token = this.jwtService.sign(payload, { expiresIn: '60m' });
+    const token = this.jwtService.sign(payload, {
+      expiresIn: MAGIC_LINK_EXPIRATION,
+    });
     const magicLink = `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN')}/auth/callback?token=${token}`;
 
     await this.mailService.sendMail(
@@ -34,10 +41,10 @@ export default class AuthService {
     const refreshPayload = { email, type: 'refresh' };
 
     const accessToken = this.jwtService.sign(accessPayload, {
-      expiresIn: '15m',
+      expiresIn: ACCESS_TOKEN_EXPIRATION,
     });
     const refreshToken = this.jwtService.sign(refreshPayload, {
-      expiresIn: '7d',
+      expiresIn: REFRESH_TOKEN_EXPIRATION,
     });
 
     const user = await this.userService.findByEmail(email);
@@ -56,7 +63,7 @@ export default class AuthService {
 
       const newAccessToken = this.jwtService.sign(
         { email: payload.email, type: 'access' },
-        { expiresIn: '15m' },
+        { expiresIn: ACCESS_TOKEN_EXPIRATION },
       );
       return { accessToken: newAccessToken };
     } catch {
