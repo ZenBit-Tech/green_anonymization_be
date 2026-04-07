@@ -8,6 +8,7 @@ import { Strategy } from 'passport-custom';
 import type { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import UserService from '@modules/user/user.service';
+import { JWT_TOKEN_TYPE } from '@common/constants';
 
 @Injectable()
 export default class MagicLoginStrategy extends PassportStrategy(
@@ -29,7 +30,7 @@ export default class MagicLoginStrategy extends PassportStrategy(
       email: string;
       type: string;
     };
-    if (payload.type !== 'magic')
+    if (payload.type !== JWT_TOKEN_TYPE.MAGIC)
       throw new UnauthorizedException('Invalid token type');
 
     try {

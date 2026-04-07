@@ -20,9 +20,9 @@ import {
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import RegistrationGuard from '@/modules/auth/guards/registeration.guard';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
+import User from '@/common/db/entities/user.entity';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
-import User from '@/common/db/entities/user.entity';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)

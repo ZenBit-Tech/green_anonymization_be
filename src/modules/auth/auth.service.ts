@@ -5,6 +5,7 @@ import MailService from '@modules/mail/mail.service';
 import { ConfigService } from '@nestjs/config';
 import {
   ACCESS_TOKEN_EXPIRATION,
+  JWT_TOKEN_TYPE,
   MAGIC_LINK_EXPIRATION,
   REFRESH_TOKEN_EXPIRATION,
 } from '@common/constants';
@@ -20,7 +21,7 @@ export default class AuthService {
 
   // STEP 1: generate magic link token
   async generateMagicToken(email: string): Promise<string> {
-    const payload = { email, type: 'magic' };
+    const payload = { email, type: JWT_TOKEN_TYPE.MAGIC };
     const token = this.jwtService.sign(payload, {
       expiresIn: MAGIC_LINK_EXPIRATION,
     });
@@ -37,8 +38,8 @@ export default class AuthService {
 
   // STEP 2: generate normal access + refresh tokens
   async generateAuthTokens(email: string) {
-    const accessPayload = { email, type: 'access' };
-    const refreshPayload = { email, type: 'refresh' };
+    const accessPayload = { email, type: JWT_TOKEN_TYPE.ACCESS };
+    const refreshPayload = { email, type: JWT_TOKEN_TYPE.REFRESH };
 
     const accessToken = this.jwtService.sign(accessPayload, {
       expiresIn: ACCESS_TOKEN_EXPIRATION,
@@ -58,11 +59,11 @@ export default class AuthService {
         email: string;
         type: string;
       };
-      if (payload.type !== 'refresh')
+      if (payload.type !== JWT_TOKEN_TYPE.REFRESH)
         throw new UnauthorizedException('Invalid token type');
 
       const newAccessToken = this.jwtService.sign(
-        { email: payload.email, type: 'access' },
+        { email: payload.email, type: JWT_TOKEN_TYPE.ACCESS },
         { expiresIn: ACCESS_TOKEN_EXPIRATION },
       );
       return { accessToken: newAccessToken };

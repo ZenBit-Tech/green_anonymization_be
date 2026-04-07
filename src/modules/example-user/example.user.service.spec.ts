@@ -7,8 +7,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import ExampleUserService from './example.user.service';
 import ExampleUser from '@/common/db/entities/example.user.entity';
+import ExampleUserService from './example.user.service';
 
 describe('ExampleUserService', () => {
   let service: ExampleUserService;

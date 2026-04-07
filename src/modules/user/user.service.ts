@@ -74,28 +74,102 @@ export default class UserService {
     }
   }
 
+  //   async completeRegistration(dto: CreateAccountDto): Promise<User> {
+  //     if (!dto.email) throw new BadRequestException('Email is required');
+
+  //     let user = await this.findByEmail(dto.email);
+
+  //     if (!user) {
+  //       user = await this.create(dto.email);
+  //       if (!user) {
+  //         throw new InternalServerErrorException('Failed to create user');
+  //       }
+  //     }
+
+  //     // Update registration details
+  //     user.firstName = dto.firstName;
+  //     user.lastName = dto.lastName;
+  //     user.companyName = dto.companyName;
+
+  //     try {
+  //       return await this.userRepository.save(user);
+  //     } catch (err) {
+  //       throw new InternalServerErrorException(
+  //         `Failed to update user, error: ${err}`,
+  //       );
+  //     }
+  //   }
+
   async completeRegistration(dto: CreateAccountDto): Promise<User> {
-    if (!dto.email) throw new BadRequestException('Email is required');
-
-    let user = await this.findByEmail(dto.email);
-
-    if (!user) {
-      user = await this.create(dto.email);
-      if (!user) {
-        throw new InternalServerErrorException('Failed to create user');
-      }
+    if (!dto.email) {
+      throw new BadRequestException('Email is Required but was not provided');
     }
 
-    // Update registration details
-    user.firstName = dto.firstName;
-    user.lastName = dto.lastName;
-    user.companyName = dto.companyName;
+    let user: User | null = null;
 
     try {
-      return await this.userRepository.save(user);
+      // Execute everything in a transaction
+      await this.userRepository.manager.transaction(
+        async (transactionalEntityManager) => {
+          // Step 1: Check if user exists
+          user = await transactionalEntityManager
+            .createQueryBuilder(User, 'user')
+            .where('user.email = :email', { email: dto.email })
+            .getOne();
+
+          // Step 2: Create user if it doesn't exist
+          if (!user) {
+            const insertResult = await transactionalEntityManager
+              .createQueryBuilder()
+              .insert()
+              .into(User)
+              .values({ email: dto.email })
+              .execute();
+
+            const insertedUuid = insertResult.identifiers[0]?.uuid;
+            if (!insertedUuid) {
+              throw new InternalServerErrorException(
+                'Failed to create a new User',
+              );
+            }
+
+            // Fetch newly created user
+            user = await transactionalEntityManager
+              .createQueryBuilder(User, 'user')
+              .where('user.uuid = :uuid', { uuid: insertedUuid })
+              .getOne();
+          }
+
+          if (!user) {
+            throw new InternalServerErrorException(
+              'Failed to fetch newly created users',
+            );
+          }
+
+          // Step 3: Update registration details
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .update(User)
+            .set({
+              firstName: dto.firstName,
+              lastName: dto.lastName,
+              companyName: dto.companyName,
+            })
+            .where('uuid = :uuid', { uuid: user.uuid })
+            .execute();
+        },
+      );
+
+      // Step 4: Return updated user
+      const updatedUser = await this.findByEmail(dto.email);
+      if (!updatedUser) {
+        throw new InternalServerErrorException('Failed to fetch updated User');
+      }
+      return updatedUser;
     } catch (err) {
+      if (err instanceof BadRequestException) throw err;
       throw new InternalServerErrorException(
-        `Failed to update user, error: ${err}`,
+        `${'Failed to complete registration'}: ${err}`,
       );
     }
   }

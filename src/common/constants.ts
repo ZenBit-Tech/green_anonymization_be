@@ -17,3 +17,8 @@ export const USER_REGISTRATION_STATUS = {
   REGISTERED: 'registered',
   UNREGISTERED: 'unregistered',
 } as const;
+export const JWT_TOKEN_TYPE = {
+  ACCESS: 'access',
+  REFRESH: 'refresh',
+  MAGIC: 'magic',
+};
