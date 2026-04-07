@@ -8,3 +8,5 @@ export const enum Compliance {
   GDPR = 'GDPR',
   HIPAA = 'HIPAA',
 }
+
+export const DEFAULT_FRONTEND_ORIGIN = 'http://localhost:5173';
