@@ -27,14 +27,14 @@ services:
   presidio-anonymizer:
     image: mcr.microsoft.com/presidio-anonymizer:latest
     ports:
-      - ${PRESIDIO_ANONYMIZER_PORT}:3000
+      - 127.0.0.1:${PRESIDIO_ANONYMIZER_PORT}:3000
 
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
     environment:
       - OLLAMA_HOST=http://ollama:11434
     ports:
-      - ${PRESIDIO_ANALYZER_PORT}:3000
+      - 127.0.0.1:${PRESIDIO_ANALYZER_PORT}:3000
     depends_on:
       ollama:
         condition: service_healthy
