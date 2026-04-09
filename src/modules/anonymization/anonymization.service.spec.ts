@@ -50,8 +50,10 @@ describe('AnonymizationService (unit)', () => {
       const gdprResult = await service.anonymize(Compliance.GDPR, 'text');
       const hipaaResult = await service.anonymize(Compliance.HIPAA, 'text');
 
-      expect(gdprResult).toBe('gdpr-result');
-      expect(hipaaResult).toBe('hipaa-result');
+      expect(gdprResult.anonymizedText).toBe('gdpr-result');
+      expect(gdprResult.originalText).toBe('text');
+      expect(hipaaResult.anonymizedText).toBe('hipaa-result');
+      expect(hipaaResult.originalText).toBe('text');
 
       expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledTimes(1);
       expect(mockHipaaAnonymizerService.anonymize).toHaveBeenCalledTimes(1);
@@ -80,7 +82,10 @@ describe('AnonymizationService (unit)', () => {
 
       const result = await service.anonymize(Compliance.GDPR, 'text');
 
-      expect(result).toBe('processed');
+      expect(result).toEqual({
+        originalText: 'text',
+        anonymizedText: 'processed',
+      });
     });
 
     it('should throw AnonymizerNotFoundError if compliance is invalid', async () => {
@@ -125,8 +130,23 @@ describe('AnonymizationService (unit)', () => {
 
       const result = await service.anonymize(Compliance.GDPR, '');
 
-      expect(result).toBe('');
+      expect(result).toEqual({
+        originalText: '',
+        anonymizedText: '',
+      });
       expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledWith('');
+    });
+
+    it('should preserve original text in result', async () => {
+      const originalInput = 'John Doe lives in New York';
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(
+        '[PERSON] lives in [LOCATION]',
+      );
+
+      const result = await service.anonymize(Compliance.GDPR, originalInput);
+
+      expect(result.originalText).toBe(originalInput);
+      expect(result.anonymizedText).toBe('[PERSON] lives in [LOCATION]');
     });
   });
 });
