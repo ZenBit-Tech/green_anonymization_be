@@ -12,7 +12,7 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-      - '127.0.0.1:11434:11434'
+      - '127.0.0.1:${OLLAMA_PORT}:11434'
     volumes:
       - ollama-data:/root/.ollama
     environment:
@@ -32,7 +32,7 @@ services:
   presidio-analyzer:
     image: mcr.microsoft.com/presidio-analyzer:latest
     environment:
-      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_HOST=http://ollama:${OLLAMA_PORT}
     ports:
       - 127.0.0.1:${PRESIDIO_ANALYZER_PORT}:3000
     depends_on:
