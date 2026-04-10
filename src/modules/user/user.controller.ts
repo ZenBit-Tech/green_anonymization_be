@@ -21,8 +21,10 @@ import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import RegistrationGuard from '@/modules/auth/guards/registeration.guard';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import User from '@/common/db/entities/user.entity';
+import { UserRegistrationStatus } from '@/common/constants';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
+import ReturnUserDto from './dto/returnUser.dto';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -45,12 +47,15 @@ export default class UserController {
     description: 'User is already registered',
   })
   @Post('register')
-  @UseGuards(JwtAuthGuard, new RegistrationGuard('unregistered'))
+  @UseGuards(
+    JwtAuthGuard,
+    new RegistrationGuard(UserRegistrationStatus.UNREGISTERED),
+  )
   async register(
     @UserEmail() email: string,
     @Body() dto: CreateAccountDto,
-  ): Promise<User> {
-    return this.userService.register({ ...dto, email });
+  ): Promise<ReturnUserDto> {
+    return this.userService.register(dto, email);
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
@@ -65,10 +70,13 @@ export default class UserController {
     description: 'User is not fully registered',
   })
   @Get('me')
-  @UseGuards(JwtAuthGuard, new RegistrationGuard('registered'))
+  @UseGuards(
+    JwtAuthGuard,
+    new RegistrationGuard(UserRegistrationStatus.REGISTERED),
+  )
   async getMe(
     @Req() req: Request & { user: { email: string } },
-  ): Promise<User | null> {
+  ): Promise<ReturnUserDto | null> {
     return this.userService.findByEmail(req.user.email);
   }
 }

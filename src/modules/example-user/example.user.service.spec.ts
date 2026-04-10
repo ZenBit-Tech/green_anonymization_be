@@ -1,13 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-// import ExampleUser from '@common/db/entities/example.user.entity';
-import ExampleUser from '@common/db/entities/example.user.entity';
 import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import ExampleUser from '@/common/db/entities/example.user.entity';
+import ExampleUser from '@common/db/entities/example.user.entity';
 import ExampleUserService from './example.user.service';
 
 describe('ExampleUserService', () => {

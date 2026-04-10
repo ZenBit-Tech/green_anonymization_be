@@ -49,30 +49,28 @@ export default class UserService {
     }
   }
 
-  async register(dto: CreateAccountDto): Promise<User> {
-    if (!dto.email) {
+  async register(dto: CreateAccountDto, email: string): Promise<User> {
+    if (!email) {
       throw new BadRequestException('Email is Required but was not provided');
     }
 
     let user: User | null = null;
 
     try {
-      // using transaction since there are several db calls here
       await this.userRepository.manager.transaction(
         async (transactionalEntityManager) => {
-          // Step 1: Check if user exists
           user = await transactionalEntityManager
             .createQueryBuilder(User, 'user')
-            .where('user.email = :email', { email: dto.email })
+            .where('user.email = :email', { email })
             .getOne();
 
-          // Step 2: Create user if it doesn't exist
           if (!user) {
             const insertResult = await transactionalEntityManager
               .createQueryBuilder()
               .insert()
               .into(User)
-              .values({ email: dto.email })
+              .values({ email })
+              .orIgnore()
               .execute();
 
             const insertedUuid = insertResult.identifiers[0]?.uuid;
@@ -82,7 +80,6 @@ export default class UserService {
               );
             }
 
-            // Fetch newly created user
             user = await transactionalEntityManager
               .createQueryBuilder(User, 'user')
               .where('user.uuid = :uuid', { uuid: insertedUuid })
@@ -95,7 +92,6 @@ export default class UserService {
             );
           }
 
-          // Step 3: Update registration details
           await transactionalEntityManager
             .createQueryBuilder()
             .update(User)
@@ -109,8 +105,7 @@ export default class UserService {
         },
       );
 
-      // Step 4: Return updated user
-      const updatedUser = await this.findByEmail(dto.email);
+      const updatedUser = await this.findByEmail(email);
       if (!updatedUser) {
         throw new InternalServerErrorException('Failed to fetch updated User');
       }

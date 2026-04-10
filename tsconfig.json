@@ -16,8 +16,8 @@
     "baseUrl": "./src",
     "paths": {
         "@/*": ["./*"],
-        "@modules/*": ["./src/modules/*"],
-        "@common/*": ["./src/common/*"],
+        "@modules/*": ["./modules/*"],
+        "@common/*": ["./common/*"],
     },
     "types": ["jest", "node"],
     "incremental": true,

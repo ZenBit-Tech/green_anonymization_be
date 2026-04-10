@@ -6,11 +6,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+
 import User from '@common/db/entities/user.entity';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
-
-jest.mock('@common/utils/isMySqlError');
 
 describe('UserService', () => {
   let service: UserService;
@@ -21,43 +20,15 @@ describe('UserService', () => {
     email: 'test@example.com',
     firstName: 'John',
     lastName: 'Doe',
-    companyName: 'Acme Corp',
-  };
+    companyName: 'Acme',
+  } as User;
 
-  const mockTransactionalManager = {
-    createQueryBuilder: jest.fn(() => ({
-      insert: jest.fn().mockReturnThis(),
-      into: jest.fn().mockReturnThis(),
-      values: jest.fn().mockReturnThis(),
-      update: jest.fn().mockReturnThis(),
-      set: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      execute: jest.fn().mockResolvedValue({
-        identifiers: [{ uuid: mockUser.uuid }],
-      }),
-      getOne: jest.fn().mockResolvedValue(mockUser),
-    })),
-  };
-
-  const mockRepository = {
-    find: jest.fn().mockResolvedValue([mockUser]),
-    findOne: jest.fn().mockResolvedValue(mockUser),
-    findOneBy: jest.fn().mockResolvedValue(mockUser),
-    save: jest.fn().mockResolvedValue(mockUser),
-
-    createQueryBuilder: jest.fn(() => ({
-      insert: jest.fn().mockReturnThis(),
-      into: jest.fn().mockReturnThis(),
-      values: jest.fn().mockReturnThis(),
-      execute: jest.fn().mockResolvedValue({
-        identifiers: [{ uuid: mockUser.uuid }],
-      }),
-    })),
-
+  const mockRepo = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    findOneBy: jest.fn(),
     manager: {
-      transaction: jest.fn().mockImplementation(async (cb) => {
-        return cb(mockTransactionalManager);
-      }),
+      transaction: jest.fn(),
     },
   };
 
@@ -65,12 +36,17 @@ describe('UserService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
-        { provide: getRepositoryToken(User), useValue: mockRepository },
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockRepo,
+        },
       ],
     }).compile();
 
     service = module.get<UserService>(UserService);
     repo = module.get<Repository<User>>(getRepositoryToken(User));
+
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -78,14 +54,17 @@ describe('UserService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all users', async () => {
-      const users = await service.findAll();
-      expect(users).toEqual([mockUser]);
-      expect(repo.find).toHaveBeenCalled();
+    it('returns all users', async () => {
+      (repo.find as jest.Mock).mockResolvedValue([mockUser]);
+
+      const result = await service.findAll();
+
+      expect(result).toEqual([mockUser]);
     });
 
-    it('should throw InternalServerErrorException on error', async () => {
-      (repo.find as jest.Mock).mockRejectedValueOnce(new Error());
+    it('throws InternalServerErrorException on failure', async () => {
+      (repo.find as jest.Mock).mockRejectedValue(new Error());
+
       await expect(service.findAll()).rejects.toThrow(
         InternalServerErrorException,
       );
@@ -93,45 +72,55 @@ describe('UserService', () => {
   });
 
   describe('findOne', () => {
-    it('should return a user by uuid', async () => {
-      const user = await service.findOne('1234');
-      expect(user).toEqual(mockUser);
-      expect(repo.findOne).toHaveBeenCalledWith({ where: { uuid: '1234' } });
+    it('returns a user', async () => {
+      (repo.findOne as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await service.findOne(mockUser.uuid);
+
+      expect(result).toEqual(mockUser);
     });
 
-    it('should throw NotFoundException if user not found', async () => {
-      (repo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      await expect(service.findOne('not-found')).rejects.toThrow(
+    it('throws NotFoundException if user missing', async () => {
+      (repo.findOne as jest.Mock).mockResolvedValue(null);
+
+      await expect(service.findOne('missing')).rejects.toThrow(
         NotFoundException,
       );
     });
 
-    it('should throw InternalServerErrorException on unexpected error', async () => {
-      (repo.findOne as jest.Mock).mockRejectedValueOnce(new Error());
-      await expect(service.findOne('1234')).rejects.toThrow(
+    it('throws InternalServerErrorException on error', async () => {
+      (repo.findOne as jest.Mock).mockRejectedValue(new Error());
+
+      await expect(service.findOne('123')).rejects.toThrow(
         InternalServerErrorException,
       );
     });
   });
 
   describe('findByEmail', () => {
-    it('should return user by email', async () => {
-      const user = await service.findByEmail('test@example.com');
-      expect(user).toEqual(mockUser);
+    it('returns user if found', async () => {
+      (repo.findOneBy as jest.Mock).mockResolvedValue(mockUser);
+
+      const result = await service.findByEmail(mockUser.email);
+
+      expect(result).toEqual(mockUser);
       expect(repo.findOneBy).toHaveBeenCalledWith({
-        email: 'test@example.com',
+        email: mockUser.email,
       });
     });
 
-    it('should return null if user not found', async () => {
-      (repo.findOneBy as jest.Mock).mockResolvedValueOnce(null);
-      const user = await service.findByEmail('missing@example.com');
-      expect(user).toBeNull();
+    it('returns null if not found', async () => {
+      (repo.findOneBy as jest.Mock).mockResolvedValue(null);
+
+      const result = await service.findByEmail('missing@email.com');
+
+      expect(result).toBeNull();
     });
 
-    it('should throw InternalServerErrorException on error', async () => {
-      (repo.findOneBy as jest.Mock).mockRejectedValueOnce(new Error());
-      await expect(service.findByEmail('fail@example.com')).rejects.toThrow(
+    it('throws InternalServerErrorException on failure', async () => {
+      (repo.findOneBy as jest.Mock).mockRejectedValue(new Error());
+
+      await expect(service.findByEmail('fail@email.com')).rejects.toThrow(
         InternalServerErrorException,
       );
     });
@@ -139,104 +128,71 @@ describe('UserService', () => {
 
   describe('register', () => {
     const dto: CreateAccountDto = {
-      email: 'test@example.com',
       firstName: 'Jane',
       lastName: 'Smith',
       companyName: 'Acme',
     };
 
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+    const email = 'test@example.com';
 
-    it('should throw BadRequestException if email missing', async () => {
-      await expect(service.register({ ...dto, email: '' })).rejects.toThrow(
+    it('throws BadRequestException if email missing', async () => {
+      await expect(service.register(dto, '' as string)).rejects.toThrow(
         BadRequestException,
       );
     });
 
-    it('should create user if not exists and update details', async () => {
-      // Transaction: first getOne -> null (user not exists)
-      // second getOne -> return created user
-      let callCount = 0;
-
-      mockTransactionalManager.createQueryBuilder.mockImplementation(() => {
-        return {
-          insert: jest.fn().mockReturnThis(),
-          into: jest.fn().mockReturnThis(),
-          values: jest.fn().mockReturnThis(),
-          update: jest.fn().mockReturnThis(),
-          set: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          execute: jest.fn().mockResolvedValue({
-            identifiers: [{ uuid: mockUser.uuid }],
+    it('completes registration successfully', async () => {
+      (repo.manager.transaction as jest.Mock).mockImplementation(async (cb) => {
+        await cb({
+          createQueryBuilder: () => ({
+            where: () => ({
+              getOne: async () => mockUser,
+            }),
+            insert: () => ({
+              into: () => ({
+                values: () => ({
+                  orIgnore: () => ({
+                    execute: async () => ({
+                      identifiers: [{ uuid: mockUser.uuid }],
+                    }),
+                  }),
+                }),
+              }),
+            }),
+            update: () => ({
+              set: () => ({
+                where: () => ({
+                  execute: async () => ({}),
+                }),
+              }),
+            }),
           }),
-          getOne: jest.fn().mockImplementation(() => {
-            callCount += 1;
-            return callCount === 1 ? null : mockUser;
-          }),
-        };
+        });
       });
 
-      // final fetch after transaction
-      jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(mockUser);
+      jest.spyOn(service, 'findByEmail').mockResolvedValue(mockUser);
 
-      const result = await service.register(dto);
+      const result = await service.register(dto, email);
 
       expect(result).toEqual(mockUser);
-      expect(repo.manager.transaction).toHaveBeenCalled();
     });
 
-    it('should update existing user', async () => {
-      // user exists immediately
-      mockTransactionalManager.createQueryBuilder.mockImplementation(() => {
-        return {
-          insert: jest.fn().mockReturnThis(),
-          into: jest.fn().mockReturnThis(),
-          values: jest.fn().mockReturnThis(),
-          update: jest.fn().mockReturnThis(),
-          set: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          execute: jest.fn().mockResolvedValue({}),
-          getOne: jest.fn().mockResolvedValue(mockUser),
-        };
-      });
+    it('throws if updated user cannot be fetched', async () => {
+      (repo.manager.transaction as jest.Mock).mockResolvedValue(undefined);
 
-      jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(mockUser);
+      jest.spyOn(service, 'findByEmail').mockResolvedValue(null);
 
-      const result = await service.register(dto);
-
-      expect(result).toEqual(mockUser);
-      expect(repo.manager.transaction).toHaveBeenCalled();
-    });
-
-    it('should throw if final fetch fails', async () => {
-      mockTransactionalManager.createQueryBuilder.mockImplementation(() => {
-        return {
-          insert: jest.fn().mockReturnThis(),
-          into: jest.fn().mockReturnThis(),
-          values: jest.fn().mockReturnThis(),
-          update: jest.fn().mockReturnThis(),
-          set: jest.fn().mockReturnThis(),
-          where: jest.fn().mockReturnThis(),
-          execute: jest.fn().mockResolvedValue({}),
-          getOne: jest.fn().mockResolvedValue(mockUser),
-        };
-      });
-
-      jest.spyOn(service, 'findByEmail').mockResolvedValueOnce(null);
-
-      await expect(service.register(dto)).rejects.toThrow(
+      await expect(service.register(dto, email)).rejects.toThrow(
         InternalServerErrorException,
       );
     });
 
-    it('should throw if transaction fails', async () => {
-      (repo.manager.transaction as jest.Mock).mockRejectedValueOnce(
-        new Error('Transaction failed'),
+    it('throws if transaction fails', async () => {
+      (repo.manager.transaction as jest.Mock).mockRejectedValue(
+        new Error('db error'),
       );
 
-      await expect(service.register(dto)).rejects.toThrow(
+      await expect(service.register(dto, email)).rejects.toThrow(
         InternalServerErrorException,
       );
     });

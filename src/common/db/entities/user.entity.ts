@@ -6,15 +6,15 @@ export default class User {
   @PrimaryGeneratedColumn('uuid')
   uuid: string = '';
 
-  @Column({ length: 500, unique: true, nullable: false })
+  @Column({ length: 500, unique: true })
   email: string = '';
 
-  @Column({ length: 255, nullable: true })
-  firstName?: string;
+  @Column({ length: 255 })
+  firstName: string = '';
 
-  @Column({ length: 255, nullable: true })
-  lastName?: string;
+  @Column({ length: 255 })
+  lastName: string = '';
 
-  @Column({ length: 255, nullable: true })
-  companyName?: string;
+  @Column({ length: 255 })
+  companyName: string = '';
 }

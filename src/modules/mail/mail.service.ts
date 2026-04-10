@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import nodemailer from 'nodemailer';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Mailer, createTransport, SentMessageInfo } from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export default class MailService {
   constructor(private configService: ConfigService) {}
 
-  emailTransport() {
-    return nodemailer.createTransport({
+  private async emailTransport(): Promise<Mailer> {
+    return createTransport({
       host: this.configService.get<string>('SMTP_HOST'),
       port: this.configService.get<number>('SMTP_PORT'),
       secure: false,
@@ -18,13 +18,23 @@ export default class MailService {
     });
   }
 
-  async sendMail(to: string, subject: string, html: string) {
-    const transport = this.emailTransport();
-    return transport.sendMail({
-      from: `"Anonimizer" <${this.configService.get<string>('SMTP_FROM')}>`,
-      to,
-      subject,
-      html,
-    });
+  async sendMail(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<SentMessageInfo> {
+    try {
+      const transport = await this.emailTransport();
+      return transport.sendMail({
+        from: `"Anonymizer" <${this.configService.get<string>('SMTP_FROM')}>`,
+        to,
+        subject,
+        html,
+      });
+    } catch (err: unknown) {
+      throw new InternalServerErrorException(
+        `Failed to send email, error: ${err}`,
+      );
+    }
   }
 }

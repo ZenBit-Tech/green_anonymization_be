@@ -10,9 +10,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Anonimizer Backend API')
+    .setTitle('Anonymizer Backend API')
     .setDescription(
-      'API documentation for the backend of out data anonimizer app',
+      'API documentation for the backend of out data anonymizer app',
     )
     .setVersion('0.1')
     .build();

@@ -1,14 +1,10 @@
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import type { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
 import UserService from '@modules/user/user.service';
-import { JWT_TOKEN_TYPE } from '@common/constants';
+import { JwtTokenType } from '@common/constants';
 
 @Injectable()
 export default class MagicLoginStrategy extends PassportStrategy(
@@ -26,28 +22,21 @@ export default class MagicLoginStrategy extends PassportStrategy(
     const { token } = req.query as Record<string, string>;
     if (!token) throw new UnauthorizedException('Token missing');
 
-    const payload = this.jwtService.verify(token) as {
-      email: string;
-      type: string;
-    };
-    if (payload.type !== JWT_TOKEN_TYPE.MAGIC)
-      throw new UnauthorizedException('Invalid token type');
+    let payload: { email: string; type: string };
 
     try {
-      const user = await this.userService.findByEmail(payload.email);
-      if (!user)
-        throw new BadRequestException(
-          "Didn't find user in magiclink strategy validate method",
-        );
-      return {
-        email: user.email,
-        isRegistered: true,
-      };
+      payload = this.jwtService.verify(token);
     } catch {
-      return {
-        email: payload.email,
-        isRegistered: false,
-      };
+      throw new UnauthorizedException('Invalid or expired token');
     }
+    if (payload.type !== JwtTokenType.MAGIC)
+      throw new UnauthorizedException('Invalid token type');
+
+    const user = await this.userService.findByEmail(payload.email);
+
+    return {
+      email: payload.email,
+      isRegistered: !!user,
+    };
   }
 }
