@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import ExampleUserModule from '@modules/example-user/example.user.module';
 import { dataSourceOptions } from '@common/db/datasource';
-import ExampleUserController from '@modules/example-user/example.user.controller';
 import AuthModule from '@modules/auth/auth.module';
 import MailModule from '@modules/mail/mail.module';
 import UserController from '@modules/user/user.controller';
@@ -25,14 +23,13 @@ import AppController from './app.controller';
       },
     ]),
     TypeOrmModule.forRoot(dataSourceOptions),
-    ExampleUserModule,
     UserModule,
     AuthModule,
     MailModule,
     ComplianceModule,
     EmailModule,
   ],
-  controllers: [AppController, ExampleUserController, UserController],
+  controllers: [AppController, UserController],
   providers: [
     AppService,
     {
