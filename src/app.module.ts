@@ -11,9 +11,9 @@ import UserModule from '@modules/user/user.module';
 import ComplianceModule from '@modules/compliance/compliance.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import EmailModule from '@/modules/email/email.module';
 import AppService from './app.service';
 import AppController from './app.controller';
-import EmailModule from '@/modules/email/email.module';
 
 @Module({
   imports: [
