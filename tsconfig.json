@@ -18,6 +18,7 @@
         "@/*": ["./*"],
         "@modules/*": ["./modules/*"],
         "@common/*": ["./common/*"],
+        "@entities/*": ["./common/db/entities/*"],
     },
     "types": ["jest", "node"],
     "incremental": true,

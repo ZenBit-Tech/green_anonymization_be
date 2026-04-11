@@ -97,3 +97,69 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
+
+## API Endpoints
+
+### Rate Limiting
+
+All endpoints are protected by rate limiting to prevent abuse.
+
+**Global Rules:**
+- 100 requests per hour per IP address
+- Rate limits are tracked per IP, not per user
+
+**Rate Limit Response (429):**
+```json
+{
+  "statusCode": 429,
+  "message": "Too Many Requests"
+}
+```
+
+**Per-Endpoint Overrides:**
+Some endpoints have stricter limits. See endpoint documentation below.
+
+### Contact Message
+
+Submit a contact us message from the frontend.
+
+**POST** `/contact-messages`
+
+**Rate Limit:** 5 requests per hour per IP address
+
+**Request Body:**
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "phoneNumber": "+15550000000",
+  "message": "Your message here (max 5000 characters)"
+}
+```
+
+**Features:**
+
+- ✅ Input validation (email format, required fields, max lengths)
+- ✅ XSS protection (HTML/JS sanitization via sanitize-html)
+- ✅ Rate limiting (5 requests per hour per IP)
+- ✅ Transaction-safe database operations (all-or-nothing)
+- ✅ Clean, minimal API responses
+
+**Response (201 Created):**
+
+```json
+{
+  "message": "Contact message created successfully"
+}
+```
+
+**Rate Limit Error (429):**
+
+```json
+{
+  "statusCode": 429,
+  "message": "Too Many Requests"
+}
+```
