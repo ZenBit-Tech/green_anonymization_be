@@ -2,9 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
-import cookieParser from 'cookie-parser';
+import { DEFAULT_FRONTEND_ORIGIN, DEFAULT_PORT } from '@common/constants';
 import AppModule from './app.module';
-import { DEFAULT_FRONTEND_ORIGIN, DEFAULT_PORT } from './common/constants';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,13 +29,11 @@ async function bootstrap() {
     }),
   );
 
-  app.use(cookieParser());
   app.enableCors({
     origin: [
-      configService.getOrThrow<number>('FRONTEND_ORIGIN') ??
+      configService.getOrThrow<string>('FRONTEND_ORIGIN') ??
         DEFAULT_FRONTEND_ORIGIN,
     ],
-    credentials: true,
     allowedHeaders: [
       'Content-Type',
       'Authorization',
@@ -44,7 +41,6 @@ async function bootstrap() {
       'Accept',
       'Origin',
     ],
-    exposedHeaders: ['Set-Cookie'],
   });
 
   await app.listen(configService.getOrThrow<number>('PORT') ?? DEFAULT_PORT);
