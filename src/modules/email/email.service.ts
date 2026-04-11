@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import sanitizeHtml from 'sanitize-html';
@@ -15,6 +19,8 @@ interface ContactMessageInput {
 
 @Injectable()
 export default class EmailService {
+  private readonly logger = new Logger(EmailService.name);
+
   constructor(
     @InjectRepository(ContactMessage)
     private emailRepository: Repository<ContactMessage>,
@@ -71,6 +77,10 @@ export default class EmailService {
         };
       });
     } catch (error) {
+      this.logger.error(
+        `Error creating email: ${error instanceof Error ? error.message : String(error)}`,
+        error,
+      );
       if (error instanceof InternalServerErrorException) throw error;
       throw new InternalServerErrorException('Failed to create email');
     }
