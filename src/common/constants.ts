@@ -8,3 +8,5 @@ export const enum Compliance {
   GDPR = 'GDPR',
   HIPAA = 'HIPAA',
 }
+export const PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT = '/anonymize';
+export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';
