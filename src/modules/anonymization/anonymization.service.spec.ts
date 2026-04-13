@@ -126,15 +126,12 @@ describe('AnonymizationService (unit)', () => {
     });
 
     it('should handle empty string input', async () => {
-      mockGdprAnonymizerService.anonymize.mockResolvedValue('');
-
       const result = await service.anonymize(Compliance.GDPR, '');
 
       expect(result).toEqual({
         originalText: '',
         anonymizedText: '',
       });
-      expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledWith('');
     });
 
     it('should preserve original text in result', async () => {

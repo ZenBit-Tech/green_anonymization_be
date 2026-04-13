@@ -24,6 +24,14 @@ export default class AnonymizationService {
     complianceName: Compliance,
     text: string,
   ): Promise<AnonymizationResult> {
+    if (text === '') {
+      const emptyAnonymizationResult: AnonymizationResult = {
+        originalText: '',
+        anonymizedText: '',
+      };
+      return emptyAnonymizationResult;
+    }
+
     const service = this.serviceMap.get(complianceName);
 
     if (!service) {
