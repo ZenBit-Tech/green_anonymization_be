@@ -3,7 +3,15 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import UserService from '@modules/user/user.service';
-import { JwtTokenType } from '@/common/constants';
+import { JwtTokenType } from '@common/constants';
+
+type JwtValidationResult = {
+  email: string;
+  isRegistered: boolean;
+  firstName?: string;
+  lastName?: string;
+  companyName?: string;
+};
 
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy) {
@@ -18,7 +26,10 @@ export default class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { email?: string; type?: string }) {
+  async validate(payload: {
+    email?: string;
+    type?: string;
+  }): Promise<JwtValidationResult> {
     if (!payload?.email || payload.type !== JwtTokenType.ACCESS) {
       throw new UnauthorizedException('Invalid access token');
     }

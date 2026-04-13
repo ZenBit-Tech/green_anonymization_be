@@ -1,10 +1,10 @@
-import { UserRegistrationStatus } from '@/common/constants';
 import {
   CanActivate,
   ExecutionContext,
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
+import { UserRegistrationStatus } from '@common/constants';
 
 @Injectable()
 export default class RegistrationGuard implements CanActivate {

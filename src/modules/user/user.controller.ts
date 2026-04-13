@@ -18,10 +18,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
+import { UserRegistrationStatus } from '@common/constants';
 import RegistrationGuard from '@/modules/auth/guards/registeration.guard';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import User from '@/common/db/entities/user.entity';
-import { UserRegistrationStatus } from '@/common/constants';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';
