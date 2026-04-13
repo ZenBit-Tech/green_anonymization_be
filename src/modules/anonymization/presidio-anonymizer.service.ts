@@ -20,29 +20,38 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
   async anonymize(text: string): Promise<string> {
     const analyzerResults = await this.analyze(text);
 
-    const response = await firstValueFrom(
-      this.httpService.post(
-        this.config.presidioAnonymizeUrl.concat('/anonymize'),
-        {
-          text,
-          analyzer_results: analyzerResults,
-        },
-      ),
-    );
-
-    return response.data.text;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          this.config.presidioAnonymizeUrl.concat('/anonymize'),
+          {
+            text,
+            analyzer_results: analyzerResults,
+          },
+        ),
+      );
+      return response.data.text;
+    } catch (error) {
+      throw new Error('Presidio anonymization failed');
+    }
   }
 
   private async analyze(text: string): Promise<string> {
     // TODO: Detect language using https://github.com/nitotm/efficient-language-detector-js
 
-    const response = await firstValueFrom(
-      this.httpService.post(this.config.presidioAnalyzeUrl.concat('/analyze'), {
-        text,
-        language: 'en',
-      }),
-    );
-
-    return response.data;
+    try {
+      const response = await firstValueFrom(
+        this.httpService.post(
+          this.config.presidioAnalyzeUrl.concat('/analyze'),
+          {
+            text,
+            language: 'en',
+          },
+        ),
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error('Presidio analysis failed');
+    }
   }
 }
