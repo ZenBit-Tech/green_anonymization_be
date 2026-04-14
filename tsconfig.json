@@ -23,6 +23,7 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@common/*": ["src/common/*"],
+      "@entities/*": ["src/common/db/entities/*"],
       "@modules/*": ["src/modules/*"]
     }
   }

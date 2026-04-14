@@ -2,6 +2,7 @@
 /dist
 /node_modules
 /build
+/src/migrations
 
 # Logs
 logs
@@ -34,6 +35,8 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
+.agents
+skills-lock.json
 
 # dotenv environment variable files
 .env

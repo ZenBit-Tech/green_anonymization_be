@@ -7,6 +7,7 @@ module.exports = {
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   moduleNameMapper: {
     '^@common/(.*)$': '<rootDir>/common/$1',
+    '^@entities/(.*)$': '<rootDir>/common/db/entities/$1',
     '^@modules/(.*)$': '<rootDir>/modules/$1',
   },
   moduleDirectories: ['node_modules', '<rootDir>'],
