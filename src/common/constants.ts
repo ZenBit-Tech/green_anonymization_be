@@ -13,10 +13,6 @@ export const DEFAULT_FRONTEND_ORIGIN = 'http://localhost:5173';
 export const MAGIC_LINK_EXPIRATION = '60m';
 export const ACCESS_TOKEN_EXPIRATION = '15m';
 export const REFRESH_TOKEN_EXPIRATION = '7d';
-export enum UserRegistrationStatus {
-  REGISTERED = 'REGISTERED',
-  UNREGISTERED = 'UNREGISTERED',
-}
 
 export enum JwtTokenType {
   ACCESS = 'access',

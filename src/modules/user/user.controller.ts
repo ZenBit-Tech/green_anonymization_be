@@ -25,6 +25,7 @@ import User from '@/common/db/entities/user.entity';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';
+import SessionResponseDto from './dto/sessionResponse.dto';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -84,13 +85,12 @@ export default class UserController {
 
   @Get('session')
   @UseGuards(JwtAuthGuard)
-  async session(@Req() req) {
+  async session(@Req() req): Promise<SessionResponseDto> {
     const { email } = req.user;
 
     const user = await this.userService.findByEmail(email as string);
 
     return {
-      authenticated: true,
       registered: !!user,
       user: user ?? null,
     };

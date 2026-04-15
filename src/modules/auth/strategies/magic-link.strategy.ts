@@ -3,26 +3,20 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import type { Request } from 'express';
 import { JwtService } from '@nestjs/jwt';
-import UserService from '@modules/user/user.service';
 import { JwtTokenType } from '@common/constants';
-
-type MagicValidationResult = {
-  email: string;
-};
 
 @Injectable()
 export default class MagicLoginStrategy extends PassportStrategy(
   Strategy,
   'magic',
 ) {
-  constructor(
-    private userService: UserService,
-    private jwtService: JwtService,
-  ) {
+  constructor(private jwtService: JwtService) {
     super();
   }
 
-  async validate(req: Request): Promise<MagicValidationResult> {
+  async validate(req: Request): Promise<{
+    email: string;
+  }> {
     const { token } = req.query as Record<string, string>;
     if (!token) throw new UnauthorizedException('Token missing');
 
