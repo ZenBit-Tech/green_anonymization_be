@@ -64,6 +64,10 @@ export default class UserService {
             .where('user.email = :email', { email })
             .getOne();
 
+          if (user) {
+            throw new BadRequestException('User already exists');
+          }
+
           if (!user) {
             const insertResult = await transactionalEntityManager
               .createQueryBuilder()

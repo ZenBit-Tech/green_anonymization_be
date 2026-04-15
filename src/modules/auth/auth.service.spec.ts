@@ -2,22 +2,23 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
+
 import UserService from '@modules/user/user.service';
 import MailService from '@modules/mail/mail.service';
+
 import {
   ACCESS_TOKEN_EXPIRATION,
   MAGIC_LINK_EXPIRATION,
+  REFRESH_TOKEN_EXPIRATION,
   JwtTokenType,
 } from '@common/constants';
+
 import AuthService from './auth.service';
 
 describe('AuthService', () => {
   let service: AuthService;
-  let jwtService: JwtService;
-  let mailService: MailService;
-  let userService: UserService;
-
-  const mockUser = { email: 'test@example.com' };
+  let jwtService: jest.Mocked<JwtService>;
+  let mailService: jest.Mocked<MailService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -33,7 +34,7 @@ describe('AuthService', () => {
         {
           provide: UserService,
           useValue: {
-            findByEmail: jest.fn().mockResolvedValue(mockUser),
+            findByEmail: jest.fn(),
           },
         },
         {
@@ -52,24 +53,27 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
-    mailService = module.get<MailService>(MailService);
-    userService = module.get<UserService>(UserService);
+    jwtService = module.get(JwtService);
+    mailService = module.get(MailService);
+
+    jest.clearAllMocks();
   });
 
   describe('generateMagicToken', () => {
     it('should generate token and send email with magic link', async () => {
-      const token = await service.generateMagicToken('test@example.com');
+      const email = 'test@example.com';
+
+      const token = await service.generateMagicToken(email);
 
       expect(token).toBe('signed-token');
 
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { email: 'test@example.com', type: JwtTokenType.MAGIC },
+        { email, type: JwtTokenType.MAGIC },
         { expiresIn: MAGIC_LINK_EXPIRATION },
       );
 
       expect(mailService.sendMail).toHaveBeenCalledWith(
-        'test@example.com',
+        email,
         'Your Magic Login Link',
         expect.stringContaining(
           'http://localhost:3000/auth-callback?token=signed-token',
@@ -79,41 +83,45 @@ describe('AuthService', () => {
   });
 
   describe('generateAuthTokens', () => {
-    it('should generate access and refresh tokens and detect registered user', async () => {
-      const tokens = await service.generateAuthTokens('test@example.com');
-      expect(jwtService.sign).toHaveBeenCalledTimes(2);
+    it('should generate access and refresh tokens', async () => {
+      const email = 'test@example.com';
 
-      expect(userService.findByEmail).toHaveBeenCalledWith('test@example.com');
+      const result = await service.generateAuthTokens(email);
 
-      expect(tokens).toEqual({
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        1,
+        { email, type: JwtTokenType.ACCESS },
+        { expiresIn: ACCESS_TOKEN_EXPIRATION },
+      );
+
+      expect(jwtService.sign).toHaveBeenNthCalledWith(
+        2,
+        { email, type: JwtTokenType.REFRESH },
+        { expiresIn: REFRESH_TOKEN_EXPIRATION },
+      );
+
+      expect(result).toEqual({
         accessToken: 'signed-token',
         refreshToken: 'signed-token',
-        isRegistered: true,
       });
-    });
-
-    it('should return isRegistered false when user does not exist', async () => {
-      (userService.findByEmail as jest.Mock).mockResolvedValueOnce(null);
-
-      const tokens = await service.generateAuthTokens('test@example.com');
-
-      expect(tokens.isRegistered).toBe(false);
     });
   });
 
   describe('refreshAccessToken', () => {
     it('should return new access token for valid refresh token', async () => {
-      (jwtService.verify as jest.Mock).mockReturnValue({
+      const payload = {
         email: 'test@example.com',
         type: JwtTokenType.REFRESH,
-      });
+      };
+
+      (jwtService.verify as jest.Mock).mockReturnValue(payload);
 
       const result = await service.refreshAccessToken('refresh-token');
 
       expect(jwtService.verify).toHaveBeenCalledWith('refresh-token');
 
       expect(jwtService.sign).toHaveBeenCalledWith(
-        { email: 'test@example.com', type: JwtTokenType.ACCESS },
+        { email: payload.email, type: JwtTokenType.ACCESS },
         { expiresIn: ACCESS_TOKEN_EXPIRATION },
       );
 
@@ -131,12 +139,12 @@ describe('AuthService', () => {
       );
     });
 
-    it('should throw UnauthorizedException for verification failure', async () => {
+    it('should throw UnauthorizedException when verification fails', async () => {
       (jwtService.verify as jest.Mock).mockImplementation(() => {
-        throw new Error();
+        throw new Error('invalid');
       });
 
-      await expect(service.refreshAccessToken('invalid-token')).rejects.toThrow(
+      await expect(service.refreshAccessToken('bad-token')).rejects.toThrow(
         UnauthorizedException,
       );
     });

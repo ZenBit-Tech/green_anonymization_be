@@ -5,14 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import UserService from '@modules/user/user.service';
 import { JwtTokenType } from '@common/constants';
 
-type JwtValidationResult = {
-  email: string;
-  isRegistered: boolean;
-  firstName?: string;
-  lastName?: string;
-  companyName?: string;
-};
-
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -26,29 +18,13 @@ export default class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: {
-    email?: string;
-    type?: string;
-  }): Promise<JwtValidationResult> {
+  // eslint-disable-next-line class-methods-use-this
+  async validate(payload: { email?: string; type?: string }) {
     if (!payload?.email || payload.type !== JwtTokenType.ACCESS) {
       throw new UnauthorizedException('Invalid access token');
     }
-
-    const user = await this.userService.findByEmail(payload.email);
-
-    if (!user) {
-      return {
-        email: payload.email,
-        isRegistered: false,
-      };
-    }
-
     return {
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      companyName: user.companyName,
-      isRegistered: true,
+      email: payload.email,
     };
   }
 }

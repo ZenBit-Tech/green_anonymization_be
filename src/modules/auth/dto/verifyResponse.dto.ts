@@ -23,12 +23,4 @@ export default class VerifyResponseDto {
   })
   @Expose()
   refreshToken: string = '';
-
-  @ApiProperty({
-    example: 'true',
-    description:
-      'Variable that says if verified user i registered (i.e exists in the db).\n Needed to distinguish between users first ever login and subsequent ones',
-  })
-  @Expose()
-  isRegistered: boolean = false;
 }

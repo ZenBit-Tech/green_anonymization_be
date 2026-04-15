@@ -8,7 +8,6 @@ import { JwtTokenType } from '@common/constants';
 
 type MagicValidationResult = {
   email: string;
-  isRegistered: boolean;
 };
 
 @Injectable()
@@ -37,11 +36,8 @@ export default class MagicLoginStrategy extends PassportStrategy(
     if (payload.type !== JwtTokenType.MAGIC)
       throw new UnauthorizedException('Invalid token type');
 
-    const user = await this.userService.findByEmail(payload.email);
-
     return {
       email: payload.email,
-      isRegistered: !!user,
     };
   }
 }

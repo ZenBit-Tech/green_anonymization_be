@@ -7,6 +7,7 @@ import {
   UseInterceptors,
   ClassSerializerInterceptor,
   Body,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -18,8 +19,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
-import { UserRegistrationStatus } from '@common/constants';
-import RegistrationGuard from '@/modules/auth/guards/registeration.guard';
+import { Throttle } from '@nestjs/throttler';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import User from '@/common/db/entities/user.entity';
 import UserService from './user.service';
@@ -46,11 +46,9 @@ export default class UserController {
   @ApiForbiddenResponse({
     description: 'User is already registered',
   })
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
   @Post('register')
-  @UseGuards(
-    JwtAuthGuard,
-    new RegistrationGuard(UserRegistrationStatus.UNREGISTERED),
-  )
+  @UseGuards(JwtAuthGuard)
   async register(
     @UserEmail() email: string,
     @Body() dto: CreateAccountDto,
@@ -69,14 +67,32 @@ export default class UserController {
   @ApiForbiddenResponse({
     description: 'User is not fully registered',
   })
+  @Throttle({ default: { limit: 20, ttl: 3600000 } })
   @Get('me')
-  @UseGuards(
-    JwtAuthGuard,
-    new RegistrationGuard(UserRegistrationStatus.REGISTERED),
-  )
+  @UseGuards(JwtAuthGuard)
   async getMe(
     @Req() req: Request & { user: { email: string } },
   ): Promise<ReturnUserDto | null> {
-    return this.userService.findByEmail(req.user.email);
+    const user = await this.userService.findByEmail(req.user.email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  @Get('session')
+  @UseGuards(JwtAuthGuard)
+  async session(@Req() req) {
+    const { email } = req.user;
+
+    const user = await this.userService.findByEmail(email as string);
+
+    return {
+      authenticated: true,
+      registered: !!user,
+      user: user ?? null,
+    };
   }
 }

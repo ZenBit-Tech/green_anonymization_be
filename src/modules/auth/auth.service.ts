@@ -13,7 +13,6 @@ import {
 type AuthTokens = {
   accessToken: string;
   refreshToken: string;
-  isRegistered: boolean;
 };
 
 @Injectable()
@@ -119,9 +118,7 @@ export default class AuthService {
       expiresIn: REFRESH_TOKEN_EXPIRATION,
     });
 
-    const user = await this.userService.findByEmail(email);
-    const isRegistered = !!user;
-    return { accessToken, refreshToken, isRegistered };
+    return { accessToken, refreshToken };
   }
 
   async refreshAccessToken(refreshToken: string): Promise<string> {

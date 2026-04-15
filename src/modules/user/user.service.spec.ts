@@ -11,6 +11,18 @@ import User from '@common/db/entities/user.entity';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 
+type MockQueryBuilder = {
+  where: jest.Mock;
+  getOne: jest.Mock;
+  insert: jest.Mock;
+  into: jest.Mock;
+  values: jest.Mock;
+  orIgnore: jest.Mock;
+  execute: jest.Mock;
+  update: jest.Mock;
+  set: jest.Mock;
+};
+
 describe('UserService', () => {
   let service: UserService;
   let repo: Repository<User>;
@@ -30,6 +42,25 @@ describe('UserService', () => {
     manager: {
       transaction: jest.fn(),
     },
+  };
+
+  const createMockQueryBuilder = (): MockQueryBuilder => {
+    const qb: Partial<MockQueryBuilder> = {};
+
+    qb.where = jest.fn().mockReturnValue(qb);
+    qb.getOne = jest.fn();
+
+    qb.insert = jest.fn().mockReturnValue(qb);
+    qb.into = jest.fn().mockReturnValue(qb);
+    qb.values = jest.fn().mockReturnValue(qb);
+    qb.orIgnore = jest.fn().mockReturnValue(qb);
+
+    qb.update = jest.fn().mockReturnValue(qb);
+    qb.set = jest.fn().mockReturnValue(qb);
+
+    qb.execute = jest.fn();
+
+    return qb as MockQueryBuilder;
   };
 
   beforeEach(async () => {
@@ -141,40 +172,80 @@ describe('UserService', () => {
       );
     });
 
-    it('completes registration successfully', async () => {
-      (repo.manager.transaction as jest.Mock).mockImplementation(async (cb) => {
-        await cb({
-          createQueryBuilder: () => ({
-            where: () => ({
-              getOne: async () => mockUser,
-            }),
-            insert: () => ({
-              into: () => ({
-                values: () => ({
-                  orIgnore: () => ({
-                    execute: async () => ({
-                      identifiers: [{ uuid: mockUser.uuid }],
-                    }),
-                  }),
-                }),
-              }),
-            }),
-            update: () => ({
-              set: () => ({
-                where: () => ({
-                  execute: async () => ({}),
-                }),
-              }),
-            }),
-          }),
-        });
+    it('throws BadRequestException if user already exists', async () => {
+      const qb = createMockQueryBuilder();
+
+      qb.getOne.mockResolvedValueOnce(mockUser);
+
+      (repo.manager.transaction as jest.Mock).mockImplementation(
+        async (
+          cb: (em: {
+            createQueryBuilder: () => MockQueryBuilder;
+          }) => Promise<void>,
+        ) => {
+          await cb({
+            createQueryBuilder: () => qb,
+          });
+        },
+      );
+
+      await expect(service.register(dto, email)).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('creates and updates user successfully', async () => {
+      const qb = createMockQueryBuilder();
+
+      qb.getOne.mockResolvedValueOnce(null).mockResolvedValueOnce(mockUser);
+
+      qb.execute.mockResolvedValue({
+        identifiers: [{ uuid: mockUser.uuid }],
       });
+
+      (repo.manager.transaction as jest.Mock).mockImplementation(
+        async (
+          cb: (em: {
+            createQueryBuilder: () => MockQueryBuilder;
+          }) => Promise<void>,
+        ) => {
+          await cb({
+            createQueryBuilder: () => qb,
+          });
+        },
+      );
 
       jest.spyOn(service, 'findByEmail').mockResolvedValue(mockUser);
 
       const result = await service.register(dto, email);
 
       expect(result).toEqual(mockUser);
+    });
+
+    it('throws if inserted uuid missing', async () => {
+      const qb = createMockQueryBuilder();
+
+      qb.getOne.mockResolvedValueOnce(null);
+
+      qb.execute.mockResolvedValue({
+        identifiers: [],
+      });
+
+      (repo.manager.transaction as jest.Mock).mockImplementation(
+        async (
+          cb: (em: {
+            createQueryBuilder: () => MockQueryBuilder;
+          }) => Promise<void>,
+        ) => {
+          await cb({
+            createQueryBuilder: () => qb,
+          });
+        },
+      );
+
+      await expect(service.register(dto, email)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
 
     it('throws if updated user cannot be fetched', async () => {
@@ -187,7 +258,7 @@ describe('UserService', () => {
       );
     });
 
-    it('throws if transaction fails', async () => {
+    it('throws InternalServerErrorException on transaction failure', async () => {
       (repo.manager.transaction as jest.Mock).mockRejectedValue(
         new Error('db error'),
       );

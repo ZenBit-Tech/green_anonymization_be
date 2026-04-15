@@ -14,6 +14,7 @@ import {
   ApiBadRequestResponse,
   ApiQuery,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import AuthService from './auth.service';
 import LoginRequestDto from './dto/loginRequest.dto';
 import MagicLinkAuthGuard from './guards/magic-link.auth.guard';
@@ -27,6 +28,7 @@ export default class AuthController {
   @ApiOperation({ summary: 'Request a magic login link via email' })
   @ApiOkResponse({ description: 'Magic link sent to email' })
   @ApiBadRequestResponse({ description: 'Invalid email provided' })
+  @Throttle({ default: { limit: 15, ttl: 3600000 } })
   @Post('login')
   async login(@Body() dto: LoginRequestDto): Promise<{ message: string }> {
     await this.authService.generateMagicToken(dto.destination);
@@ -37,25 +39,26 @@ export default class AuthController {
   @ApiQuery({ name: 'token', required: true })
   @ApiOkResponse({ description: 'User authenticated successfully' })
   @ApiBadRequestResponse({ description: 'Invalid or missing token' })
+  @Throttle({ default: { limit: 20, ttl: 3600000 } })
   @Get('verify')
   @UseGuards(MagicLinkAuthGuard)
   async verify(@Req() req): Promise<VerifyResponseDto> {
     const { email } = req.user;
 
-    const { accessToken, refreshToken, isRegistered } =
+    const { accessToken, refreshToken } =
       await this.authService.generateAuthTokens(email as string);
 
     return {
       message: 'Authenticated successfully',
       accessToken,
       refreshToken,
-      isRegistered,
     };
   }
 
   @ApiOperation({ summary: 'Refresh access token using refresh token' })
   @ApiOkResponse({ description: 'New access token issued' })
   @ApiBadRequestResponse({ description: 'Invalid or missing refresh token' })
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
   @Post('refresh')
   async refresh(
     @Body('refreshToken') refreshToken: string,
