@@ -23,3 +23,5 @@ export enum JwtTokenType {
   REFRESH = 'refresh',
   MAGIC = 'magic',
 }
+export const PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT = '/anonymize';
+export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';

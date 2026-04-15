@@ -12,10 +12,14 @@ import { APP_GUARD } from '@nestjs/core';
 import EmailModule from '@/modules/email/email.module';
 import AppService from './app.service';
 import AppController from './app.controller';
+import anonymizationConfig from './modules/anonymization/anonymization.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [anonymizationConfig],
+    }),
     ThrottlerModule.forRoot([
       {
         ttl: 3600000,
