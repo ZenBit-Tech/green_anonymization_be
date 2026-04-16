@@ -1,0 +1,98 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Req,
+  UseGuards,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+  Body,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
+import { Throttle } from '@nestjs/throttler';
+import UserEmail from '@/common/utils/decorators/user-email.decorator';
+import User from '@/common/db/entities/user.entity';
+import UserService from './user.service';
+import CreateAccountDto from './dto/createAccount.dto';
+import ReturnUserDto from './dto/returnUser.dto';
+import SessionResponseDto from './dto/sessionResponse.dto';
+
+@ApiTags('user')
+@UseInterceptors(ClassSerializerInterceptor)
+@Controller('user')
+export default class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @ApiOperation({ summary: 'Complete user registration' })
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
+    type: User,
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid input data',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiForbiddenResponse({
+    description: 'User is already registered',
+  })
+  @Throttle({ default: { limit: 5, ttl: 3600000 } })
+  @Post('register')
+  @UseGuards(JwtAuthGuard)
+  async register(
+    @UserEmail() email: string,
+    @Body() dto: CreateAccountDto,
+  ): Promise<ReturnUserDto> {
+    return this.userService.register(dto, email);
+  }
+
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiOkResponse({
+    description: 'User retrieved successfully',
+    type: User,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiForbiddenResponse({
+    description: 'User is not fully registered',
+  })
+  @Throttle({ default: { limit: 20, ttl: 3600000 } })
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  async getMe(
+    @Req() req: Request & { user: { email: string } },
+  ): Promise<ReturnUserDto | null> {
+    const user = await this.userService.findByEmail(req.user.email);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  @Get('session')
+  @UseGuards(JwtAuthGuard)
+  async session(@Req() req): Promise<SessionResponseDto> {
+    const { email } = req.user;
+
+    const user = await this.userService.findByEmail(email as string);
+
+    return {
+      registered: !!user,
+      user: user ?? null,
+    };
+  }
+}

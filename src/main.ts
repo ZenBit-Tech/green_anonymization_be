@@ -2,23 +2,17 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
+import { DEFAULT_PORT } from '@common/constants';
+import ThrottlerExceptionFilter from '@common/filters/throttler-exception.filter';
 import AppModule from './app.module';
-import { DEFAULT_PORT } from './common/constants';
-import ThrottlerExceptionFilter from './common/filters/throttler-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // temporarelly enable Cors, will be changed in  https://github.com/ZenBit-Tech/green_anonymization_be/pull/4
-  app.enableCors({
-    origin: '*',
-    credentials: true,
-  });
-
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Anonimizer Backend API')
+    .setTitle('Anonymizer Backend API')
     .setDescription(
-      'API documentation for the backend of out data anonimizer app',
+      'API documentation for the backend of out data anonymizer app',
     )
     .setVersion('0.1')
     .build();
@@ -36,6 +30,16 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCors({
+    origin: [configService.getOrThrow<string>('FRONTEND_ORIGIN')],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+    ],
+  });
   app.useGlobalFilters(new ThrottlerExceptionFilter());
 
   await app.listen(configService.getOrThrow<number>('PORT') ?? DEFAULT_PORT);
