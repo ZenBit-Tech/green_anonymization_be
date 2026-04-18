@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 
 import ComplianceSelection from '@common/db/entities/compliance-selection.entity';
 
+import UserService from '@modules/user/user.service';
 import ComplianceService from './compliance.service';
 
 describe('ComplianceService', () => {
@@ -15,13 +16,23 @@ describe('ComplianceService', () => {
     create: jest.fn(),
   };
 
+  const mockUserService = {
+    findByEmail: jest.fn(),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ComplianceService,
         {
           provide: getRepositoryToken(ComplianceSelection),
           useValue: mockSelectionRepo,
+        },
+        {
+          provide: UserService,
+          useValue: mockUserService,
         },
       ],
     }).compile();
@@ -31,10 +42,9 @@ describe('ComplianceService', () => {
 
   it('should throw NotFoundException if framework does not exist', async () => {
     await expect(
-      service.selectFramework({
-        userId: 'user-1',
-        frameworkCode: 'UNKNOWN',
-      }),
+      service.selectFrameworkByEmail('test@example.com', 'UNKNOWN'),
     ).rejects.toThrow(NotFoundException);
+
+    expect(mockUserService.findByEmail).not.toHaveBeenCalled();
   });
 });

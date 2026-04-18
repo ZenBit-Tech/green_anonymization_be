@@ -9,12 +9,4 @@ export default class SelectComplianceDto {
   @IsString()
   @IsNotEmpty()
   frameworkCode: string;
-
-  @ApiProperty({
-    example: 'user-123',
-    description: 'User identifier',
-  })
-  @IsString()
-  @IsNotEmpty()
-  userId: string;
 }
