@@ -1,13 +1,16 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiParam,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+
+import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
+import UserEmail from '@/common/utils/decorators/user-email.decorator';
 
 import ComplianceService from './compliance.service';
 import SelectComplianceDto from './dto/selectCompliance.dto';
@@ -29,7 +32,8 @@ export default class ComplianceController {
     return this.complianceService.getFrameworks();
   }
 
-  @Post('select')
+  @Post('selection')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Select compliance framework for a user' })
   @ApiCreatedResponse({
     description: 'Compliance framework selected successfully',
@@ -38,32 +42,40 @@ export default class ComplianceController {
   @ApiBadRequestResponse({
     description: 'Invalid request body',
   })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+  })
   @ApiNotFoundResponse({
     description: 'Compliance framework not found',
   })
   async selectFramework(
+    @UserEmail() email: string,
     @Body() dto: SelectComplianceDto,
   ): Promise<ReturnComplianceSelectionDto> {
-    return this.complianceService.selectFramework(dto);
+    return this.complianceService.selectFrameworkByEmail(
+      email,
+      dto.frameworkCode,
+    );
   }
 
-  @Get('selection/:userId')
-  @ApiOperation({ summary: 'Get selected compliance framework for a user' })
-  @ApiParam({
-    name: 'userId',
-    example: 'user-123',
-    description: 'User identifier',
+  @Get('selection')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Get selected compliance framework for current user',
   })
   @ApiOkResponse({
     description: 'Selected compliance framework',
     type: ReturnComplianceSelectionDto,
   })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+  })
   @ApiNotFoundResponse({
     description: 'Compliance selection not found',
   })
   async getSelection(
-    @Param('userId') userId: string,
+    @UserEmail() email: string,
   ): Promise<ReturnComplianceSelectionDto> {
-    return this.complianceService.getSelection(userId);
+    return this.complianceService.getSelectionByEmail(email);
   }
 }
