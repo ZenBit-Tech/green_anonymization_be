@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import MailService from '@modules/mail/mail.service';
+import EmailService from '@modules/email/email.service';
 import { ConfigService } from '@nestjs/config';
 import {
   ACCESS_TOKEN_EXPIRATION,
@@ -19,7 +19,7 @@ type AuthTokens = {
 export default class AuthService {
   constructor(
     private jwtService: JwtService,
-    private mailService: MailService,
+    private emailService: EmailService,
     private configService: ConfigService,
   ) {}
 
@@ -32,7 +32,7 @@ export default class AuthService {
 
     const html = MagicEmailHtml(magicLink);
 
-    await this.mailService.sendMail(email, 'Your Magic Login Link', html);
+    await this.emailService.sendMail(email, 'Your Magic Login Link', html);
 
     return token;
   }

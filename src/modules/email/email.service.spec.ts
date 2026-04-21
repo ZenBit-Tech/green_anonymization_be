@@ -1,6 +1,7 @@
 /// <reference types="jest" />
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
 import { InternalServerErrorException } from '@nestjs/common';
 import ContactMessage from '@entities/contactMessage.entity';
 import EmailService from './email.service';
@@ -39,6 +40,12 @@ describe('EmailService', () => {
         {
           provide: getRepositoryToken(ContactMessage),
           useValue: mockRepository,
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn().mockReturnValue('test-value'),
+          },
         },
       ],
     }).compile();

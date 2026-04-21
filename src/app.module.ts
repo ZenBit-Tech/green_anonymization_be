@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from '@common/db/datasource';
 import AuthModule from '@modules/auth/auth.module';
-import MailModule from '@modules/mail/mail.module';
 import UserController from '@modules/user/user.controller';
 import UserModule from '@modules/user/user.module';
 import ComplianceModule from '@modules/compliance/compliance.module';
@@ -29,7 +28,6 @@ import anonymizationConfig from './modules/anonymization/anonymization.config';
     TypeOrmModule.forRoot(dataSourceOptions),
     UserModule,
     AuthModule,
-    MailModule,
     ComplianceModule,
     EmailModule,
   ],
