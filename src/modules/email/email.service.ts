@@ -10,6 +10,7 @@ import { Mailer, createTransport, SentMessageInfo } from 'nodemailer';
 import sanitizeHtml from 'sanitize-html';
 import ContactMessage from '@entities/contactMessage.entity';
 import type CreateContactMessageResponse from './dto/createContactMessageResponse.dto';
+import ContactMessageEmailHtml from './utils/contactMessageEmail';
 
 interface ContactMessageInput {
   firstName: string;
@@ -82,8 +83,8 @@ export default class EmailService {
             message: EmailService.sanitizeInput(data.message),
           };
 
-          const emailRepo = tm.getRepository(ContactMessage);
-          const insertResult = await emailRepo
+          const contactMessageRepo = tm.getRepository(ContactMessage);
+          const insertResult = await contactMessageRepo
             .createQueryBuilder()
             .insert()
             .into(ContactMessage)
@@ -97,7 +98,7 @@ export default class EmailService {
             );
           }
 
-          const email = await emailRepo
+          const email = await contactMessageRepo
             .createQueryBuilder('e')
             .where('e.uuid = :uuid', { uuid: id })
             .getOne();
@@ -106,6 +107,23 @@ export default class EmailService {
             throw new InternalServerErrorException(
               'Email creation failed: could not fetch created record',
             );
+          }
+
+          const notificationTarget =
+            this.configService.get<string>('SMTP_FROM');
+
+          if (notificationTarget) {
+            try {
+              await this.sendMail(
+                notificationTarget,
+                `New Contact Message from ${sanitizedData.firstName} ${sanitizedData.lastName}`,
+                ContactMessageEmailHtml(sanitizedData),
+              );
+            } catch (mailError) {
+              this.logger.error(
+                `Failed to send contact notification email: ${mailError instanceof Error ? mailError.message : String(mailError)}`,
+              );
+            }
           }
 
           return {

@@ -51,6 +51,7 @@ describe('EmailService', () => {
     }).compile();
 
     service = module.get<EmailService>(EmailService);
+    jest.spyOn(service, 'sendMail').mockResolvedValue(undefined as never);
   });
 
   describe('createContactMessage', () => {
