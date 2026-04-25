@@ -11,6 +11,7 @@ import sanitizeHtml from 'sanitize-html';
 import ContactMessage from '@entities/contactMessage.entity';
 import type CreateContactMessageResponse from './dto/createContactMessageResponse.dto';
 import ContactMessageEmailHtml from './utils/contactMessageEmail';
+import ContactMessageConfirmationEmailHtml from './utils/contactMessageConfirmationEmail';
 
 interface ContactMessageInput {
   firstName: string;
@@ -124,6 +125,21 @@ export default class EmailService {
                 `Failed to send contact notification email: ${mailError instanceof Error ? mailError.message : String(mailError)}`,
               );
             }
+          }
+
+          try {
+            await this.sendMail(
+              sanitizedData.email,
+              'We received your message',
+              ContactMessageConfirmationEmailHtml({
+                firstName: sanitizedData.firstName,
+                message: sanitizedData.message,
+              }),
+            );
+          } catch (mailError) {
+            this.logger.error(
+              `Failed to send contact confirmation email: ${mailError instanceof Error ? mailError.message : String(mailError)}`,
+            );
           }
 
           return {
