@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import MailModule from '@modules/mail/mail.module';
+import EmailModule from '@modules/email/email.module';
 import UserModule from '@modules/user/user.module';
 import AuthService from './auth.service';
 import AuthController from './auth.controller';
@@ -20,7 +20,7 @@ import MagicLoginStrategy from './strategies/magic-link.strategy';
       inject: [ConfigService],
     }),
     UserModule,
-    MailModule,
+    EmailModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, MagicLoginStrategy, JwtStrategy],
