@@ -4,6 +4,7 @@ import AnonymizationService from './anonymization.service';
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
 import AnonymizerNotFoundError from './anonymizer-not-found.error';
+import { AnonymizationResult } from './anonymization.types';
 
 describe('AnonymizationService (unit)', () => {
   let service: AnonymizationService;
@@ -44,15 +45,26 @@ describe('AnonymizationService (unit)', () => {
 
   describe('anonymize', () => {
     it('should select the correct anonymizer based on compliance', async () => {
-      mockGdprAnonymizerService.anonymize.mockResolvedValue('gdpr-result');
-      mockHipaaAnonymizerService.anonymize.mockResolvedValue('hipaa-result');
+      const gdprResultData: AnonymizationResult = {
+        originalText: 'text',
+        anonymizedText: 'text',
+        metadata: { entities: [] },
+      };
+      const hipaaResultData: AnonymizationResult = {
+        originalText: 'text',
+        anonymizedText: 'text',
+        metadata: { entities: [] },
+      };
+
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(gdprResultData);
+      mockHipaaAnonymizerService.anonymize.mockResolvedValue(hipaaResultData);
 
       const gdprResult = await service.anonymize(Compliance.GDPR, 'text');
       const hipaaResult = await service.anonymize(Compliance.HIPAA, 'text');
 
-      expect(gdprResult.anonymizedText).toBe('gdpr-result');
+      expect(gdprResult.anonymizedText).toBe('text');
       expect(gdprResult.originalText).toBe('text');
-      expect(hipaaResult.anonymizedText).toBe('hipaa-result');
+      expect(hipaaResult.anonymizedText).toBe('text');
       expect(hipaaResult.originalText).toBe('text');
 
       expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledTimes(1);
@@ -60,7 +72,12 @@ describe('AnonymizationService (unit)', () => {
     });
 
     it('should call only the matching anonymizer', async () => {
-      mockGdprAnonymizerService.anonymize.mockResolvedValue('result');
+      const resultData: AnonymizationResult = {
+        originalText: 'text',
+        anonymizedText: 'text',
+        metadata: { entities: [] },
+      };
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
       await service.anonymize(Compliance.GDPR, 'text');
 
@@ -69,8 +86,13 @@ describe('AnonymizationService (unit)', () => {
     });
 
     it('should pass the exact input text to anonymizer', async () => {
-      const input = 'original text';
-      mockGdprAnonymizerService.anonymize.mockResolvedValue('result');
+      const input = 'text';
+      const resultData: AnonymizationResult = {
+        originalText: input,
+        anonymizedText: 'text',
+        metadata: { entities: [] },
+      };
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
       await service.anonymize(Compliance.GDPR, input);
 
@@ -78,14 +100,16 @@ describe('AnonymizationService (unit)', () => {
     });
 
     it('should return the result from anonymizer', async () => {
-      mockGdprAnonymizerService.anonymize.mockResolvedValue('processed');
+      const resultData: AnonymizationResult = {
+        originalText: 'text',
+        anonymizedText: 'text',
+        metadata: { entities: [] },
+      };
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
       const result = await service.anonymize(Compliance.GDPR, 'text');
 
-      expect(result).toEqual({
-        originalText: 'text',
-        anonymizedText: 'processed',
-      });
+      expect(result).toEqual(resultData);
     });
 
     it('should throw AnonymizerNotFoundError if compliance is invalid', async () => {
@@ -131,19 +155,23 @@ describe('AnonymizationService (unit)', () => {
       expect(result).toEqual({
         originalText: '',
         anonymizedText: '',
+        metadata: { entities: [] },
       });
     });
 
     it('should preserve original text in result', async () => {
-      const originalInput = 'John Doe lives in New York';
-      mockGdprAnonymizerService.anonymize.mockResolvedValue(
-        '[PERSON] lives in [LOCATION]',
-      );
+      const originalInput = 'John Snow lives at The Wall';
+      const resultData: AnonymizationResult = {
+        originalText: originalInput,
+        anonymizedText: '[PERSON] lives at [LOCATION]',
+        metadata: { entities: [] },
+      };
+      mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
       const result = await service.anonymize(Compliance.GDPR, originalInput);
 
       expect(result.originalText).toBe(originalInput);
-      expect(result.anonymizedText).toBe('[PERSON] lives in [LOCATION]');
+      expect(result.anonymizedText).toBe('[PERSON] lives at [LOCATION]');
     });
   });
 });
