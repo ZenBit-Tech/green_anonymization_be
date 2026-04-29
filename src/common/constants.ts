@@ -4,7 +4,7 @@ export const NODE_ENV = {
   PRODUCTION: 'production',
   DEVELOPMENT: 'development',
 };
-export const enum Compliance {
+export enum Compliance {
   GDPR = 'GDPR',
   HIPAA = 'HIPAA',
 }
@@ -20,3 +20,22 @@ export enum JwtTokenType {
 }
 export const PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT = '/anonymize';
 export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';
+
+export enum EntityType {
+  PERSON = 'PERSON',
+  EMAIL_ADDRESS = 'EMAIL_ADDRESS',
+  PHONE_NUMBER = 'PHONE_NUMBER',
+  DATE_TIME = 'DATE_TIME',
+  LOCATION = 'LOCATION',
+  URL = 'URL',
+  US_ITIN = 'US_ITIN',
+  US_BANK_NUMBER = 'US_BANK_NUMBER',
+  US_PASSPORT = 'US_PASSPORT',
+  US_DRIVER_LICENSE = 'US_DRIVER_LICENSE',
+}
+
+export enum Confidence {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+}

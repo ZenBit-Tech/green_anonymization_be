@@ -13,6 +13,7 @@ import EmailModule from '@/modules/email/email.module';
 import AppService from './app.service';
 import AppController from './app.controller';
 import anonymizationConfig from './modules/anonymization/anonymization.config';
+import AnonymizationModule from './modules/anonymization/anonymization.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import anonymizationConfig from './modules/anonymization/anonymization.config';
     MailModule,
     ComplianceModule,
     EmailModule,
+    AnonymizationModule,
   ],
   controllers: [AppController, UserController],
   providers: [

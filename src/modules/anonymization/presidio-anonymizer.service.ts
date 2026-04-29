@@ -9,6 +9,7 @@ import {
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import anonymizationConfig from './anonymization.config';
 import type { AnonymizationConfig } from './anonymization.config';
+import { PresidioEntity, PresidioResult } from './types/presidioResults';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
   complianceName = Compliance.GDPR;
@@ -21,45 +22,55 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
     super();
   }
 
-  async anonymize(text: string): Promise<string> {
-    const analyzerResults = await this.analyze(text);
+  async anonymize(text: string): Promise<PresidioResult> {
+    const entities = await this.analyze(text);
 
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          this.config.presidioAnonymizeUrl.concat(
-            PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT,
-          ),
-          {
-            text,
-            analyzer_results: analyzerResults,
-          },
+    const response = await firstValueFrom(
+      this.httpService.post(
+        this.config.presidioAnonymizeUrl.concat(
+          PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT,
         ),
-      );
-      return response.data.text;
-    } catch (error) {
-      throw new Error('Presidio anonymization failed');
-    }
+        {
+          text,
+          analyzer_results: entities,
+        },
+      ),
+    );
+
+    return {
+      originalText: text,
+      anonymizedText: response.data.text,
+      entities,
+    };
   }
 
-  private async analyze(text: string): Promise<string> {
-    // TODO: Detect language using https://github.com/nitotm/efficient-language-detector-js
-
-    try {
-      const response = await firstValueFrom(
-        this.httpService.post(
-          this.config.presidioAnalyzeUrl.concat(
-            PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT,
-          ),
-          {
-            text,
-            language: 'en',
-          },
+  private async analyze(text: string): Promise<PresidioEntity[]> {
+    const response = await firstValueFrom(
+      this.httpService.post<unknown[]>(
+        this.config.presidioAnalyzeUrl.concat(
+          PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT,
         ),
-      );
-      return response.data;
-    } catch (error) {
-      throw new Error('Presidio analysis failed');
-    }
+        {
+          text,
+          language: 'en',
+        },
+      ),
+    );
+
+    return response.data.map((e) => {
+      const entity = e as {
+        entity_type: string;
+        start: number;
+        end: number;
+        score: number;
+      };
+
+      return {
+        entity_type: entity.entity_type,
+        start: entity.start,
+        end: entity.end,
+        score: entity.score,
+      };
+    });
   }
 }
