@@ -3,13 +3,7 @@ import { Compliance } from '@common/constants';
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
 import AnonymizerNotFoundError from './anonymizer-not-found.error';
-
-export type AnonymizationResult = {
-  originalText: string;
-  anonymizedText: string;
-  // TODO: Add custom metadata type, once the required anonymization entity-related fields are defined
-  // metadata: AnonymizationMetadata;
-};
+import { AnonymizationResult } from './anonymization.types';
 
 export default class AnonymizationService {
   private serviceMap: Map<Compliance, AbstractAnonymizerService>;
@@ -28,6 +22,9 @@ export default class AnonymizationService {
       const emptyAnonymizationResult: AnonymizationResult = {
         originalText: '',
         anonymizedText: '',
+        metadata: {
+          entities: [],
+        },
       };
       return emptyAnonymizationResult;
     }
@@ -38,11 +35,8 @@ export default class AnonymizationService {
       throw new AnonymizerNotFoundError(complianceName);
     }
 
-    const anonymizedText = await service.anonymize(text);
-    const anonymizationResult: AnonymizationResult = {
-      originalText: text,
-      anonymizedText,
-    };
-    return anonymizationResult;
+    const result = await service.anonymize(text);
+
+    return result;
   }
 }

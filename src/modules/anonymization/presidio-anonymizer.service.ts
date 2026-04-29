@@ -9,6 +9,10 @@ import {
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import anonymizationConfig from './anonymization.config';
 import type { AnonymizationConfig } from './anonymization.config';
+import {
+  AnonymizationEntity,
+  AnonymizationResult,
+} from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
   complianceName = Compliance.GDPR;
@@ -21,7 +25,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
     super();
   }
 
-  async anonymize(text: string): Promise<string> {
+  async anonymize(text: string): Promise<AnonymizationResult> {
     const analyzerResults = await this.analyze(text);
 
     try {
@@ -36,7 +40,19 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
           },
         ),
       );
-      return response.data.text;
+
+      const anonymizedText = response.data.text;
+      const entities: AnonymizationEntity[] = response.data.items;
+
+      const result: AnonymizationResult = {
+        originalText: text,
+        anonymizedText,
+        metadata: {
+          entities,
+        },
+      };
+
+      return result;
     } catch (error) {
       throw new Error('Presidio anonymization failed');
     }
