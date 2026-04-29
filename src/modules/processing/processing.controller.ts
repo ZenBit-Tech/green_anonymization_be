@@ -20,18 +20,18 @@ import {
   ApiInternalServerErrorResponse,
 } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
-import ComplianceService from '../compliance/compliance.service';
-import AnonymizationService from './anonymization.service';
-import extractTextFromFile from '../processing/utils/file-text';
-import AnonymizeRequestDto from '../processing/dto/anonymizeRequest.dto';
-import AnonymizeResponseDto from '../processing/dto/anonymizeResponse.dto';
-import mapFramework from '../processing/utils/mapFrameworks';
-import DocumentDto from '../processing/dto/document.dto';
-import EntityDto from '../processing/dto/entity.dto';
+import ComplianceService from '@modules/compliance/compliance.service';
+import AnonymizationService from '@modules/anonymization/anonymization.service';
+import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
+import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
+import extractTextFromFile from './utils/file-text';
+import mapFramework from './utils/mapFrameworks';
+import DocumentDto from './dto/document.dto';
+import EntityDto from './dto/entity.dto';
 
-@ApiTags('Anonymization')
-@Controller('anonymization')
-export default class AnonymizationController {
+@ApiTags('Processing')
+@Controller('processing')
+export default class ProcessingController {
   constructor(
     private readonly anonymizationService: AnonymizationService,
     private readonly complianceService: ComplianceService,

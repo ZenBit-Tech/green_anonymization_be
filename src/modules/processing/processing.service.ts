@@ -1,36 +1,29 @@
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { Compliance } from '@common/constants';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import { DataSource } from 'typeorm';
+import { Compliance } from '@common/constants';
 import Documents from '@common/db/entities/documents.entity';
-import Entities from '@common/db/entities/entities.entity';
-import User from '@common/db/entities/user.entity';
-import AbstractAnonymizerService from './abstract-anonymizer.service';
-import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
-import AnonymizerNotFoundError from './anonymizer-not-found.error';
-import { AnonymizationResult } from '../processing/types/anonymizeResult';
-import mapConfidence from '../processing/utils/mapConfidence';
-import mapEntityType from '../processing/utils/mapEntityType';
-import { PresidioResult } from './types/presidioResults';
+import Entities from '@/common/db/entities/entities.entity';
+import User from '@/common/db/entities/user.entity';
+import { ProcessingResult } from './types/anonymizeResult';
+import mapConfidence from './utils/mapConfidence';
+import mapEntityType from './utils/mapEntityType';
 
 @Injectable()
-export default class AnonymizationService {
-  private serviceMap: Map<Compliance, AbstractAnonymizerService>;
-
+export default class ProcessingService {
   constructor(
-    @Inject(ANONYMIZER_SERVICES_TOKEN) services: AbstractAnonymizerService[],
     private readonly userService: UserService,
     private readonly dataSource: DataSource,
-  ) {
-    this.serviceMap = new Map(services.map((s) => [s.complianceName, s]));
-  }
+    private readonly anonymizationService: AnonymizationService,
+  ) {}
 
-  async anonymize(
+  async process(
     complianceName: Compliance,
     text: string,
     email: string,
     originalFileName?: string,
-  ): Promise<AnonymizationResult> {
+  ): Promise<ProcessingResult> {
     if (text === '') {
       return {
         originalText: '',
@@ -39,19 +32,11 @@ export default class AnonymizationService {
         entities: [],
       };
     }
-
-    const service = this.serviceMap.get(complianceName);
-
-    if (!service) {
-      throw new AnonymizerNotFoundError(complianceName);
-    }
-
-    let result: PresidioResult;
-    try {
-      result = await service.anonymize(text);
-    } catch (err) {
-      throw new BadRequestException(`Anonymization provider failed`);
-    }
+    const anonymizationResult = await this.anonymizationService.anonymize(
+      complianceName,
+      text,
+    );
+    console.log(anonymizationResult);
 
     try {
       return await this.dataSource.transaction(async (manager) => {

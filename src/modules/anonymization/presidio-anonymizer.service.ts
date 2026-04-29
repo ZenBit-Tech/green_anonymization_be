@@ -9,7 +9,7 @@ import {
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import anonymizationConfig from './anonymization.config';
 import type { AnonymizationConfig } from './anonymization.config';
-import { PresidioEntity, PresidioResult } from './types/presidioResults';
+import { PresidioAnalyzeResult, PresidioResult } from './types/presidioResults';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
   complianceName = Compliance.GDPR;
@@ -44,7 +44,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
     };
   }
 
-  private async analyze(text: string): Promise<PresidioEntity[]> {
+  private async analyze(text: string): Promise<PresidioAnalyzeResult> {
     const response = await firstValueFrom(
       this.httpService.post<unknown[]>(
         this.config.presidioAnalyzeUrl.concat(
@@ -65,12 +65,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
         score: number;
       };
 
-      return {
-        entity_type: entity.entity_type,
-        start: entity.start,
-        end: entity.end,
-        score: entity.score,
-      };
+      return entity;
     });
   }
 }
