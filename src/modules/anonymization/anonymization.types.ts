@@ -7,7 +7,6 @@ export type AnonymizationEntity = {
   end: number;
   entity_type: string;
   score: number;
-  analysis_explanation: string | null;
 };
 
 export type AnonymizationResult = {
