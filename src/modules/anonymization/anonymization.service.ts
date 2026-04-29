@@ -11,6 +11,7 @@ import AnonymizerNotFoundError from './anonymizer-not-found.error';
 import { AnonymizationResult } from './types/anonymizeResult';
 import mapConfidence from './utils/mapConfidence';
 import mapEntityType from './utils/mapEntityType';
+import { PresidioResult } from './types/presidioResults';
 
 @Injectable()
 export default class AnonymizationService {
@@ -28,6 +29,7 @@ export default class AnonymizationService {
     complianceName: Compliance,
     text: string,
     email: string,
+    originalFileName?: string,
   ): Promise<AnonymizationResult> {
     if (text === '') {
       return {
@@ -44,45 +46,60 @@ export default class AnonymizationService {
       throw new AnonymizerNotFoundError(complianceName);
     }
 
-    const result = await service.anonymize(text);
-
-    return this.dataSource.transaction(async (manager) => {
-      const user: User | null = await this.userService.findByEmail(email);
-
-      if (!user) {
-        throw new BadRequestException('User not found');
-      }
-
-      const document = manager.create(Documents, {
-        userId: user.uuid,
-        chosenCompliance: complianceName,
-        fileType: 'txt',
-        fileName: `anonymized-${Date.now()}.txt`,
-        filePath: 'cloud/path/placeholder',
-        verifiedAt: new Date(),
-      });
-
-      const savedDocument = await manager.save(document);
-
-      const entityEntities = result.entities.map((e) =>
-        manager.create(Entities, {
-          documentId: savedDocument.id,
-          entityType: mapEntityType(e.entity_type),
-          posStart: e.start,
-          posEnd: e.end,
-          score: e.score,
-          confidence: mapConfidence(e.score),
-        }),
+    let result: PresidioResult;
+    try {
+      result = await service.anonymize(text);
+    } catch (err) {
+      throw new BadRequestException(
+        err?.message || 'Anonymization provider failed',
       );
+    }
 
-      const savedEntities = await manager.save(entityEntities);
+    try {
+      return await this.dataSource.transaction(async (manager) => {
+        const user: User | null = await this.userService.findByEmail(email);
 
-      return {
-        originalText: result.originalText,
-        anonymizedText: result.anonymizedText,
-        document: savedDocument,
-        entities: savedEntities,
-      };
-    });
+        if (!user) {
+          throw new BadRequestException('User not found');
+        }
+
+        const document = manager.create(Documents, {
+          userId: user.uuid,
+          chosenCompliance: complianceName,
+          fileType: 'Medical Record',
+          fileName: originalFileName
+            ? `${originalFileName}-${complianceName}-${Date.now()}`
+            : `${complianceName}-${Date.now()}.txt`,
+          filePath: 'cloud/path/placeholder',
+          verifiedAt: new Date(),
+        });
+
+        const savedDocument = await manager.save(document);
+
+        const entityEntities = result.entities.map((e) =>
+          manager.create(Entities, {
+            documentId: savedDocument.id,
+            entityType: mapEntityType(e.entity_type),
+            posStart: e.start,
+            posEnd: e.end,
+            score: e.score,
+            confidence: mapConfidence(e.score),
+          }),
+        );
+
+        const savedEntities = await manager.save(entityEntities);
+
+        return {
+          originalText: result.originalText,
+          anonymizedText: result.anonymizedText,
+          document: savedDocument,
+          entities: savedEntities,
+        };
+      });
+    } catch (err) {
+      throw new BadRequestException(
+        err?.message || 'Failed to persist anonymization result',
+      );
+    }
   }
 }

@@ -84,35 +84,49 @@ export default class AnonymizationController {
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
-    const selection = await this.complianceService.getSelectionByEmail(email);
+    try {
+      const selection = await this.complianceService.getSelectionByEmail(email);
 
-    if (!selection.frameworkCode) {
-      throw new BadRequestException('No framework selected');
+      if (!selection.frameworkCode) {
+        throw new BadRequestException('No framework selected');
+      }
+
+      let input = '';
+      try {
+        if (file) {
+          input = await extractTextFromFile(file);
+        } else {
+          input = data?.text ?? '';
+        }
+      } catch (err) {
+        throw new BadRequestException('Failed to extract text from input');
+      }
+
+      const result = await this.anonymizationService.anonymize(
+        mapFramework(selection.frameworkCode),
+        input,
+        email,
+        file?.originalname,
+      );
+
+      return {
+        originalText: result.originalText,
+        anonymizedText: result.anonymizedText,
+        document: plainToInstance(DocumentDto, result.document, {
+          excludeExtraneousValues: true,
+        }),
+        entities: plainToInstance(EntityDto, result.entities, {
+          excludeExtraneousValues: true,
+        }),
+      };
+    } catch (err) {
+      if (err instanceof BadRequestException) {
+        throw err;
+      }
+
+      throw new BadRequestException(
+        err?.message || 'Anonymization request failed',
+      );
     }
-
-    let input = '';
-
-    if (file) {
-      input = await extractTextFromFile(file);
-    } else {
-      input = data?.text ?? '';
-    }
-
-    const result = await this.anonymizationService.anonymize(
-      mapFramework(selection.frameworkCode),
-      input,
-      email,
-    );
-
-    return {
-      originalText: result.originalText,
-      anonymizedText: result.anonymizedText,
-      document: plainToInstance(DocumentDto, result.document, {
-        excludeExtraneousValues: true,
-      }),
-      entities: plainToInstance(EntityDto, result.entities, {
-        excludeExtraneousValues: true,
-      }),
-    };
   }
 }
