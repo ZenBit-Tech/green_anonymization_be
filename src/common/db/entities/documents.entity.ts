@@ -8,6 +8,10 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Compliance } from '@common/constants';
+// this is literally how 1:n relations are done in typeorm docs;
+// if that is not correct idk what is
+// and so, eslint can be ignored here
+// eslint-disable-next-line import/no-cycle
 import Entities from './entities.entity';
 
 @Entity({ name: 'documents' })

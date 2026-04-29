@@ -7,6 +7,10 @@ import {
   Index,
 } from 'typeorm';
 import { Confidence, EntityType } from '@common/constants';
+// this is literally how 1:n relations are done in typeorm docs;
+// if that is not correct idk what is
+// and so, eslint can be ignored here
+// eslint-disable-next-line import/no-cycle
 import Documents from './documents.entity';
 
 @Entity({ name: 'entities' })
