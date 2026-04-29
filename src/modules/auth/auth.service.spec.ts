@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
 
 import UserService from '@modules/user/user.service';
-import MailService from '@modules/mail/mail.service';
+import EmailService from '@modules/email/email.service';
 
 import {
   ACCESS_TOKEN_EXPIRATION,
@@ -18,7 +18,7 @@ import AuthService from './auth.service';
 describe('AuthService', () => {
   let service: AuthService;
   let jwtService: jest.Mocked<JwtService>;
-  let mailService: jest.Mocked<MailService>;
+  let mailService: jest.Mocked<EmailService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -38,7 +38,7 @@ describe('AuthService', () => {
           },
         },
         {
-          provide: MailService,
+          provide: EmailService,
           useValue: {
             sendMail: jest.fn().mockResolvedValue(undefined),
           },
@@ -54,7 +54,7 @@ describe('AuthService', () => {
 
     service = module.get<AuthService>(AuthService);
     jwtService = module.get(JwtService);
-    mailService = module.get(MailService);
+    mailService = module.get(EmailService);
 
     jest.clearAllMocks();
   });
