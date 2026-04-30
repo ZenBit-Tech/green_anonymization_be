@@ -1,45 +1,45 @@
-import UserEmail from '@common/utils/decorators/user-email.decorator';
 import {
+  BadRequestException,
+  Body,
   Controller,
   Post,
-  UseInterceptors,
   UploadedFile,
-  Body,
-  BadRequestException,
+  UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiConsumes,
-  ApiBody,
-  ApiResponse,
   ApiBadRequestResponse,
-  ApiNotFoundResponse,
-  ApiUnauthorizedResponse,
+  ApiBody,
+  ApiConsumes,
   ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import ComplianceService from '@modules/compliance/compliance.service';
-import AnonymizationService from '@modules/anonymization/anonymization.service';
-import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
+import UserEmail from '@/common/utils/decorators/user-email.decorator';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { plainToInstance } from 'class-transformer';
 import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
-import extractTextFromFile from './utils/file-text';
-import mapFramework from './utils/mapFrameworks';
+import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
 import DocumentDto from './dto/document.dto';
 import EntityDto from './dto/entity.dto';
+import extractTextFromFile from './utils/file-text';
+import mapFramework from './utils/mapFrameworks';
+import ProcessingService from './processing.service';
 
 @ApiTags('Processing')
 @Controller('processing')
 export default class ProcessingController {
   constructor(
-    private readonly anonymizationService: AnonymizationService,
+    private readonly processingService: ProcessingService,
     private readonly complianceService: ComplianceService,
   ) {}
 
   @ApiOperation({
     summary:
-      'Anonymize medical or sensitive text using selected compliance framework',
+      'Process medical or sensitive text using selected compliance framework and anonymizer',
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -108,7 +108,7 @@ export default class ProcessingController {
       } else {
         throw new BadRequestException('No input provided');
       }
-      const result = await this.anonymizationService.anonymize(
+      const result = await this.processingService.process(
         mapFramework(selection.frameworkCode),
         input,
         email,

@@ -1,14 +1,19 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import { DataSource } from 'typeorm';
-import { Compliance } from '@common/constants';
-import Documents from '@common/db/entities/documents.entity';
+import { Compliance } from '@/common/constants';
+import Documents from '@/common/db/entities/documents.entity';
 import Entities from '@/common/db/entities/entities.entity';
 import User from '@/common/db/entities/user.entity';
 import { ProcessingResult } from './types/anonymizeResult';
 import mapConfidence from './utils/mapConfidence';
 import mapEntityType from './utils/mapEntityType';
+import { AnonymizationResult } from '../anonymization/anonymization.types';
 
 @Injectable()
 export default class ProcessingService {
@@ -32,11 +37,9 @@ export default class ProcessingService {
         entities: [],
       };
     }
-    const anonymizationResult = await this.anonymizationService.anonymize(
-      complianceName,
-      text,
-    );
-    console.log(anonymizationResult);
+
+    const anonymizationResult: AnonymizationResult =
+      await this.anonymizationService.anonymize(complianceName, text);
 
     try {
       return await this.dataSource.transaction(async (manager) => {
@@ -58,8 +61,13 @@ export default class ProcessingService {
         });
 
         const savedDocument = await manager.save(document);
+        if (!anonymizationResult.metadata) {
+          throw new InternalServerErrorException(
+            'No metadata found in anonymization result',
+          );
+        }
 
-        const entityEntities = result.entities.map((e) =>
+        const entities = anonymizationResult?.metadata?.entities.map((e) =>
           manager.create(Entities, {
             documentId: savedDocument.id,
             entityType: mapEntityType(e.entity_type),
@@ -70,11 +78,11 @@ export default class ProcessingService {
           }),
         );
 
-        const savedEntities = await manager.save(entityEntities);
+        const savedEntities = await manager.save(entities);
 
         return {
-          originalText: result.originalText,
-          anonymizedText: result.anonymizedText,
+          originalText: anonymizationResult.originalText,
+          anonymizedText: anonymizationResult.anonymizedText,
           document: savedDocument,
           entities: savedEntities,
         };
