@@ -17,11 +17,11 @@ export default class EntityDto {
 
   @ApiProperty()
   @Expose()
-  posStart: number;
+  start: number;
 
   @ApiProperty()
   @Expose()
-  posEnd: number;
+  end: number;
 
   @ApiProperty()
   @Expose()

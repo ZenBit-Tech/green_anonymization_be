@@ -5,7 +5,6 @@ import AnonymizationService from './anonymization.service';
 import PresidioAnonymizerService from './presidio-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
 import anonymizationConfig from './anonymization.config';
-import AnonymizationController from './anonymizer.controller';
 
 @Module({
   imports: [ConfigModule.forFeature(anonymizationConfig), HttpModule],
@@ -21,6 +20,6 @@ import AnonymizationController from './anonymizer.controller';
     },
   ],
   exports: [AnonymizationService],
-  controllers: [AnonymizationController],
+  controllers: [],
 })
 export default class AnonymizationModule {}

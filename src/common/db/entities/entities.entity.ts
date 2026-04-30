@@ -31,10 +31,10 @@ export default class Entities {
   entityType: EntityType;
 
   @Column({ type: 'int' })
-  posStart: number;
+  start: number;
 
   @Column({ type: 'int' })
-  posEnd: number;
+  end: number;
 
   @Column({ type: 'float' })
   score: number;

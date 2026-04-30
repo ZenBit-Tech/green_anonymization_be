@@ -10,10 +10,10 @@ import { Compliance } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
 import Entities from '@/common/db/entities/entities.entity';
 import User from '@/common/db/entities/user.entity';
+import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
 import { ProcessingResult } from './types/anonymizeResult';
 import mapConfidence from './utils/mapConfidence';
 import mapEntityType from './utils/mapEntityType';
-import { AnonymizationResult } from '../anonymization/anonymization.types';
 
 @Injectable()
 export default class ProcessingService {
@@ -66,14 +66,13 @@ export default class ProcessingService {
             'No metadata found in anonymization result',
           );
         }
-
         const entities = anonymizationResult?.metadata?.entities.map((e) =>
           manager.create(Entities, {
             documentId: savedDocument.id,
             entityType: mapEntityType(e.entity_type),
-            posStart: e.start,
-            posEnd: e.end,
-            score: e.score,
+            start: e.start,
+            end: e.end,
+            score: e.score ?? 0.0,
             confidence: mapConfidence(e.score),
           }),
         );
@@ -88,7 +87,9 @@ export default class ProcessingService {
         };
       });
     } catch (err) {
-      throw new BadRequestException('Failed to persist anonymization result');
+      throw new BadRequestException(
+        `Failed to persist anonymization result, error: ${err}`,
+      );
     }
   }
 }
