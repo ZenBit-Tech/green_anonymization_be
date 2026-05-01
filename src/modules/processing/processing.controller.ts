@@ -4,6 +4,7 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
@@ -28,6 +29,7 @@ import EntityDto from './dto/entity.dto';
 import extractTextFromFile from './utils/file-text';
 import mapFramework from './utils/mapFrameworks';
 import ProcessingService from './processing.service';
+import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('Processing')
 @Controller('processing')
@@ -78,6 +80,7 @@ export default class ProcessingController {
     description: 'Unexpected server error during anonymization process',
   })
   @Post('anonymize')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async anonymize(
     @UserEmail() email: string,
