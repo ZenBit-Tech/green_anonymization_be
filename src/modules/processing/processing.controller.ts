@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  InternalServerErrorException,
   Post,
   UploadedFile,
   UseGuards,
@@ -87,53 +88,47 @@ export default class ProcessingController {
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
+    const selection = await this.complianceService.getSelectionByEmail(email);
+
+    if (!selection.frameworkCode) {
+      throw new BadRequestException('No framework selected');
+    }
+
+    let input: string;
+
+    if (file) {
+      try {
+        input = await extractTextFromFile(file);
+      } catch {
+        throw new BadRequestException('Failed to extract text from file');
+      }
+    } else if (data?.text) {
+      input = data.text;
+    } else {
+      throw new BadRequestException('No input provided');
+    }
+
+    let result;
     try {
-      const selection = await this.complianceService.getSelectionByEmail(email);
-
-      if (!selection.frameworkCode) {
-        throw new BadRequestException('No framework selected');
-      }
-
-      if (!file && !data?.text) {
-        throw new BadRequestException('No input provided');
-      }
-
-      let input: string;
-
-      if (file) {
-        try {
-          input = await extractTextFromFile(file);
-        } catch {
-          throw new BadRequestException('Failed to extract text from file');
-        }
-      } else if (data?.text) {
-        input = data.text;
-      } else {
-        throw new BadRequestException('No input provided');
-      }
-      const result = await this.processingService.process(
+      result = await this.processingService.process(
         mapFramework(selection.frameworkCode),
         input,
         email,
         file?.originalname,
       );
-
-      return {
-        originalText: result.originalText,
-        anonymizedText: result.anonymizedText,
-        document: plainToInstance(DocumentDto, result.document, {
-          excludeExtraneousValues: true,
-        }),
-        entities: plainToInstance(EntityDto, result.entities, {
-          excludeExtraneousValues: true,
-        }),
-      };
     } catch (err) {
-      if (err instanceof BadRequestException) {
-        throw err;
-      }
-
-      throw new BadRequestException('Anonymization request failed');
+      throw new InternalServerErrorException('Anonymization processing failed');
     }
+
+    return plainToInstance(AnonymizeResponseDto, {
+      originalText: result.originalText,
+      anonymizedText: result.anonymizedText,
+      document: plainToInstance(DocumentDto, result.document, {
+        excludeExtraneousValues: true,
+      }),
+      entities: plainToInstance(EntityDto, result.entities, {
+        excludeExtraneousValues: true,
+      }),
+    });
   }
 }

@@ -11,7 +11,7 @@ import Documents from '@/common/db/entities/documents.entity';
 import Entities from '@/common/db/entities/entities.entity';
 import User from '@/common/db/entities/user.entity';
 import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
-import { ProcessingResult } from './types/anonymizeResult';
+import { ProcessingResult } from './types/ProcessingResult';
 import mapConfidence from './utils/mapConfidence';
 import mapEntityType from './utils/mapEntityType';
 
@@ -38,11 +38,11 @@ export default class ProcessingService {
       };
     }
 
-    const anonymizationResult: AnonymizationResult =
-      await this.anonymizationService.anonymize(complianceName, text);
-
     try {
       return await this.dataSource.transaction(async (manager) => {
+        const anonymizationResult: AnonymizationResult =
+          await this.anonymizationService.anonymize(complianceName, text);
+
         const user: User | null = await this.userService.findByEmail(email);
 
         if (!user) {
