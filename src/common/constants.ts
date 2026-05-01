@@ -32,6 +32,7 @@ export enum EntityType {
   US_BANK_NUMBER = 'US_BANK_NUMBER',
   US_PASSPORT = 'US_PASSPORT',
   US_DRIVER_LICENSE = 'US_DRIVER_LICENSE',
+  OTHER = 'OTHER',
 }
 
 export enum Confidence {
