@@ -7,6 +7,7 @@ export const NODE_ENV = {
 export const enum Compliance {
   GDPR = 'GDPR',
   HIPAA = 'HIPAA',
+  FADP = 'FADP',
 }
 
 export const MAGIC_LINK_EXPIRATION = '60m';
