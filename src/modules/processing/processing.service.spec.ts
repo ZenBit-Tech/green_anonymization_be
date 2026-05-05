@@ -1,20 +1,20 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DataSource, EntityManager } from 'typeorm';
-import { Compliance, Confidence, EntityType } from '@common/constants';
+import { Compliance, Confidence, PIIEntityType } from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import User from '@/common/db/entities/user.entity';
 import ProcessingService from './processing.service';
 import { AnonymizationResult } from '../anonymization/anonymization.types';
 import mapConfidence from './utils/mapConfidence';
-import mapEntityType from './utils/mapEntityType';
+import mapPIIEntityType from './utils/mapPIIEntityType';
 
 jest.mock('./utils/mapConfidence');
-jest.mock('./utils/mapEntityType');
+jest.mock('./utils/mapPIIEntityType');
 
 const mockedMapConfidence = jest.mocked(mapConfidence);
-const mockedMapEntityType = jest.mocked(mapEntityType);
+const mockedMapPIIEntityType = jest.mocked(mapPIIEntityType);
 
 describe('ProcessingService', () => {
   let service: ProcessingService;
@@ -65,7 +65,7 @@ describe('ProcessingService', () => {
         originalText: '',
         anonymizedText: '',
         document: null,
-        entities: [],
+        piiEntities: [],
       });
     });
 
@@ -83,7 +83,7 @@ describe('ProcessingService', () => {
       userServiceMock.findByEmail.mockResolvedValue(user);
       anonymizationServiceMock.anonymize.mockResolvedValue(anonymizationResult);
 
-      mockedMapEntityType.mockReturnValue('PERSON' as EntityType);
+      mockedMapPIIEntityType.mockReturnValue('PERSON' as PIIEntityType);
       mockedMapConfidence.mockReturnValue('HIGH' as Confidence);
 
       managerMock.create.mockImplementation((_, data) => ({
@@ -100,12 +100,12 @@ describe('ProcessingService', () => {
       );
 
       expect(managerMock.create).toHaveBeenCalled();
-      expect(mockedMapEntityType).toHaveBeenCalledWith('PERSON');
+      expect(mockedMapPIIEntityType).toHaveBeenCalledWith('PERSON');
       expect(mockedMapConfidence).toHaveBeenCalledWith(0.9);
       expect(result.originalText).toBe('text');
       expect(result.anonymizedText).toBe('anon');
       expect(result.document).toBeDefined();
-      expect(result.entities).toHaveLength(1);
+      expect(result.piiEntities).toHaveLength(1);
     });
 
     it('throws if user not found', async () => {

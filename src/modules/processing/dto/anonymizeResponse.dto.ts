@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import DocumentDto from './document.dto';
-import EntityDto from './entity.dto';
+import PIIEntityDto from './piiEntity.dto';
 
 export default class AnonymizeResponseDto {
   @ApiProperty()
@@ -12,6 +12,6 @@ export default class AnonymizeResponseDto {
   @ApiProperty({ type: DocumentDto })
   document: DocumentDto;
 
-  @ApiProperty({ type: [EntityDto] })
-  entities: EntityDto[];
+  @ApiProperty({ type: [PIIEntityDto] })
+  piiEntities: PIIEntityDto[];
 }

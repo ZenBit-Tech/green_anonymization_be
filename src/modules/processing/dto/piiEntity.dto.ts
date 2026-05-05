@@ -1,8 +1,8 @@
-import { EntityType, Confidence } from '@common/constants';
+import { PIIEntityType, Confidence } from '@common/constants';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 
-export default class EntityDto {
+export default class PIIEntityDto {
   @ApiProperty()
   @Expose()
   id: string;
@@ -11,9 +11,9 @@ export default class EntityDto {
   @Expose()
   documentId: string;
 
-  @ApiProperty({ enum: EntityType })
+  @ApiProperty({ enum: PIIEntityType })
   @Expose()
-  entityType: EntityType;
+  entityType: PIIEntityType;
 
   @ApiProperty()
   @Expose()

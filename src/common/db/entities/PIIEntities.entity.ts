@@ -6,15 +6,12 @@ import {
   ManyToOne,
   Index,
 } from 'typeorm';
-import { Confidence, EntityType } from '@common/constants';
-// this is literally how 1:n relations are done in typeorm docs;
-// if that is not correct idk what is
-// and so, eslint can be ignored here
+import { Confidence, PIIEntityType } from '@common/constants';
 // eslint-disable-next-line import/no-cycle
 import Documents from './documents.entity';
 
-@Entity({ name: 'entities' })
-export default class Entities {
+@Entity({ name: 'PIIEntities' })
+export default class PIIEntities {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -22,13 +19,13 @@ export default class Entities {
   @Column({ type: 'uuid' })
   documentId: string;
 
-  @ManyToOne(() => Documents, (document) => document.entities, {
+  @ManyToOne(() => Documents, (document) => document.piiEntities, {
     onDelete: 'CASCADE',
   })
   document: Documents;
 
-  @Column({ type: 'enum', enum: EntityType })
-  entityType: EntityType;
+  @Column({ type: 'enum', enum: PIIEntityType })
+  entityType: PIIEntityType;
 
   @Column({ type: 'int' })
   start: number;

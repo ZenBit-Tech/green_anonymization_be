@@ -8,12 +8,12 @@ import UserService from '@modules/user/user.service';
 import { DataSource } from 'typeorm';
 import { Compliance } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
-import Entities from '@/common/db/entities/entities.entity';
+import PIIEntities from '@/common/db/entities/PIIEntities.entity';
 import User from '@/common/db/entities/user.entity';
 import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
 import { ProcessingResult } from './types/ProcessingResult';
 import mapConfidence from './utils/mapConfidence';
-import mapEntityType from './utils/mapEntityType';
+import mapPIIEntityType from './utils/mapPIIEntityType';
 
 @Injectable()
 export default class ProcessingService {
@@ -34,7 +34,7 @@ export default class ProcessingService {
         originalText: '',
         anonymizedText: '',
         document: null as unknown as Documents,
-        entities: [],
+        piiEntities: [],
       };
     }
 
@@ -66,10 +66,10 @@ export default class ProcessingService {
             'No metadata found in anonymization result',
           );
         }
-        const entities = anonymizationResult?.metadata?.entities.map((e) =>
-          manager.create(Entities, {
+        const piiEntities = anonymizationResult?.metadata?.entities.map((e) =>
+          manager.create(PIIEntities, {
             documentId: savedDocument.id,
-            entityType: mapEntityType(e.entity_type),
+            entityType: mapPIIEntityType(e.entity_type),
             start: e.start,
             end: e.end,
             score: e.score ?? 0.0,
@@ -77,13 +77,13 @@ export default class ProcessingService {
           }),
         );
 
-        const savedEntities = await manager.save(entities);
+        const savedPIIEntities = await manager.save(piiEntities);
 
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,
           document: savedDocument,
-          entities: savedEntities,
+          piiEntities: savedPIIEntities,
         };
       });
     } catch (err) {

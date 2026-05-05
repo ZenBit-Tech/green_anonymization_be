@@ -26,11 +26,11 @@ import { plainToInstance } from 'class-transformer';
 import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
 import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
 import DocumentDto from './dto/document.dto';
-import EntityDto from './dto/entity.dto';
 import extractTextFromFile from './utils/file-text';
 import mapFramework from './utils/mapFrameworks';
 import ProcessingService from './processing.service';
 import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
+import PIIEntityDto from './dto/piiEntity.dto';
 
 @ApiTags('Processing')
 @Controller('processing')
@@ -126,7 +126,7 @@ export default class ProcessingController {
       document: plainToInstance(DocumentDto, result.document, {
         excludeExtraneousValues: true,
       }),
-      entities: plainToInstance(EntityDto, result.entities, {
+      piiEntities: plainToInstance(PIIEntityDto, result.piiEntities, {
         excludeExtraneousValues: true,
       }),
     });

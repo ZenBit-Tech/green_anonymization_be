@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import ContactMessage from './entities/contactMessage.entity';
 import ComplianceSelection from './entities/compliance-selection.entity';
 import User from './entities/user.entity';
-import Entities from './entities/entities.entity';
+import PIIEntities from './entities/PIIEntities.entity';
 import Documents from './entities/documents.entity';
 
 config();
@@ -39,7 +39,7 @@ const dbConfig = getDatabaseConfig();
 
 export const dataSourceOptions: DataSourceOptions = {
   ...dbConfig,
-  entities: [User, ComplianceSelection, ContactMessage, Documents, Entities],
+  entities: [User, ComplianceSelection, ContactMessage, Documents, PIIEntities],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
   logging: false,
