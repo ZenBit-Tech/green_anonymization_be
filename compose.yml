@@ -1,3 +1,5 @@
+name: green-anonymization-be
+
 services:
   database:
     image: mysql:latest
