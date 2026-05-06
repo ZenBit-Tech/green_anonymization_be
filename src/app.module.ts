@@ -9,6 +9,7 @@ import ComplianceModule from '@modules/compliance/compliance.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import EmailModule from '@/modules/email/email.module';
+import AnalyticsModule from '@modules/analytics/analytics.module';
 import AppService from './app.service';
 import AppController from './app.controller';
 import anonymizationConfig from './modules/anonymization/anonymization.config';
@@ -30,6 +31,7 @@ import anonymizationConfig from './modules/anonymization/anonymization.config';
     AuthModule,
     ComplianceModule,
     EmailModule,
+    AnalyticsModule,
   ],
   controllers: [AppController, UserController],
   providers: [
