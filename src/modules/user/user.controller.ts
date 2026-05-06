@@ -20,8 +20,8 @@ import {
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { Throttle } from '@nestjs/throttler';
-import UserEmail from '@/common/utils/decorators/user-email.decorator';
-import User from '@/common/db/entities/user.entity';
+import UserEmail from '@common/utils/decorators/user-email.decorator';
+import User from '@common/db/entities/user.entity';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';

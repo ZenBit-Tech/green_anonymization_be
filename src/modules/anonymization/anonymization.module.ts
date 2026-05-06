@@ -20,5 +20,6 @@ import anonymizationConfig from './anonymization.config';
     },
   ],
   exports: [AnonymizationService],
+  controllers: [],
 })
 export default class AnonymizationModule {}
