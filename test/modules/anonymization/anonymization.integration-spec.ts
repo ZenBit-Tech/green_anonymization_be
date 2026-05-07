@@ -11,6 +11,7 @@ import runPersonTestsGDPR from './run-person-tests.gdpr';
 import runBiometricTestsGDPR from './run-biometric-tests.gdpr';
 import runContactTestsGDPR from './run-contact-tests.gdpr';
 import runDateTimeTestsGDPR from './run-date-time-tests.gdpr';
+import runFinancialTestsGDPR from './run-financial-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -126,18 +127,6 @@ describe('Anonymization (integration)', () => {
 
       const regex =
         /^My passport number is <[^>]+>, though some forms list it as <[^>]+> or just <[^>]+> with prefix <[^>]+>, and my internal ID is <[^>]+>, sometimes shortened to <[^>]+> or written as <[^>]+>\.$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize FINANCIAL correctly', async () => {
-      const input =
-        'My card number used to be 1234 5678 9012 3456, sometimes written as 1234567890123456, and occasionally only shown as **** **** **** 3456, while my bank account might appear as UA123456789012345678901234567 or shortened in different systems.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My card number used to be <[^>]+>, sometimes written as <[^>]+>, and occasionally only shown as <[^>]+>, while my bank account might appear as <[^>]+> or shortened in different systems\.$/;
 
       expect(result.anonymizedText).toMatch(regex);
     });
@@ -264,36 +253,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(/^Token \{<[^>]+>\}\.$/);
     });
 
-    it('should anonymize: credit card (4111 1111 8294 1111)', async () => {
-      const input = 'Card: 4111 1111 8294 1111.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Card: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: IBAN (DE89 3704 0044 0532 0130 00)', async () => {
-      const input = 'IBAN: DE89 3704 0044 0532 0130 00.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^IBAN: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: account number (001-234567-89)', async () => {
-      const input = 'Account No: 001-234567-89.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Account No: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: SWIFT (BOFAUS3NXXX)', async () => {
-      const input = 'SWIFT: BOFAUS3NXXX.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^SWIFT: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: not sufficiently masked card (**** 99** 8893 1234)', async () => {
-      const input = 'Card ending **** 99** 8893 1234.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Card ending <[^>]+>\.$/);
-    });
-
     it('should anonymize: public IP (8.8.8.8)', async () => {
       const input = 'IP is 8.8.8.8.';
       const result = await service.anonymize(Compliance.GDPR, input);
@@ -394,6 +353,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runFinancialTestsGDPR(() => service);
     runDateTimeTestsGDPR(() => service);
     runContactTestsGDPR(() => service);
     runBiometricTestsGDPR(() => service);
