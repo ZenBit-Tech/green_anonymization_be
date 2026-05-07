@@ -10,6 +10,7 @@ import runLocationTestsGDPR from './run-location-tests.gdpr';
 import runPersonTestsGDPR from './run-person-tests.gdpr';
 import runBiometricTestsGDPR from './run-biometric-tests.gdpr';
 import runContactTestsGDPR from './run-contact-tests.gdpr';
+import runDateTimeTestsGDPR from './run-date-time-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -113,18 +114,6 @@ describe('Anonymization (integration)', () => {
 
       const regex =
         /^I work at <[^>]+>, or sometimes we shorten it to <[^>]+>, though legally it's registered as <[^>]+>, and internally we refer to it as “<[^>]+>” or just “<[^>]+>.”$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize DATE/TIME correctly', async () => {
-      const input =
-        'I was born on January 5th, 2001, or 05/01/2001 depending on the format, sometime around 3:45 PM, though my records also show 15:45 or even just “early afternoon Q1 2001.”';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^I was born on <[^>]+>, or <[^>]+> depending on the format, sometime <[^>]+>, though my records also show <[^>]+> or even just “<[^>]+>.”$/;
 
       expect(result.anonymizedText).toMatch(regex);
     });
@@ -243,42 +232,6 @@ describe('Anonymization (integration)', () => {
       const input = 'Freelancing via ACME Corp.';
       const result = await service.anonymize(Compliance.GDPR, input);
       expect(result.anonymizedText).toMatch(/^Freelancing via <[^>]+>\.$/);
-    });
-
-    it('should anonymize: 11:59 PM', async () => {
-      const input = 'Meeting at 11:59 PM.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Meeting at <[^>]+>\.$/);
-    });
-
-    it('should anonymize: 12/31/2024', async () => {
-      const input = 'Meeting on 12/31/2024.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Meeting on <[^>]+>\.$/);
-    });
-
-    it('should anonymize: CET format (31.12.2024 23:59 CET)', async () => {
-      const input = 'Event: 31.12.2024 23:59 CET.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Event: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: ISO datetime (2024-12-31T23:59:00+09:00)', async () => {
-      const input = 'Scheduled for 2024-12-31T23:59:00+09:00.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Scheduled for <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Hijri date (1446-09-01)', async () => {
-      const input = 'Date is 1446-09-01 (Hijri).';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Date is <[^>]+> \(Hijri\)\.$/);
-    });
-
-    it('should anonymize: UTC offset time (10:30 UTC+5:30)', async () => {
-      const input = 'Happening at 10:30 UTC+5:30.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Happening at <[^>]+>\.$/);
     });
 
     it('should anonymize: ID (AB-123456)', async () => {
@@ -441,6 +394,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runDateTimeTestsGDPR(() => service);
     runContactTestsGDPR(() => service);
     runBiometricTestsGDPR(() => service);
     runLocationTestsGDPR(() => service);
