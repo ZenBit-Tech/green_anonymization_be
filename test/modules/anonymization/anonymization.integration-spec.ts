@@ -14,6 +14,7 @@ import runDateTimeTestsGDPR from './run-date-time-tests.gdpr';
 import runFinancialTestsGDPR from './run-financial-tests.gdpr';
 import runIdentifierTestsGDPR from './run-identifier-tests.gdpr';
 import runMedicalTestsGDPR from './run-medical-tests.gdpr';
+import runOnlineIdentifierTestsGDPR from './run-online-identifier-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -121,18 +122,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(regex);
     });
 
-    it('should anonymize ONLINE IDENTIFIERS correctly', async () => {
-      const input =
-        'My IP could be 192.168.1.1 locally, or 203.0.113.45 externally, sometimes logged as 203.0.113.xxx, and my device might appear as iPhone-13-Alex, Alex’s iPhone, or device ID A1B2C3D4.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My IP could be <[^>]+> locally, or <[^>]+> externally, sometimes logged as <[^>]+>, and my device might appear as <[^>]+>, <[^>]+>, or device ID <[^>]+>\.$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
     it('should anonymize FREE TEXT correctly', async () => {
       const input =
         'In my notes I might write something like “Hey this is Alex from Cherkasy, email me at alex.petrenko@gmail.com if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together.';
@@ -201,36 +190,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(/^Freelancing via <[^>]+>\.$/);
     });
 
-    it('should anonymize: public IP (8.8.8.8)', async () => {
-      const input = 'IP is 8.8.8.8.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^IP is <[^>]+>\.$/);
-    });
-
-    it('should anonymize: private IP (192.168.0.1)', async () => {
-      const input = 'Local IP 192.168.0.1 used.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Local IP <[^>]+> used\.$/);
-    });
-
-    it('should anonymize: device (Samsung-Galaxy-S21)', async () => {
-      const input = 'Device: Samsung-Galaxy-S21.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Device: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: IPv6 (fe80::1ff:fe23:4567:890a)', async () => {
-      const input = 'Session from fe80::1ff:fe23:4567:890a.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Session from <[^>]+>\.$/);
-    });
-
-    it('should anonymize: user agent ID (UA-123456-7)', async () => {
-      const input = 'User agent ID UA-123456-7.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^User agent ID <[^>]+>\.$/);
-    });
-
     it('should anonymize: Alex Paris and alex@mail.com', async () => {
       const input = 'Hi I am Alex from Paris, email alex@mail.com.';
       const result = await service.anonymize(Compliance.GDPR, input);
@@ -271,6 +230,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runOnlineIdentifierTestsGDPR(() => service);
     runMedicalTestsGDPR(() => service);
     runIdentifierTestsGDPR(() => service);
     runFinancialTestsGDPR(() => service);
