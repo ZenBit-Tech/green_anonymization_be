@@ -13,6 +13,7 @@ import runContactTestsGDPR from './run-contact-tests.gdpr';
 import runDateTimeTestsGDPR from './run-date-time-tests.gdpr';
 import runFinancialTestsGDPR from './run-financial-tests.gdpr';
 import runIdentifierTestsGDPR from './run-identifier-tests.gdpr';
+import runMedicalTestsGDPR from './run-medical-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -132,18 +133,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(regex);
     });
 
-    it('should anonymize MEDICAL DATA correctly', async () => {
-      const input =
-        'My records mention Type 1 diabetes, sometimes written as T1D, insulin-dependent diabetes mellitus, or just “chronic condition,” with notes about blood glucose levels like 5.6 mmol/L or “within normal range.”';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My records mention <[^>]+>, sometimes written as <[^>]+>, <[^>]+>, or just “<[^>]+>,” with notes about blood glucose levels like <[^>]+> or “<[^>]+>.”$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
     it('should anonymize FREE TEXT correctly', async () => {
       const input =
         'In my notes I might write something like “Hey this is Alex from Cherkasy, email me at alex.petrenko@gmail.com if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together.';
@@ -242,36 +231,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(/^User agent ID <[^>]+>\.$/);
     });
 
-    it('should anonymize: diabetes', async () => {
-      const input = 'Patient has diabetes.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Patient has <[^>]+>\.$/);
-    });
-
-    it('should anonymize: hypertension stage 2', async () => {
-      const input = 'Diagnosed with hypertension stage 2.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Diagnosed with <[^>]+>\.$/);
-    });
-
-    it('should anonymize: COVID-19 positive', async () => {
-      const input = 'Condition: COVID-19 positive.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Condition: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: glucose (7.8 mmol/L)', async () => {
-      const input = 'Glucose level 7.8 mmol/L.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Glucose level <[^>]+>\.$/);
-    });
-
-    it('should anonymize: asthma', async () => {
-      const input = 'History of asthma.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^History of <[^>]+>\.$/);
-    });
-
     it('should anonymize: Alex Paris and alex@mail.com', async () => {
       const input = 'Hi I am Alex from Paris, email alex@mail.com.';
       const result = await service.anonymize(Compliance.GDPR, input);
@@ -312,6 +271,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runMedicalTestsGDPR(() => service);
     runIdentifierTestsGDPR(() => service);
     runFinancialTestsGDPR(() => service);
     runDateTimeTestsGDPR(() => service);
