@@ -6,6 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import anonymizationConfig from '../../../src/modules/anonymization/anonymization.config';
 import PresidioAnonymizerService from '../../../src/modules/anonymization/presidio-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from '../../../src/modules/anonymization/anonymizer-services.token';
+import { runLocationTestsGDPR } from './run-location-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -115,18 +116,6 @@ describe('Anonymization (integration)', () => {
 
       const regex =
         /^My name is <[^>]+>, but some people call me <[^>]+>, others write <[^>]+> or even <[^>]+>, while my mom <[^>]+> \(sometimes <[^>]+> after marriage\) still signs as <[^>]+> in some documents\.$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize LOCATION correctly', async () => {
-      const input =
-        'I live in Ukraine, in Cherkasy region, near a small village called Verbivka, although I used to say I’m from Central Europe, then Eastern Europe, and sometimes just “near Kyiv” even though it’s actually a few hours away.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^I live in <[^>]+>, in <[^>]+> region, near a small village called <[^>]+>, although I used to say I’m from <[^>]+>, then <[^>]+>, and sometimes just “near <[^>]+>” even though it’s actually <[^>]+> away\.$/;
 
       expect(result.anonymizedText).toMatch(regex);
     });
@@ -296,14 +285,6 @@ describe('Anonymization (integration)', () => {
       const result = await service.anonymize(Compliance.GDPR, input);
       expect(result.anonymizedText).toMatch(
         /^I moved from <[^>]+> to <[^>]+>\.$/,
-      );
-    });
-
-    it('should anonymize: Iceland', async () => {
-      const input = 'Based somewhere in rural Iceland.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(
-        /^Based somewhere in rural <[^>]+>\.$/,
       );
     });
 
@@ -592,6 +573,8 @@ describe('Anonymization (integration)', () => {
         /^Ping <[^>]+> in <[^>]+> at <[^>]+>\.$/,
       );
     });
+
+    runLocationTestsGDPR(() => service);
 
     testIdempotency(Compliance.GDPR, textLong);
     testPerformance(Compliance.GDPR, textArrayShort);
