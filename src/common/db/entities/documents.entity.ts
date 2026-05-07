@@ -21,7 +21,7 @@ export default class Documents {
   userId: string = '';
 
   @Column({ type: 'enum', enum: Compliance })
-  chosenCompliance: Compliance = Compliance.GDPR;
+  chosenCompliance!: Compliance;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   fileType?: string;
