@@ -15,6 +15,7 @@ import runFinancialTestsGDPR from './run-financial-tests.gdpr';
 import runIdentifierTestsGDPR from './run-identifier-tests.gdpr';
 import runMedicalTestsGDPR from './run-medical-tests.gdpr';
 import runOnlineIdentifierTestsGDPR from './run-online-identifier-tests.gdpr';
+import runOrganizationTestsGDPR from './run-organization-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -110,18 +111,6 @@ describe('Anonymization (integration)', () => {
       expect(result).toBeDefined();
     });
 
-    it('should anonymize ORGANIZATION correctly', async () => {
-      const input =
-        "I work at Global Tech Solutions LLC, or sometimes we shorten it to GTS, though legally it's registered as Global Tech Solutions Limited, and internally we refer to it as “the Group” or just “Head Office.”";
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^I work at <[^>]+>, or sometimes we shorten it to <[^>]+>, though legally it's registered as <[^>]+>, and internally we refer to it as “<[^>]+>” or just “<[^>]+>.”$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
     it('should anonymize FREE TEXT correctly', async () => {
       const input =
         'In my notes I might write something like “Hey this is Alex from Cherkasy, email me at alex.petrenko@gmail.com if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together.';
@@ -158,36 +147,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(
         /^I moved from <[^>]+> to <[^>]+>\.$/,
       );
-    });
-
-    it('should anonymize: Google', async () => {
-      const input = 'I work at Google.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^I work at <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Tata Consultancy Services', async () => {
-      const input = 'Employed by Tata Consultancy Services.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Employed by <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Aramco (Arabic organization)', async () => {
-      const input = 'Working for Aramco.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Working for <[^>]+>\.$/);
-    });
-
-    it('should anonymize: NHS UK', async () => {
-      const input = 'At NHS UK currently.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^At <[^>]+> currently\.$/);
-    });
-
-    it('should anonymize: ACME Corp', async () => {
-      const input = 'Freelancing via ACME Corp.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Freelancing via <[^>]+>\.$/);
     });
 
     it('should anonymize: Alex Paris and alex@mail.com', async () => {
@@ -230,6 +189,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runOrganizationTestsGDPR(() => service);
     runOnlineIdentifierTestsGDPR(() => service);
     runMedicalTestsGDPR(() => service);
     runIdentifierTestsGDPR(() => service);
