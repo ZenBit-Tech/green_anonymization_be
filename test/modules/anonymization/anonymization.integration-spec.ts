@@ -8,6 +8,7 @@ import PresidioAnonymizerService from '../../../src/modules/anonymization/presid
 import ANONYMIZER_SERVICES_TOKEN from '../../../src/modules/anonymization/anonymizer-services.token';
 import runLocationTestsGDPR from './run-location-tests.gdpr';
 import runPersonTestsGDPR from './run-person-tests.gdpr';
+import runBiometricTestsGDPR from './run-biometric-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -183,18 +184,6 @@ describe('Anonymization (integration)', () => {
 
       const regex =
         /^My records mention <[^>]+>, sometimes written as <[^>]+>, <[^>]+>, or just “<[^>]+>,” with notes about blood glucose levels like <[^>]+> or “<[^>]+>.”$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize BIOMETRIC correctly', async () => {
-      const input =
-        'My profile includes a face image file IMG_20230101_123456.jpg, a facial embedding vector [0.123, -0.987, 0.456, ...], fingerprint template FMR-1234-5678-ABCD, and retina scan ID RET-99887766, all linked to biometric record BIO-ID-445566.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My profile includes a face image file <[^>]+>, a facial embedding vector <[^>]+>, fingerprint template <[^>]+>, and retina scan <[^>]+>, all linked to biometric record <[^>]+>\.$/;
 
       expect(result.anonymizedText).toMatch(regex);
     });
@@ -453,36 +442,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(/^History of <[^>]+>\.$/);
     });
 
-    it('should anonymize: fingerprint (FMR-9988-7766)', async () => {
-      const input = 'Fingerprint ID FMR-9988-7766.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Fingerprint ID <[^>]+>\.$/);
-    });
-
-    it('should anonymize: face vector ([0.12, 0.98, -0.45])', async () => {
-      const input = 'Face ID vector [0.12, 0.98, -0.45].';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Face ID vector <[^>]+>\.$/);
-    });
-
-    it('should anonymize: retina (RET-123456)', async () => {
-      const input = 'Retina scan RET-123456.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Retina scan <[^>]+>\.$/);
-    });
-
-    it('should anonymize: voiceprint (VP-ABC-999)', async () => {
-      const input = 'Voiceprint hash VP-ABC-999.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Voiceprint hash <[^>]+>\.$/);
-    });
-
-    it('should anonymize: biometric record (BIO-777888)', async () => {
-      const input = 'Biometric record BIO-777888.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Biometric record <[^>]+>\.$/);
-    });
-
     it('should anonymize: Alex Paris and alex@mail.com', async () => {
       const input = 'Hi I am Alex from Paris, email alex@mail.com.';
       const result = await service.anonymize(Compliance.GDPR, input);
@@ -523,6 +482,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runBiometricTestsGDPR(() => service);
     runLocationTestsGDPR(() => service);
     runPersonTestsGDPR(() => service);
 
