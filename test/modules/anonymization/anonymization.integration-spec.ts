@@ -7,6 +7,7 @@ import anonymizationConfig from '../../../src/modules/anonymization/anonymizatio
 import PresidioAnonymizerService from '../../../src/modules/anonymization/presidio-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from '../../../src/modules/anonymization/anonymizer-services.token';
 import runLocationTestsGDPR from './run-location-tests.gdpr';
+import runPersonTestsGDPR from './run-person-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -100,18 +101,6 @@ describe('Anonymization (integration)', () => {
     it('should handle GDPR compliance', async () => {
       const result = await service.anonymize(Compliance.GDPR, textShort);
       expect(result).toBeDefined();
-    });
-
-    it('should anonymize PERSON correctly', async () => {
-      const input =
-        'My name is Alexander Ivan Petrenko, but some people call me Alex, others write A. Petrenko or even Oleksandr I. Petrenko, while my mom Maria Kovalchuk (sometimes Maria Petrenko after marriage) still signs as M. Kovalchuk-Petrenko in some documents.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My name is <[^>]+>, but some people call me <[^>]+>, others write <[^>]+> or even <[^>]+>, while my mom <[^>]+> \(sometimes <[^>]+> after marriage\) still signs as <[^>]+> in some documents\.$/;
-
-      expect(result.anonymizedText).toMatch(regex);
     });
 
     it('should anonymize ORGANIZATION correctly', async () => {
@@ -220,40 +209,6 @@ describe('Anonymization (integration)', () => {
         /^In my notes I might write something like “Hey this is <[^>]+> from <[^>]+>, email me at <[^>]+> if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together\.$/;
 
       expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize: John Smith', async () => {
-      const input = 'Hi, I am John Smith.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Hi, I am <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Wei Zhang', async () => {
-      const input = 'My name is Wei Zhang and I live here.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(
-        /^My name is <[^>]+> and I live here\.$/,
-      );
-    });
-
-    it('should anonymize: Arabic name', async () => {
-      const input = 'This is Ahmed Mohamed speaking.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^This is <[^>]+> speaking\.$/);
-    });
-
-    it('should anonymize: Jean-Luc Picard', async () => {
-      const input = 'I am Jean-Luc Picard, nice to meet you.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(
-        /^I am <[^>]+>, nice to meet you\.$/,
-      );
-    });
-
-    it('should anonymize: María-José Carreño Quiñones', async () => {
-      const input = 'Call me María-José Carreño Quiñones.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Call me <[^>]+>\.$/);
     });
 
     it('should anonymize: Tokyo', async () => {
@@ -569,6 +524,7 @@ describe('Anonymization (integration)', () => {
     });
 
     runLocationTestsGDPR(() => service);
+    runPersonTestsGDPR(() => service);
 
     testIdempotency(Compliance.GDPR, textLong);
     testPerformance(Compliance.GDPR, textArrayShort);
