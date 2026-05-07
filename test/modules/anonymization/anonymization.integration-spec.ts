@@ -9,6 +9,7 @@ import ANONYMIZER_SERVICES_TOKEN from '../../../src/modules/anonymization/anonym
 import runLocationTestsGDPR from './run-location-tests.gdpr';
 import runPersonTestsGDPR from './run-person-tests.gdpr';
 import runBiometricTestsGDPR from './run-biometric-tests.gdpr';
+import runContactTestsGDPR from './run-contact-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -124,18 +125,6 @@ describe('Anonymization (integration)', () => {
 
       const regex =
         /^I was born on <[^>]+>, or <[^>]+> depending on the format, sometime <[^>]+>, though my records also show <[^>]+> or even just “<[^>]+>.”$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
-    it('should anonymize CONTACT correctly', async () => {
-      const input =
-        'You can reach me at alex.petrenko@gmail.com, or a.petrenko@workmail.co, and sometimes I still use my old address alexp01@yahoo.com, while my phone could be +380501234567, (050) 123-45-67, or even written as 0501234567.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^You can reach me at <[^>]+>, or <[^>]+>, and sometimes I still use my old address <[^>]+>, while my phone could be <[^>]+>, <[^>]+>, or even written as <[^>]+>\.$/;
 
       expect(result.anonymizedText).toMatch(regex);
     });
@@ -290,36 +279,6 @@ describe('Anonymization (integration)', () => {
       const input = 'Happening at 10:30 UTC+5:30.';
       const result = await service.anonymize(Compliance.GDPR, input);
       expect(result.anonymizedText).toMatch(/^Happening at <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Gmail alias (test.user+alias@gmail.com)', async () => {
-      const input = 'Email me at test.user+alias@gmail.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Email me at <[^>]+>\.$/);
-    });
-
-    it('should anonymize: Proton email (user_name123@proton.me)', async () => {
-      const input = 'Reach out: user_name123@proton.me';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Reach out: <[^>]+>$/);
-    });
-
-    it('should anonymize: US phone (+1 (555) 123-4567)', async () => {
-      const input = 'Phone: +1 (555) 123-4567';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Phone: <[^>]+>$/);
-    });
-
-    it('should anonymize: UK phone (0044 20 7946 0958)', async () => {
-      const input = 'Alt: 0044 20 7946 0958';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Alt: <[^>]+>$/);
-    });
-
-    it('should anonymize: Telegram username (@cool_user_99)', async () => {
-      const input = 'Telegram: @cool_user_99';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Telegram: <[^>]+>$/);
     });
 
     it('should anonymize: ID (AB-123456)', async () => {
@@ -482,6 +441,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runContactTestsGDPR(() => service);
     runBiometricTestsGDPR(() => service);
     runLocationTestsGDPR(() => service);
     runPersonTestsGDPR(() => service);
