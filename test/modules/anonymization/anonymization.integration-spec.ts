@@ -12,6 +12,7 @@ import runBiometricTestsGDPR from './run-biometric-tests.gdpr';
 import runContactTestsGDPR from './run-contact-tests.gdpr';
 import runDateTimeTestsGDPR from './run-date-time-tests.gdpr';
 import runFinancialTestsGDPR from './run-financial-tests.gdpr';
+import runIdentifierTestsGDPR from './run-identifier-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
@@ -119,18 +120,6 @@ describe('Anonymization (integration)', () => {
       expect(result.anonymizedText).toMatch(regex);
     });
 
-    it('should anonymize IDENTIFIERS correctly', async () => {
-      const input =
-        'My passport number is AB123456, though some forms list it as AB-123456 or just 123456 with prefix AB, and my internal ID is 000987654, sometimes shortened to 987654 or written as ID#987654.';
-
-      const result = await service.anonymize(Compliance.GDPR, input);
-
-      const regex =
-        /^My passport number is <[^>]+>, though some forms list it as <[^>]+> or just <[^>]+> with prefix <[^>]+>, and my internal ID is <[^>]+>, sometimes shortened to <[^>]+> or written as <[^>]+>\.$/;
-
-      expect(result.anonymizedText).toMatch(regex);
-    });
-
     it('should anonymize ONLINE IDENTIFIERS correctly', async () => {
       const input =
         'My IP could be 192.168.1.1 locally, or 203.0.113.45 externally, sometimes logged as 203.0.113.xxx, and my device might appear as iPhone-13-Alex, Alex’s iPhone, or device ID A1B2C3D4.';
@@ -221,36 +210,6 @@ describe('Anonymization (integration)', () => {
       const input = 'Freelancing via ACME Corp.';
       const result = await service.anonymize(Compliance.GDPR, input);
       expect(result.anonymizedText).toMatch(/^Freelancing via <[^>]+>\.$/);
-    });
-
-    it('should anonymize: ID (AB-123456)', async () => {
-      const input = 'ID: AB-123456.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^ID: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: reference number (XYZ-999-888)', async () => {
-      const input = 'Ref number (XYZ-999-888).';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Ref number \(<[^>]+>\)\.$/);
-    });
-
-    it('should anonymize: user ID (ID:778899)', async () => {
-      const input = 'User ID [ID:778899].';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^User ID \[<[^>]+>\]\.$/);
-    });
-
-    it('should anonymize: code (12-34-56-78)', async () => {
-      const input = 'Code: 12-34-56-78.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Code: <[^>]+>\.$/);
-    });
-
-    it('should anonymize: token ({A1B2-C3D4})', async () => {
-      const input = 'Token {A1B2-C3D4}.';
-      const result = await service.anonymize(Compliance.GDPR, input);
-      expect(result.anonymizedText).toMatch(/^Token \{<[^>]+>\}\.$/);
     });
 
     it('should anonymize: public IP (8.8.8.8)', async () => {
@@ -353,6 +312,7 @@ describe('Anonymization (integration)', () => {
       );
     });
 
+    runIdentifierTestsGDPR(() => service);
     runFinancialTestsGDPR(() => service);
     runDateTimeTestsGDPR(() => service);
     runContactTestsGDPR(() => service);
