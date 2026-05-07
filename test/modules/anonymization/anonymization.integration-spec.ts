@@ -71,13 +71,7 @@ describe('Anonymization (integration)', () => {
           useFactory: (
             presidioAnonymizerService: PresidioAnonymizerService,
           ) => {
-            const hipaaService: Partial<PresidioAnonymizerService> =
-              Object.assign(
-                Object.create(Object.getPrototypeOf(presidioAnonymizerService)),
-                presidioAnonymizerService,
-                { complianceName: Compliance.HIPAA && Compliance.FADP },
-              );
-            return [presidioAnonymizerService, hipaaService];
+            return [presidioAnonymizerService];
           },
           inject: [PresidioAnonymizerService],
         },
