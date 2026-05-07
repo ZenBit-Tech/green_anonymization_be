@@ -1,9 +1,7 @@
 import { Compliance } from '../../../src/common/constants';
 import AnonymizationService from '../../../src/modules/anonymization/anonymization.service';
 
-export const runLocationTestsGDPR = (
-  getService: () => AnonymizationService,
-) => {
+const runLocationTestsGDPR = (getService: () => AnonymizationService) => {
   describe('GDPR locations anonymization', () => {
     let service: AnonymizationService;
 

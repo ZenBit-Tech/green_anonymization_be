@@ -6,7 +6,7 @@ import { HttpModule } from '@nestjs/axios';
 import anonymizationConfig from '../../../src/modules/anonymization/anonymization.config';
 import PresidioAnonymizerService from '../../../src/modules/anonymization/presidio-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from '../../../src/modules/anonymization/anonymizer-services.token';
-import { runLocationTestsGDPR } from './run-location-tests.gdpr';
+import runLocationTestsGDPR from './run-location-tests.gdpr';
 
 describe('Anonymization (integration)', () => {
   let module: TestingModule;
