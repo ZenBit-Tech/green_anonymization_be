@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class TrendsDto {
+export default class TrendsResponseDto {
   @ApiProperty({
     nullable: true,
     description: '% change vs previous month. null if no prior data',

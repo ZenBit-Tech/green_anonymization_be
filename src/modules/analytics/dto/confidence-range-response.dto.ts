@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class ConfidenceRangeDto {
+export default class ConfidenceRangeResponseDto {
   @ApiProperty({
     description: 'Score bucket: 90-100 | 80-90 | 70-80 | 60-70 | <60',
   })

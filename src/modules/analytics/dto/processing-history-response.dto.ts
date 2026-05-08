@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class ProcessingHistoryDto {
+export default class ProcessingHistoryResponseDto {
   @ApiProperty({ description: 'Date in YYYY-MM-DD format' })
   date: string = '';
 

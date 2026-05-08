@@ -1,6 +1,7 @@
 import {
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,13 +10,6 @@ import Documents from '@common/db/entities/documents.entity';
 import PIIEntities from '@common/db/entities/PIIEntities.entity';
 import UserService from '@modules/user/user.service';
 import { YEAR_MONTH_FORMAT } from '@common/constants';
-import DashboardDto from './dto/dashboard.dto';
-import DashboardStatsDto from './dto/dashboard-stats.dto';
-import EntityTypeStatDto from './dto/entity-type-stat.dto';
-import ComplianceUsageDto from './dto/compliance-usage.dto';
-import ProcessingHistoryDto from './dto/processing-history.dto';
-import ConfidenceRangeDto from './dto/confidence-range.dto';
-import RecentActivityDto from './dto/recent-activity.dto';
 import {
   ANALYTICS_DEFAULT_SUCCESS_RATE,
   ANALYTICS_HISTORY_DAYS,
@@ -33,9 +27,20 @@ import {
   CONFIDENCE_SCORE_MEDIUM,
   CONFIDENCE_SCORE_MEDIUM_HIGH,
 } from './constants/analytics.constants';
+import {
+  ComplianceUsageData,
+  ConfidenceRangeData,
+  DashboardData,
+  EntityTypeData,
+  ProcessingHistoryData,
+  RecentActivityData,
+  StatsData,
+} from './types/dashboard-data.types';
 
 @Injectable()
 export default class AnalyticsService {
+  private readonly logger = new Logger(AnalyticsService.name);
+
   constructor(
     @InjectRepository(Documents)
     private readonly documentsRepo: Repository<Documents>,
@@ -44,45 +49,77 @@ export default class AnalyticsService {
     private readonly userService: UserService,
   ) {}
 
-  async getDashboard(email: string): Promise<DashboardDto> {
-    try {
-      const user = await this.userService.findByEmail(email);
-      if (!user) throw new NotFoundException('User not found');
+  async getDashboard(email: string): Promise<DashboardData> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) throw new NotFoundException('User not found');
 
-      const { uuid: userId } = user;
+    const { uuid: userId } = user;
 
-      const [
-        stats,
-        entityTypes,
-        complianceUsage,
-        processingHistory,
-        confidenceDistribution,
-        recentActivity,
-      ] = await Promise.all([
-        this.getStats(userId),
-        this.getEntityTypes(userId),
-        this.getComplianceUsage(userId),
-        this.getProcessingHistory(userId, ANALYTICS_HISTORY_DAYS),
-        this.getConfidenceDistribution(userId),
-        this.getRecentActivity(userId, ANALYTICS_RECENT_ACTIVITY_LIMIT),
-      ]);
+    const [
+      statsResult,
+      entityTypesResult,
+      complianceUsageResult,
+      processingHistoryResult,
+      confidenceDistributionResult,
+      recentActivityResult,
+    ] = await Promise.allSettled([
+      this.getStats(userId),
+      this.getEntityTypes(userId),
+      this.getComplianceUsage(userId),
+      this.getProcessingHistory(userId, ANALYTICS_HISTORY_DAYS),
+      this.getConfidenceDistribution(userId),
+      this.getRecentActivity(userId, ANALYTICS_RECENT_ACTIVITY_LIMIT),
+    ]);
 
-      return {
-        stats,
-        entityTypes,
-        complianceUsage,
-        processingHistory,
-        confidenceDistribution,
-        recentActivity,
-      };
-    } catch (err) {
-      if (err instanceof NotFoundException) throw err;
-      if (err instanceof InternalServerErrorException) throw err;
-      throw new InternalServerErrorException('Failed to load dashboard data');
-    }
+    if (statsResult.status === 'rejected')
+      this.logger.error('getStats failed', statsResult.reason);
+    if (entityTypesResult.status === 'rejected')
+      this.logger.error('getEntityTypes failed', entityTypesResult.reason);
+    if (complianceUsageResult.status === 'rejected')
+      this.logger.error(
+        'getComplianceUsage failed',
+        complianceUsageResult.reason,
+      );
+    if (processingHistoryResult.status === 'rejected')
+      this.logger.error(
+        'getProcessingHistory failed',
+        processingHistoryResult.reason,
+      );
+    if (confidenceDistributionResult.status === 'rejected')
+      this.logger.error(
+        'getConfidenceDistribution failed',
+        confidenceDistributionResult.reason,
+      );
+    if (recentActivityResult.status === 'rejected')
+      this.logger.error(
+        'getRecentActivity failed',
+        recentActivityResult.reason,
+      );
+
+    return {
+      stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
+      entityTypes:
+        entityTypesResult.status === 'fulfilled' ? entityTypesResult.value : [],
+      complianceUsage:
+        complianceUsageResult.status === 'fulfilled'
+          ? complianceUsageResult.value
+          : [],
+      processingHistory:
+        processingHistoryResult.status === 'fulfilled'
+          ? processingHistoryResult.value
+          : [],
+      confidenceDistribution:
+        confidenceDistributionResult.status === 'fulfilled'
+          ? confidenceDistributionResult.value
+          : [],
+      recentActivity:
+        recentActivityResult.status === 'fulfilled'
+          ? recentActivityResult.value
+          : [],
+    };
   }
 
-  private async getStats(userId: string): Promise<DashboardStatsDto> {
+  private async getStats(userId: string): Promise<StatsData> {
     try {
       const totals = await this.documentsRepo
         .createQueryBuilder('d')
@@ -146,11 +183,12 @@ export default class AnalyticsService {
         },
       };
     } catch (err) {
-      throw new InternalServerErrorException(`Failed to load stats: ${err}`);
+      this.logger.error('getStats query failed', err);
+      throw new InternalServerErrorException('Failed to load stats');
     }
   }
 
-  private async getEntityTypes(userId: string): Promise<EntityTypeStatDto[]> {
+  private async getEntityTypes(userId: string): Promise<EntityTypeData[]> {
     try {
       const rows = await this.piiEntitiesRepo
         .createQueryBuilder('e')
@@ -167,15 +205,14 @@ export default class AnalyticsService {
         count: Number(r.count),
       }));
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Failed to load entity types: ${err}`,
-      );
+      this.logger.error('getEntityTypes query failed', err);
+      throw new InternalServerErrorException('Failed to load entity types');
     }
   }
 
   private async getComplianceUsage(
     userId: string,
-  ): Promise<ComplianceUsageDto[]> {
+  ): Promise<ComplianceUsageData[]> {
     try {
       const rows = await this.documentsRepo
         .createQueryBuilder('d')
@@ -201,16 +238,15 @@ export default class AnalyticsService {
         };
       });
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Failed to load compliance usage: ${err}`,
-      );
+      this.logger.error('getComplianceUsage query failed', err);
+      throw new InternalServerErrorException('Failed to load compliance usage');
     }
   }
 
   private async getProcessingHistory(
     userId: string,
     days: number,
-  ): Promise<ProcessingHistoryDto[]> {
+  ): Promise<ProcessingHistoryData[]> {
     try {
       const rows = await this.documentsRepo
         .createQueryBuilder('d')
@@ -239,15 +275,16 @@ export default class AnalyticsService {
         entities: Number(r.entityCount),
       }));
     } catch (err) {
+      this.logger.error('getProcessingHistory query failed', err);
       throw new InternalServerErrorException(
-        `Failed to load processing history: ${err}`,
+        'Failed to load processing history',
       );
     }
   }
 
   private async getConfidenceDistribution(
     userId: string,
-  ): Promise<ConfidenceRangeDto[]> {
+  ): Promise<ConfidenceRangeData[]> {
     try {
       const rows = await this.piiEntitiesRepo
         .createQueryBuilder('e')
@@ -275,8 +312,9 @@ export default class AnalyticsService {
             (CONFIDENCE_RANGE_ORDER[b.range] ?? 99),
         );
     } catch (err) {
+      this.logger.error('getConfidenceDistribution query failed', err);
       throw new InternalServerErrorException(
-        `Failed to load confidence distribution: ${err}`,
+        'Failed to load confidence distribution',
       );
     }
   }
@@ -284,7 +322,7 @@ export default class AnalyticsService {
   private async getRecentActivity(
     userId: string,
     limit: number,
-  ): Promise<RecentActivityDto[]> {
+  ): Promise<RecentActivityData[]> {
     try {
       const rows = await this.documentsRepo
         .createQueryBuilder('d')
@@ -317,9 +355,8 @@ export default class AnalyticsService {
         createdAt: r.createdAt,
       }));
     } catch (err) {
-      throw new InternalServerErrorException(
-        `Failed to load recent activity: ${err}`,
-      );
+      this.logger.error('getRecentActivity query failed', err);
+      throw new InternalServerErrorException('Failed to load recent activity');
     }
   }
 

@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class ComplianceUsageDto {
+export default class ComplianceUsageResponseDto {
   @ApiProperty({ description: 'Compliance framework code (e.g. GDPR, HIPAA)' })
   frameworkCode: string = '';
 

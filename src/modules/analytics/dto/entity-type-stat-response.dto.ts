@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class EntityTypeStatDto {
+export default class EntityTypeStatResponseDto {
   @ApiProperty({ description: 'PIIEntityType enum value or OTHER' })
   entityType: string = '';
 

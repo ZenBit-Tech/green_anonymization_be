@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import TrendsDto from './trends.dto';
+import TrendsResponseDto from './trends-response.dto';
 
-export default class DashboardStatsDto {
+export default class DashboardStatsResponseDto {
   @ApiProperty()
   totalDocuments: number = 0;
 
@@ -16,6 +16,6 @@ export default class DashboardStatsDto {
   })
   successRate: number = 100;
 
-  @ApiProperty({ type: TrendsDto })
-  trends: TrendsDto = new TrendsDto();
+  @ApiProperty({ type: TrendsResponseDto })
+  trends: TrendsResponseDto = new TrendsResponseDto();
 }

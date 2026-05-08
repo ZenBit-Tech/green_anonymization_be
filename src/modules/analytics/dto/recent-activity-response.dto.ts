@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export default class RecentActivityDto {
+export default class RecentActivityResponseDto {
   @ApiProperty()
   id: string = '';
 
