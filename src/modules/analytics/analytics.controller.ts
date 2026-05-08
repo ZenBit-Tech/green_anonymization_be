@@ -1,8 +1,4 @@
-import {
-  Controller,
-  Get,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiInternalServerErrorResponse,
@@ -32,7 +28,9 @@ export default class AnalyticsController {
     description: 'Failed to load dashboard data',
   })
   @Get('dashboard')
-  async getDashboard(@UserEmail() email: string): Promise<DashboardResponseDto> {
+  async getDashboard(
+    @UserEmail() email: string,
+  ): Promise<DashboardResponseDto> {
     const data = await this.analyticsService.getDashboard(email);
     return {
       stats: data.stats,
