@@ -1,0 +1,79 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      anonymizer: ${{ steps.filter.outputs.anonymizer }}
+      analyzer: ${{ steps.filter.outputs.analyzer }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig*.json'
+              - 'nest-cli.json'
+              - 'Dockerfile'
+            anonymizer:
+              - 'deploy/presidio-anonymizer/**'
+            analyzer:
+              - 'deploy/presidio-analyzer/**'
+
+  deploy-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Heroku container login
+        run: heroku container:login
+      - name: Build & push image
+        run: heroku container:push web --app green-anonymization-be
+      - name: Release
+        run: heroku container:release web --app green-anonymization-be
+
+  deploy-anonymizer:
+    needs: changes
+    if: needs.changes.outputs.anonymizer == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deploy/presidio-anonymizer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Heroku container login
+        run: heroku container:login
+      - name: Build & push image
+        run: heroku container:push web --app green-presidio-anonymizer
+      - name: Release
+        run: heroku container:release web --app green-presidio-anonymizer
+
+  deploy-analyzer:
+    needs: changes
+    if: needs.changes.outputs.analyzer == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deploy/presidio-analyzer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Heroku container login
+        run: heroku container:login
+      - name: Build & push image
+        run: heroku container:push web --app green-presidio-analyzer
+      - name: Release
+        run: heroku container:release web --app green-presidio-analyzer
