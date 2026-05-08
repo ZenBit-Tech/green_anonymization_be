@@ -2,7 +2,7 @@ import { Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  Compliance,
+  COMPLIANCE_FRAMEWORKS,
   PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT,
   PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT,
 } from '@common/constants';
@@ -15,7 +15,7 @@ import {
 } from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
-  complianceName = Compliance.GDPR;
+  complianceName = COMPLIANCE_FRAMEWORKS.GDPR_EU.code;
 
   constructor(
     @Inject(anonymizationConfig.KEY)

@@ -7,7 +7,6 @@ import {
   Index,
   OneToMany,
 } from 'typeorm';
-import { Compliance } from '@common/constants';
 // eslint-disable-next-line import/no-cycle
 import PIIEntities from './PIIEntities.entity';
 
@@ -20,8 +19,8 @@ export default class Documents {
   @Column({ type: 'uuid' })
   userId: string;
 
-  @Column({ type: 'enum', enum: Compliance })
-  chosenCompliance: Compliance;
+  @Column({ type: 'varchar', length: 50 })
+  chosenCompliance: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   fileType?: string;

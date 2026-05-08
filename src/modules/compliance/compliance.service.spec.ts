@@ -2,18 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
-import ComplianceSelection from '@common/db/entities/compliance-selection.entity';
-
+import User from '@common/db/entities/user.entity';
 import UserService from '@modules/user/user.service';
 import ComplianceService from './compliance.service';
 
 describe('ComplianceService', () => {
   let service: ComplianceService;
 
-  const mockSelectionRepo = {
-    findOne: jest.fn(),
+  const mockUserRepository = {
     save: jest.fn(),
-    create: jest.fn(),
   };
 
   const mockUserService = {
@@ -27,8 +24,8 @@ describe('ComplianceService', () => {
       providers: [
         ComplianceService,
         {
-          provide: getRepositoryToken(ComplianceSelection),
-          useValue: mockSelectionRepo,
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
         },
         {
           provide: UserService,

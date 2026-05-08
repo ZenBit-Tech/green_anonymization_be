@@ -2,7 +2,6 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { config } from 'dotenv';
 import { ConfigService } from '@nestjs/config';
 import ContactMessage from './entities/contactMessage.entity';
-import ComplianceSelection from './entities/compliance-selection.entity';
 import User from './entities/user.entity';
 import PIIEntities from './entities/PIIEntities.entity';
 import Documents from './entities/documents.entity';
@@ -39,7 +38,7 @@ const dbConfig = getDatabaseConfig();
 
 export const dataSourceOptions: DataSourceOptions = {
   ...dbConfig,
-  entities: [User, ComplianceSelection, ContactMessage, Documents, PIIEntities],
+  entities: [User, ContactMessage, Documents, PIIEntities],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
   logging: false,

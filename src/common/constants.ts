@@ -4,10 +4,6 @@ export const NODE_ENV = {
   PRODUCTION: 'production',
   DEVELOPMENT: 'development',
 };
-export enum Compliance {
-  GDPR = 'GDPR',
-  HIPAA = 'HIPAA',
-}
 
 export const MAGIC_LINK_EXPIRATION = '60m';
 export const ACCESS_TOKEN_EXPIRATION = '15m';
@@ -45,3 +41,45 @@ export enum Confidence {
   MEDIUM = 'medium',
   HIGH = 'high',
 }
+
+export interface ComplianceFrameworkConfig {
+  code: string;
+  name: string;
+  description?: string;
+  entityTypesCount?: number;
+  isActive: boolean;
+}
+
+export const COMPLIANCE_FRAMEWORKS = {
+  HIPAA_US: {
+    code: 'HIPAA_US',
+    name: 'HIPAA',
+    description: 'Health Insurance Portability and Accountability Act (US)',
+    entityTypesCount: 18,
+    isActive: true,
+  } as ComplianceFrameworkConfig,
+  GDPR_EU: {
+    code: 'GDPR_EU',
+    name: 'EU GDPR',
+    description: 'European Union General Data Protection Regulation',
+    entityTypesCount: 11,
+    isActive: true,
+  } as ComplianceFrameworkConfig,
+  GDPR_UK: {
+    code: 'GDPR_UK',
+    name: 'UK GDPR',
+    description: 'United Kingdom General Data Protection Regulation',
+    entityTypesCount: 11,
+    isActive: true,
+  } as ComplianceFrameworkConfig,
+  FADP_CH: {
+    code: 'FADP_CH',
+    name: 'Swiss FADP',
+    description: 'Swiss Federal Act on Data Protection',
+    entityTypesCount: 11,
+    isActive: true,
+  } as ComplianceFrameworkConfig,
+};
+
+export type ComplianceFramework =
+  (typeof COMPLIANCE_FRAMEWORKS)[keyof typeof COMPLIANCE_FRAMEWORKS];
