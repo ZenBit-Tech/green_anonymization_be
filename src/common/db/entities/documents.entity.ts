@@ -14,7 +14,7 @@ import PIIEntities from './PIIEntities.entity';
 @Entity({ name: 'documents' })
 export default class Documents {
   @PrimaryGeneratedColumn('uuid')
-  id: string = '';
+  id!: string;
 
   @Index('IDX_DOCUMENTS_USER_ID')
   @Column({ type: 'uuid' })

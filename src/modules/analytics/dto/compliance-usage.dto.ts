@@ -1,9 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export default class ComplianceUsageDto {
-  @ApiProperty({
-    description: 'GDPR or HIPAA (full framework codes after PR#14 fix)',
-  })
+  @ApiProperty({ description: 'Compliance framework code (e.g. GDPR, HIPAA)' })
   frameworkCode: string = '';
 
   @ApiProperty()

@@ -1,6 +1,14 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  InternalServerErrorException,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -21,8 +29,18 @@ export default class AnalyticsController {
   @ApiOperation({ summary: 'Get all dashboard data in a single request' })
   @ApiResponse({ status: 200, type: DashboardDto })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiInternalServerErrorResponse({
+    description: 'Failed to load dashboard data',
+  })
   @Get('dashboard')
-  getDashboard(@UserEmail() email: string): Promise<DashboardDto> {
-    return this.analyticsService.getDashboard(email);
+  async getDashboard(@UserEmail() email: string): Promise<DashboardDto> {
+    try {
+      return await this.analyticsService.getDashboard(email);
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new InternalServerErrorException('Failed to load dashboard data');
+    }
   }
 }

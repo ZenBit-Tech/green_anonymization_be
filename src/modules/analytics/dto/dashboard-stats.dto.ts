@@ -12,7 +12,7 @@ export default class DashboardStatsDto {
   avgEntitiesPerDoc: number = 0;
 
   @ApiProperty({
-    description: 'Always 100 until status field is added to documents table',
+    description: 'Percentage of successfully processed documents',
   })
   successRate: number = 100;
 
