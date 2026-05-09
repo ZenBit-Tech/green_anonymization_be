@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Compliance } from '@common/constants';
 import { Expose, Type } from 'class-transformer';
 
 export default class DocumentDto {
@@ -11,9 +10,9 @@ export default class DocumentDto {
   @Expose()
   userId: string;
 
-  @ApiProperty({ enum: Compliance })
+  @ApiProperty()
   @Expose()
-  chosenCompliance: Compliance;
+  chosenCompliance: string;
 
   @ApiProperty({ required: false, nullable: true })
   @Expose()

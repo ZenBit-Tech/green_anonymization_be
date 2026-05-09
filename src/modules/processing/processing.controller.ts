@@ -27,7 +27,6 @@ import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
 import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
 import DocumentDto from './dto/document.dto';
 import extractTextFromFile from './utils/file-text';
-import mapFramework from './utils/mapFrameworks';
 import ProcessingService from './processing.service';
 import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 import PIIEntityDto from './dto/piiEntity.dto';
@@ -88,10 +87,16 @@ export default class ProcessingController {
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
-    const selection = await this.complianceService.getSelectionByEmail(email);
+    // const selection = await this.complianceService.getSelectionByEmail(email);
 
-    if (!selection.frameworkCode) {
+    if (!data?.selectedFrameworkCode) {
       throw new BadRequestException('No framework selected');
+    }
+    const selectedFramework = await this.complianceService.getFrameworkByCode(
+      data.selectedFrameworkCode,
+    );
+    if (!selectedFramework) {
+      throw new BadRequestException('Framework with selected code not found');
     }
 
     let input: string;
@@ -107,11 +112,10 @@ export default class ProcessingController {
     } else {
       throw new BadRequestException('No input provided');
     }
-
     let result;
     try {
       result = await this.processingService.process(
-        mapFramework(selection.frameworkCode),
+        selectedFramework,
         input,
         email,
         file?.originalname,

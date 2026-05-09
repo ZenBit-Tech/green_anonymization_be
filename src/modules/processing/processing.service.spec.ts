@@ -1,7 +1,12 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DataSource, EntityManager } from 'typeorm';
-import { Compliance, Confidence, PIIEntityType } from '@common/constants';
+import {
+  COMPLIANCE_FRAMEWORKS,
+  ComplianceFrameworkConfig,
+  Confidence,
+  PIIEntityType,
+} from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import User from '@/common/db/entities/user.entity';
@@ -21,10 +26,14 @@ describe('ProcessingService', () => {
 
   const userServiceMock = {
     findByEmail: jest.fn<Promise<User | null>, [string]>(),
+    setDefaultFramework: jest.fn<Promise<string>, [string, string]>(),
   };
 
   const anonymizationServiceMock = {
-    anonymize: jest.fn<Promise<AnonymizationResult>, [Compliance, string]>(),
+    anonymize: jest.fn<
+      Promise<AnonymizationResult>,
+      [ComplianceFrameworkConfig, string]
+    >(),
   };
 
   const managerMock = {
@@ -56,7 +65,7 @@ describe('ProcessingService', () => {
   describe('process', () => {
     it('returns empty result for empty input', async () => {
       const result = await service.process(
-        Compliance.GDPR,
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
         '',
         'test@mail.com',
       );
@@ -93,7 +102,7 @@ describe('ProcessingService', () => {
       managerMock.save.mockImplementation(async (x) => x);
 
       const result = await service.process(
-        Compliance.GDPR,
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
         'text',
         'test@mail.com',
         'file.txt',
@@ -117,7 +126,11 @@ describe('ProcessingService', () => {
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'missing@mail.com'),
+        service.process(
+          COMPLIANCE_FRAMEWORKS.GDPR_EU,
+          'text',
+          'missing@mail.com',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -129,7 +142,7 @@ describe('ProcessingService', () => {
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -137,7 +150,7 @@ describe('ProcessingService', () => {
       anonymizationServiceMock.anonymize.mockRejectedValue(new Error('fail'));
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
       ).rejects.toThrow('fail');
     });
 
@@ -152,7 +165,7 @@ describe('ProcessingService', () => {
       managerMock.save.mockRejectedValue(new Error('db error'));
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
   });

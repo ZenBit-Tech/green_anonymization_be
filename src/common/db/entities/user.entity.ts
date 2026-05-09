@@ -17,4 +17,7 @@ export default class User {
 
   @Column({ length: 255 })
   companyName: string = '';
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  defaultFramework?: string;
 }

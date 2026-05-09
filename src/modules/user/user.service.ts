@@ -121,4 +121,33 @@ export default class UserService {
       );
     }
   }
+
+  async checkDefaultFramework(email: string): Promise<string | null> {
+    const user: User | null = await this.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException('No user with specified email');
+    }
+    if (user.defaultFramework) {
+      return user.defaultFramework;
+    }
+    return null;
+  }
+
+  async setDefaultFramework(
+    email: string,
+    frameworkCode: string,
+  ): Promise<string> {
+    try {
+      const user: User | null = await this.findByEmail(email);
+      if (!user) {
+        throw new BadRequestException('Specified user not found');
+      }
+      user.defaultFramework = frameworkCode;
+
+      await this.userRepository.save(user);
+      return user.uuid;
+    } catch (err) {
+      throw new InternalServerErrorException('Failed to set default framework');
+    }
+  }
 }
