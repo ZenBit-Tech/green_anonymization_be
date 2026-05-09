@@ -9,6 +9,8 @@ import {
 } from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
+import DocumentsService from '@modules/documents/documents.service';
+import Documents from '@/common/db/entities/documents.entity';
 import User from '@/common/db/entities/user.entity';
 import ProcessingService from './processing.service';
 import { AnonymizationResult } from '../anonymization/anonymization.types';
@@ -36,6 +38,13 @@ describe('ProcessingService', () => {
     >(),
   };
 
+  const documentsServiceMock = {
+    uploadAnonymizedText: jest.fn<
+      Promise<Documents>,
+      [Documents, string, EntityManager?]
+    >(),
+  };
+
   const managerMock = {
     create: jest.fn(),
     save: jest.fn(),
@@ -50,12 +59,17 @@ describe('ProcessingService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    documentsServiceMock.uploadAnonymizedText.mockImplementation(
+      async (doc) => doc,
+    );
+
     const module = await Test.createTestingModule({
       providers: [
         ProcessingService,
         { provide: UserService, useValue: userServiceMock },
         { provide: DataSource, useValue: dataSourceMock },
         { provide: AnonymizationService, useValue: anonymizationServiceMock },
+        { provide: DocumentsService, useValue: documentsServiceMock },
       ],
     }).compile();
 

@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import AnonymizationModule from '@modules/anonymization/anonymization.module';
+import DocumentsModule from '@modules/documents/documents.module';
 import Documents from '@/common/db/entities/documents.entity';
 import PIIEntities from '@/common/db/entities/PIIEntities.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,6 +15,7 @@ import UserModule from '../user/user.module';
     AnonymizationModule,
     ComplianceModule,
     UserModule,
+    DocumentsModule,
   ],
   providers: [ProcessingService],
   controllers: [ProcessingController],
