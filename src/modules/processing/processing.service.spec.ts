@@ -159,7 +159,7 @@ describe('ProcessingService', () => {
 
       await expect(
         service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow('fail');
     });
 
     it('wraps transaction errors', async () => {
