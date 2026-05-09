@@ -2,7 +2,7 @@ import { Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  Compliance,
+  COMPLIANCE_FRAMEWORKS,
   PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT,
   PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT,
 } from '@common/constants';
@@ -15,7 +15,7 @@ import {
 } from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
-  complianceNames = [Compliance.GDPR, Compliance.HIPAA];
+  complianceNames = Object.values(COMPLIANCE_FRAMEWORKS).map((f) => f.code);
 
   constructor(
     @Inject(anonymizationConfig.KEY)
@@ -67,7 +67,6 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
 
   private async analyze(text: string): Promise<AnonymizationEntity[]> {
     // TODO: Detect language using https://github.com/nitotm/efficient-language-detector-js
-
     try {
       const response = await firstValueFrom(
         this.httpService.post(

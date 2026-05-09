@@ -3,12 +3,11 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-
 import UserService from '@modules/user/user.service';
-import ComplianceSelection from '@common/db/entities/compliance-selection.entity';
-
+import {
+  ComplianceFramework,
+  ComplianceFrameworkConfig,
+} from '@/common/constants';
 import { COMPLIANCE_FRAMEWORKS } from './constants/complianceFrameworks';
 
 const FRAMEWORK_NOT_FOUND_MESSAGE = 'Compliance framework not found';
@@ -22,16 +21,27 @@ const USER_NOT_FOUND_MESSAGE = 'User not found';
 
 @Injectable()
 export default class ComplianceService {
-  constructor(
-    @InjectRepository(ComplianceSelection)
-    private readonly complianceSelectionRepository: Repository<ComplianceSelection>,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   // eslint-disable-next-line class-methods-use-this
   async getFrameworks() {
     try {
-      return COMPLIANCE_FRAMEWORKS.filter((framework) => framework.isActive);
+      return Object.values(COMPLIANCE_FRAMEWORKS).filter(
+        (framework) => framework.isActive,
+      );
+    } catch {
+      throw new InternalServerErrorException(COMPLIANCE_FETCH_FAILED_MESSAGE);
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async getFrameworkByCode(
+    _code: string,
+  ): Promise<ComplianceFrameworkConfig | undefined> {
+    try {
+      return COMPLIANCE_FRAMEWORKS.find(
+        (framework) => framework.code === _code,
+      );
     } catch {
       throw new InternalServerErrorException(COMPLIANCE_FETCH_FAILED_MESSAGE);
     }
@@ -40,39 +50,31 @@ export default class ComplianceService {
   async selectFrameworkByEmail(
     email: string,
     frameworkCode: string,
-  ): Promise<ComplianceSelection> {
+  ): Promise<{
+    userId: string;
+    frameworkCode: string;
+    framework: ComplianceFramework;
+  }> {
     try {
-      const framework = COMPLIANCE_FRAMEWORKS.find(
-        (item) => item.code === frameworkCode && item.isActive,
+      const framework = Object.values(COMPLIANCE_FRAMEWORKS).find(
+        (item): item is ComplianceFramework =>
+          item.code === frameworkCode && item.isActive,
       );
 
       if (!framework) {
         throw new NotFoundException(FRAMEWORK_NOT_FOUND_MESSAGE);
       }
 
-      const user = await this.userService.findByEmail(email);
+      const userUuid = await this.userService.setDefaultFramework(
+        email,
+        framework.code,
+      );
 
-      if (!user) {
-        throw new NotFoundException(USER_NOT_FOUND_MESSAGE);
-      }
-
-      const existingSelection =
-        await this.complianceSelectionRepository.findOne({
-          where: { userId: user.uuid },
-        });
-
-      if (existingSelection) {
-        existingSelection.frameworkCode = framework.code;
-
-        return await this.complianceSelectionRepository.save(existingSelection);
-      }
-
-      const selection = this.complianceSelectionRepository.create({
-        userId: user.uuid,
+      return {
+        userId: userUuid,
         frameworkCode: framework.code,
-      });
-
-      return await this.complianceSelectionRepository.save(selection);
+        framework,
+      };
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -84,7 +86,11 @@ export default class ComplianceService {
     }
   }
 
-  async getSelectionByEmail(email: string) {
+  async getSelectionByEmail(email: string): Promise<{
+    userId: string;
+    frameworkCode: string;
+    framework: ComplianceFramework;
+  }> {
     try {
       const user = await this.userService.findByEmail(email);
 
@@ -92,21 +98,23 @@ export default class ComplianceService {
         throw new NotFoundException(USER_NOT_FOUND_MESSAGE);
       }
 
-      const selection = await this.complianceSelectionRepository.findOne({
-        where: { userId: user.uuid },
-      });
-
-      if (!selection) {
+      if (!user.defaultFramework) {
         throw new NotFoundException(COMPLIANCE_SELECTION_NOT_FOUND);
       }
 
-      const framework = COMPLIANCE_FRAMEWORKS.find(
-        (item) => item.code === selection.frameworkCode,
+      const framework = Object.values(COMPLIANCE_FRAMEWORKS).find(
+        (item): item is ComplianceFramework =>
+          item.code === user.defaultFramework,
       );
 
+      if (!framework) {
+        throw new NotFoundException(COMPLIANCE_SELECTION_NOT_FOUND);
+      }
+
       return {
-        ...selection,
-        framework: framework ?? null,
+        userId: user.uuid,
+        frameworkCode: user.defaultFramework,
+        framework,
       };
     } catch (error) {
       if (error instanceof NotFoundException) {

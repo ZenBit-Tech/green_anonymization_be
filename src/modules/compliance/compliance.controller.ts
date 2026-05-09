@@ -52,10 +52,16 @@ export default class ComplianceController {
     @UserEmail() email: string,
     @Body() dto: SelectComplianceDto,
   ): Promise<ReturnComplianceSelectionDto> {
-    return this.complianceService.selectFrameworkByEmail(
+    const result = await this.complianceService.selectFrameworkByEmail(
       email,
       dto.frameworkCode,
     );
+
+    return {
+      userId: result.userId,
+      frameworkCode: result.frameworkCode,
+      framework: result.framework as ReturnComplianceFrameworkDto,
+    };
   }
 
   @Get('selection')
@@ -76,6 +82,12 @@ export default class ComplianceController {
   async getSelection(
     @UserEmail() email: string,
   ): Promise<ReturnComplianceSelectionDto> {
-    return this.complianceService.getSelectionByEmail(email);
+    const result = await this.complianceService.getSelectionByEmail(email);
+
+    return {
+      userId: result.userId,
+      frameworkCode: result.frameworkCode,
+      framework: result.framework as ReturnComplianceFrameworkDto,
+    };
   }
 }

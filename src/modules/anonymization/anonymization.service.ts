@@ -1,12 +1,12 @@
 import { Inject } from '@nestjs/common';
-import { Compliance } from '@common/constants';
+import { ComplianceFrameworkConfig } from '@common/constants';
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
 import AnonymizerNotFoundError from './anonymizer-not-found.error';
 import { AnonymizationResult } from './anonymization.types';
 
 export default class AnonymizationService {
-  private serviceMap: Map<Compliance, AbstractAnonymizerService>;
+  private serviceMap: Map<string, AbstractAnonymizerService>;
 
   constructor(
     @Inject(ANONYMIZER_SERVICES_TOKEN) services: AbstractAnonymizerService[],
@@ -18,7 +18,7 @@ export default class AnonymizationService {
   }
 
   async anonymize(
-    complianceName: Compliance,
+    compliance: ComplianceFrameworkConfig,
     text: string,
   ): Promise<AnonymizationResult> {
     if (text === '') {
@@ -32,14 +32,12 @@ export default class AnonymizationService {
       return emptyAnonymizationResult;
     }
 
-    const service = this.serviceMap.get(complianceName);
-
+    const service = this.serviceMap.get(compliance.code);
     if (!service) {
-      throw new AnonymizerNotFoundError(complianceName);
+      throw new AnonymizerNotFoundError(compliance);
     }
 
     const result = await service.anonymize(text);
-
     return result;
   }
 }

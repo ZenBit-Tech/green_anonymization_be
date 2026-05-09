@@ -11,5 +11,4 @@ coverage
 .prettierrc
 jest.config.js
 jest-unit.js
-tsconfig.json
 test/

@@ -1,5 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Compliance } from '@common/constants';
+import {
+  COMPLIANCE_FRAMEWORKS,
+  ComplianceFrameworkConfig,
+} from '@/common/constants';
 import AnonymizationService from './anonymization.service';
 import AbstractAnonymizerService from './abstract-anonymizer.service';
 import ANONYMIZER_SERVICES_TOKEN from './anonymizer-services.token';
@@ -13,12 +16,12 @@ describe('AnonymizationService (unit)', () => {
 
   beforeEach(async () => {
     mockGdprAnonymizerService = {
-      complianceNames: [Compliance.GDPR],
+      complianceNames: [COMPLIANCE_FRAMEWORKS.GDPR_EU.code],
       anonymize: jest.fn(),
     } as jest.Mocked<AbstractAnonymizerService>;
 
     mockHipaaAnonymizerService = {
-      complianceNames: [Compliance.HIPAA],
+      complianceNames: [COMPLIANCE_FRAMEWORKS.HIPAA_US.code],
       anonymize: jest.fn(),
     } as jest.Mocked<AbstractAnonymizerService>;
 
@@ -59,8 +62,14 @@ describe('AnonymizationService (unit)', () => {
       mockGdprAnonymizerService.anonymize.mockResolvedValue(gdprResultData);
       mockHipaaAnonymizerService.anonymize.mockResolvedValue(hipaaResultData);
 
-      const gdprResult = await service.anonymize(Compliance.GDPR, 'text');
-      const hipaaResult = await service.anonymize(Compliance.HIPAA, 'text');
+      const gdprResult = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        'text',
+      );
+      const hipaaResult = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.HIPAA_US,
+        'text',
+      );
 
       expect(gdprResult.anonymizedText).toBe('text');
       expect(gdprResult.originalText).toBe('text');
@@ -79,7 +88,7 @@ describe('AnonymizationService (unit)', () => {
       };
       mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
-      await service.anonymize(Compliance.GDPR, 'text');
+      await service.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text');
 
       expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledTimes(1);
       expect(mockHipaaAnonymizerService.anonymize).not.toHaveBeenCalled();
@@ -94,7 +103,7 @@ describe('AnonymizationService (unit)', () => {
       };
       mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
-      await service.anonymize(Compliance.GDPR, input);
+      await service.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, input);
 
       expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledWith(input);
     });
@@ -107,13 +116,22 @@ describe('AnonymizationService (unit)', () => {
       };
       mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
-      const result = await service.anonymize(Compliance.GDPR, 'text');
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        'text',
+      );
 
       expect(result).toEqual(resultData);
     });
 
     it('should throw AnonymizerNotFoundError if compliance is invalid', async () => {
-      const invalidCompliance = 'INVALID' as Compliance;
+      const invalidCompliance = {
+        code: 'INVALID',
+        name: 'INVALID_NAME',
+        description: 'An invalid framework for testing',
+        entityTypesCount: 0,
+        isActive: false,
+      } as ComplianceFrameworkConfig;
 
       await expect(
         service.anonymize(invalidCompliance, 'text'),
@@ -135,7 +153,7 @@ describe('AnonymizationService (unit)', () => {
         module.get<AnonymizationService>(AnonymizationService);
 
       await expect(
-        emptyService.anonymize(Compliance.GDPR, 'text'),
+        emptyService.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text'),
       ).rejects.toThrow(AnonymizerNotFoundError);
     });
 
@@ -144,13 +162,13 @@ describe('AnonymizationService (unit)', () => {
 
       mockGdprAnonymizerService.anonymize.mockRejectedValue(error);
 
-      await expect(service.anonymize(Compliance.GDPR, 'text')).rejects.toThrow(
-        'External service failure',
-      );
+      await expect(
+        service.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text'),
+      ).rejects.toThrow('External service failure');
     });
 
     it('should handle empty string input', async () => {
-      const result = await service.anonymize(Compliance.GDPR, '');
+      const result = await service.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, '');
 
       expect(result).toEqual({
         originalText: '',
@@ -168,7 +186,10 @@ describe('AnonymizationService (unit)', () => {
       };
       mockGdprAnonymizerService.anonymize.mockResolvedValue(resultData);
 
-      const result = await service.anonymize(Compliance.GDPR, originalInput);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        originalInput,
+      );
 
       expect(result.originalText).toBe(originalInput);
       expect(result.anonymizedText).toBe('[PERSON] lives at [LOCATION]');

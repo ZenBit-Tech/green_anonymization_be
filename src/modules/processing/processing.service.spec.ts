@@ -1,7 +1,15 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DataSource, EntityManager } from 'typeorm';
-import { Compliance, Confidence, PIIEntityType } from '@common/constants';
+import {
+  COMPLIANCE_FRAMEWORKS,
+  ComplianceFrameworkConfig,
+  Confidence,
+  PIIEntityType,
+} from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import User from '@/common/db/entities/user.entity';
@@ -21,10 +29,14 @@ describe('ProcessingService', () => {
 
   const userServiceMock = {
     findByEmail: jest.fn<Promise<User | null>, [string]>(),
+    setDefaultFramework: jest.fn<Promise<string>, [string, string]>(),
   };
 
   const anonymizationServiceMock = {
-    anonymize: jest.fn<Promise<AnonymizationResult>, [Compliance, string]>(),
+    anonymize: jest.fn<
+      Promise<AnonymizationResult>,
+      [ComplianceFrameworkConfig, string]
+    >(),
   };
 
   const managerMock = {
@@ -56,8 +68,7 @@ describe('ProcessingService', () => {
   describe('process', () => {
     it('returns empty result for empty input', async () => {
       const result = await service.process(
-        Compliance.GDPR,
-        'GDPR_EU',
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
         '',
         'test@mail.com',
       );
@@ -71,7 +82,7 @@ describe('ProcessingService', () => {
     });
 
     it('persists document and entities', async () => {
-      const user = { uuid: 'user-id' } as User;
+      const user = { uuid: 'user-id', email: 'test@mail.com' } as User;
 
       const anonymizationResult: AnonymizationResult = {
         originalText: 'text',
@@ -82,6 +93,7 @@ describe('ProcessingService', () => {
       };
 
       userServiceMock.findByEmail.mockResolvedValue(user);
+      userServiceMock.setDefaultFramework.mockResolvedValue(user.uuid);
       anonymizationServiceMock.anonymize.mockResolvedValue(anonymizationResult);
 
       mockedMapPIIEntityType.mockReturnValue('PERSON' as PIIEntityType);
@@ -94,8 +106,7 @@ describe('ProcessingService', () => {
       managerMock.save.mockImplementation(async (x) => x);
 
       const result = await service.process(
-        Compliance.GDPR,
-        'GDPR_EU',
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
         'text',
         'test@mail.com',
         'file.txt',
@@ -119,32 +130,44 @@ describe('ProcessingService', () => {
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'missing@mail.com'),
+        service.process(
+          COMPLIANCE_FRAMEWORKS.GDPR_EU,
+          'text',
+          'missing@mail.com',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('throws if metadata is missing', async () => {
-      userServiceMock.findByEmail.mockResolvedValue({ uuid: 'id' } as User);
+      userServiceMock.findByEmail.mockResolvedValue({
+        uuid: 'id',
+        email: 'test@mail.com',
+      } as User);
+      userServiceMock.setDefaultFramework.mockResolvedValue('id');
       anonymizationServiceMock.anonymize.mockResolvedValue({
         originalText: 'text',
         anonymizedText: 'anon',
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
-      ).rejects.toThrow(BadRequestException);
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
+      ).rejects.toThrow(InternalServerErrorException);
     });
 
     it('propagates anonymization errors', async () => {
       anonymizationServiceMock.anonymize.mockRejectedValue(new Error('fail'));
 
       await expect(
-        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
-      ).rejects.toThrow('fail');
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('wraps transaction errors', async () => {
-      userServiceMock.findByEmail.mockResolvedValue({ uuid: 'id' } as User);
+      userServiceMock.findByEmail.mockResolvedValue({
+        uuid: 'id',
+        email: 'test@mail.com',
+      } as User);
+      userServiceMock.setDefaultFramework.mockResolvedValue('id');
       anonymizationServiceMock.anonymize.mockResolvedValue({
         originalText: 'text',
         anonymizedText: 'anon',
@@ -154,7 +177,7 @@ describe('ProcessingService', () => {
       managerMock.save.mockRejectedValue(new Error('db error'));
 
       await expect(
-        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
+        service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
   });
