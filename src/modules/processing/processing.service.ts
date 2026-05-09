@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
+import DocumentsService from '@modules/documents/documents.service';
 import { DataSource } from 'typeorm';
 import { ComplianceFrameworkConfig } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
@@ -21,6 +22,7 @@ export default class ProcessingService {
     private readonly userService: UserService,
     private readonly dataSource: DataSource,
     private readonly anonymizationService: AnonymizationService,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   async process(
@@ -49,6 +51,7 @@ export default class ProcessingService {
           throw new BadRequestException('User not found');
         }
         await this.userService.setDefaultFramework(user.email, compliance.code);
+
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: compliance.code,
@@ -56,7 +59,7 @@ export default class ProcessingService {
           fileName: originalFileName
             ? `${originalFileName}-${compliance.name}-${Date.now()}`
             : `${compliance.name}-${Date.now()}.txt`,
-          filePath: 'cloud/path/placeholder',
+          filePath: '',
           verifiedAt: new Date(),
         });
 
@@ -80,10 +83,17 @@ export default class ProcessingService {
 
         const savedPIIEntities = await manager.save(piiEntities);
 
+        const documentWithText =
+          await this.documentsService.uploadAnonymizedText(
+            savedDocument,
+            anonymizationResult.anonymizedText,
+            manager,
+          );
+
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,
-          document: savedDocument,
+          document: documentWithText,
           piiEntities: savedPIIEntities,
         };
       });
