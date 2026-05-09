@@ -1,9 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import DocumentSummaryDto from './document-summary.dto';
+import { Expose, Type } from 'class-transformer';
+import PIIEntityDto from '@modules/processing/dto/piiEntity.dto';
+import DocumentTextDto from './document-text.dto';
 
-export default class DocumentDetailDto extends DocumentSummaryDto {
-  @ApiProperty({ description: 'Anonymized text content fetched from S3' })
+export default class DocumentDetailDto extends DocumentTextDto {
+  @ApiProperty({ type: [PIIEntityDto] })
   @Expose()
-  anonymizedText: string;
+  @Type(() => PIIEntityDto)
+  piiEntities: PIIEntityDto[];
 }

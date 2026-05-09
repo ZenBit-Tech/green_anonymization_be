@@ -13,6 +13,7 @@ import UserService from '@modules/user/user.service';
 import DocumentDetailDto from './dto/document-detail.dto';
 import DocumentListResponseDto from './dto/document-list-response.dto';
 import DocumentSummaryDto from './dto/document-summary.dto';
+import DocumentTextDto from './dto/document-text.dto';
 import PaginationQueryDto from './dto/pagination-query.dto';
 
 @Injectable()
@@ -68,7 +69,7 @@ export default class DocumentsService {
     id: string,
     email: string,
   ): Promise<DocumentDetailDto> {
-    const doc = await this.findOwnedDocument(id, email);
+    const doc = await this.findOwnedDocument(id, email, true);
 
     const anonymizedText = await this.s3.getText(doc.filePath);
 
@@ -83,7 +84,7 @@ export default class DocumentsService {
     id: string,
     email: string,
     text: string,
-  ): Promise<DocumentDetailDto> {
+  ): Promise<DocumentTextDto> {
     const doc = await this.findOwnedDocument(id, email);
 
     await this.s3.uploadText(doc.filePath, text);
@@ -92,7 +93,7 @@ export default class DocumentsService {
     try {
       const updated = await this.repo.save(doc);
       return plainToInstance(
-        DocumentDetailDto,
+        DocumentTextDto,
         { ...updated, anonymizedText: text },
         { excludeExtraneousValues: true },
       );
@@ -124,6 +125,7 @@ export default class DocumentsService {
   private async findOwnedDocument(
     id: string,
     email: string,
+    withRelations = false,
   ): Promise<Documents> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
@@ -132,7 +134,10 @@ export default class DocumentsService {
 
     let doc: Documents | null;
     try {
-      doc = await this.repo.findOne({ where: { id } });
+      doc = await this.repo.findOne({
+        where: { id },
+        ...(withRelations ? { relations: { piiEntities: true } } : {}),
+      });
     } catch (err) {
       throw new InternalServerErrorException(
         `Failed to fetch document: ${(err as Error).message}`,

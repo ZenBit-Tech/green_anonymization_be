@@ -22,6 +22,7 @@ import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import DocumentsService from './documents.service';
 import DocumentDetailDto from './dto/document-detail.dto';
 import DocumentListResponseDto from './dto/document-list-response.dto';
+import DocumentTextDto from './dto/document-text.dto';
 import PaginationQueryDto from './dto/pagination-query.dto';
 import UpdateDocumentDto from './dto/update-document.dto';
 
@@ -67,7 +68,7 @@ export default class DocumentsController {
   @ApiOperation({
     summary: 'Replace anonymized text in S3 for the given document',
   })
-  @ApiOkResponse({ type: DocumentDetailDto })
+  @ApiOkResponse({ type: DocumentTextDto })
   @ApiNotFoundResponse({ description: 'Document not found' })
   @ApiForbiddenResponse({
     description: 'Document does not belong to current user',
@@ -76,7 +77,7 @@ export default class DocumentsController {
     @UserEmail() email: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateDocumentDto,
-  ): Promise<DocumentDetailDto> {
+  ): Promise<DocumentTextDto> {
     return this.documentsService.updateTextForEmail(id, email, dto.text);
   }
 }
