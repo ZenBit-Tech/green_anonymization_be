@@ -216,10 +216,10 @@ export default class AnalyticsService {
     try {
       const rows = await this.documentsRepo
         .createQueryBuilder('d')
-        .select('d.frameworkCode', 'frameworkCode')
+        .select('d.chosenCompliance', 'frameworkCode')
         .addSelect('COUNT(d.id)', 'count')
         .where('d.userId = :userId', { userId })
-        .groupBy('d.frameworkCode')
+        .groupBy('d.chosenCompliance')
         .getRawMany<{ frameworkCode: string; count: string }>();
 
       const total = rows.reduce((sum, r) => sum + Number(r.count), 0);
@@ -329,13 +329,13 @@ export default class AnalyticsService {
         .leftJoin('d.piiEntities', 'e')
         .select('d.id', 'id')
         .addSelect('d.fileName', 'fileName')
-        .addSelect('d.frameworkCode', 'frameworkCode')
+        .addSelect('d.chosenCompliance', 'frameworkCode')
         .addSelect('d.createdAt', 'createdAt')
         .addSelect('COUNT(e.id)', 'entityCount')
         .where('d.userId = :userId', { userId })
         .groupBy('d.id')
         .addGroupBy('d.fileName')
-        .addGroupBy('d.frameworkCode')
+        .addGroupBy('d.chosenCompliance')
         .addGroupBy('d.createdAt')
         .orderBy('d.createdAt', 'DESC')
         .limit(limit)

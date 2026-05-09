@@ -20,10 +20,7 @@ export default class Documents {
   userId: string = '';
 
   @Column({ type: 'varchar', length: 50 })
-  chosenCompliance: string;
-
-  @Column({ type: 'varchar', length: 50 })
-  frameworkCode: string = '';
+  chosenCompliance: string = '';
 
   @Column({ type: 'varchar', length: 255, nullable: true })
   fileType?: string;
