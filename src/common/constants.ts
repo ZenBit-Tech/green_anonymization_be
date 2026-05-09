@@ -21,6 +21,8 @@ export enum JwtTokenType {
 export const PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT = '/anonymize';
 export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';
 
+export const YEAR_MONTH_FORMAT = '%Y-%m';
+
 // TODO update when more precise list of entity types will be known
 export enum PIIEntityType {
   PERSON = 'PERSON',
@@ -40,6 +42,7 @@ export enum PIIEntityType {
   UK_NINO = 'UK_NINO',
   OTHER = 'OTHER',
 }
+
 export enum Confidence {
   LOW = 'low',
   MEDIUM = 'medium',
