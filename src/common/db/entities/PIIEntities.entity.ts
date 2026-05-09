@@ -15,7 +15,7 @@ export default class PIIEntities {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index()
+  @Index('IDX_PIIENTITIES_DOCUMENT_ID')
   @Column({ type: 'uuid' })
   documentId: string;
 
@@ -39,6 +39,6 @@ export default class PIIEntities {
   @Column({ type: 'enum', enum: Confidence })
   confidence: Confidence;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;
 }

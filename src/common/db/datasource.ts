@@ -4,8 +4,8 @@ import { ConfigService } from '@nestjs/config';
 import ContactMessage from './entities/contactMessage.entity';
 import ComplianceSelection from './entities/compliance-selection.entity';
 import User from './entities/user.entity';
-import PIIEntities from './entities/PIIEntities.entity';
 import Documents from './entities/documents.entity';
+import PIIEntities from './entities/PIIEntities.entity';
 
 config();
 const configService = new ConfigService();
