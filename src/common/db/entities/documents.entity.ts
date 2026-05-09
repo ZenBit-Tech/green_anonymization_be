@@ -23,6 +23,9 @@ export default class Documents {
   @Column({ type: 'enum', enum: Compliance })
   chosenCompliance!: Compliance;
 
+  @Column({ type: 'varchar', length: 50 })
+  frameworkCode: string = '';
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   fileType?: string;
 

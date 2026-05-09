@@ -15,7 +15,7 @@ import {
 } from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
-  complianceName = Compliance.GDPR;
+  complianceNames = [Compliance.GDPR, Compliance.HIPAA];
 
   constructor(
     @Inject(anonymizationConfig.KEY)

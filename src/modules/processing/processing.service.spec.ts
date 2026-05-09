@@ -57,6 +57,7 @@ describe('ProcessingService', () => {
     it('returns empty result for empty input', async () => {
       const result = await service.process(
         Compliance.GDPR,
+        'GDPR_EU',
         '',
         'test@mail.com',
       );
@@ -94,6 +95,7 @@ describe('ProcessingService', () => {
 
       const result = await service.process(
         Compliance.GDPR,
+        'GDPR_EU',
         'text',
         'test@mail.com',
         'file.txt',
@@ -117,7 +119,7 @@ describe('ProcessingService', () => {
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'missing@mail.com'),
+        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'missing@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -129,7 +131,7 @@ describe('ProcessingService', () => {
       });
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -137,7 +139,7 @@ describe('ProcessingService', () => {
       anonymizationServiceMock.anonymize.mockRejectedValue(new Error('fail'));
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
       ).rejects.toThrow('fail');
     });
 
@@ -152,7 +154,7 @@ describe('ProcessingService', () => {
       managerMock.save.mockRejectedValue(new Error('db error'));
 
       await expect(
-        service.process(Compliance.GDPR, 'text', 'test@mail.com'),
+        service.process(Compliance.GDPR, 'GDPR_EU', 'text', 'test@mail.com'),
       ).rejects.toThrow(BadRequestException);
     });
   });

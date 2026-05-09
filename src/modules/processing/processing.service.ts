@@ -25,6 +25,7 @@ export default class ProcessingService {
 
   async process(
     complianceName: Compliance,
+    frameworkCode: string,
     text: string,
     email: string,
     originalFileName?: string,
@@ -52,6 +53,7 @@ export default class ProcessingService {
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: complianceName,
+          frameworkCode,
           fileType: 'Medical Record',
           fileName: originalFileName
             ? `${originalFileName}-${complianceName}-${Date.now()}`

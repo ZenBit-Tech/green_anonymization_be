@@ -13,12 +13,12 @@ describe('AnonymizationService (unit)', () => {
 
   beforeEach(async () => {
     mockGdprAnonymizerService = {
-      complianceName: Compliance.GDPR,
+      complianceNames: [Compliance.GDPR],
       anonymize: jest.fn(),
     } as jest.Mocked<AbstractAnonymizerService>;
 
     mockHipaaAnonymizerService = {
-      complianceName: Compliance.HIPAA,
+      complianceNames: [Compliance.HIPAA],
       anonymize: jest.fn(),
     } as jest.Mocked<AbstractAnonymizerService>;
 

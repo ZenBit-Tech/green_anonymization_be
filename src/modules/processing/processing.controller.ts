@@ -112,6 +112,7 @@ export default class ProcessingController {
     try {
       result = await this.processingService.process(
         mapFramework(selection.frameworkCode),
+        selection.frameworkCode,
         input,
         email,
         file?.originalname,
