@@ -13,11 +13,11 @@ import PIIEntities from './PIIEntities.entity';
 @Entity({ name: 'documents' })
 export default class Documents {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @Index()
+  @Index('IDX_DOCUMENTS_USER_ID')
   @Column({ type: 'uuid' })
-  userId: string;
+  userId: string = '';
 
   @Column({ type: 'varchar', length: 50 })
   chosenCompliance: string;
@@ -26,20 +26,20 @@ export default class Documents {
   fileType?: string;
 
   @Column({ type: 'varchar', length: 255 })
-  fileName: string;
+  fileName: string = '';
 
   @Column({ type: 'varchar', length: 1024 })
-  filePath: string;
+  filePath: string = '';
 
   @Column({ type: 'timestamp', nullable: true })
   verifiedAt?: Date;
 
-  @CreateDateColumn()
-  createdAt: Date;
+  @CreateDateColumn({ type: 'datetime', precision: 6 })
+  createdAt: Date = new Date();
 
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @UpdateDateColumn({ type: 'datetime', precision: 6 })
+  updatedAt: Date = new Date();
 
   @OneToMany(() => PIIEntities, (entity) => entity.document)
-  piiEntities: PIIEntities[];
+  piiEntities!: PIIEntities[];
 }
