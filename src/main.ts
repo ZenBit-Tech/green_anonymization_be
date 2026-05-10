@@ -15,6 +15,10 @@ async function bootstrap() {
       'API documentation for the backend of out data anonymizer app',
     )
     .setVersion('0.1')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'jwt',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
