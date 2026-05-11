@@ -3,7 +3,8 @@ import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export default class AnonymizeRequestDto {
   @ApiProperty({
-    description: 'Compliance framework code. Falls back to user default if omitted.',
+    description:
+      'Compliance framework code. Falls back to user default if omitted.',
     required: false,
     example: 'GDPR_EU',
   })

@@ -54,7 +54,8 @@ export default class ProcessingController {
         selectedFrameworkCode: {
           type: 'string',
           example: 'GDPR_EU',
-          description: 'Compliance framework code (GDPR_EU, GDPR_UK, FADP_CH, HIPAA_US)',
+          description:
+            'Compliance framework code (GDPR_EU, GDPR_UK, FADP_CH, HIPAA_US)',
         },
         file: {
           type: 'string',

@@ -50,7 +50,10 @@ describe('AnalyticsService', () => {
       providers: [
         AnalyticsService,
         { provide: getRepositoryToken(Documents), useValue: documentsRepoMock },
-        { provide: getRepositoryToken(PIIEntities), useValue: piiEntitiesRepoMock },
+        {
+          provide: getRepositoryToken(PIIEntities),
+          useValue: piiEntitiesRepoMock,
+        },
         { provide: UserService, useValue: userServiceMock },
       ],
     }).compile();
@@ -66,9 +69,9 @@ describe('AnalyticsService', () => {
     it('should throw NotFoundException if user not found', async () => {
       userServiceMock.findByEmail.mockResolvedValue(null);
 
-      await expect(
-        service.getDashboard('unknown@test.com'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getDashboard('unknown@test.com')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should return deIdMethodUsage with aggregated methods', async () => {
@@ -78,9 +81,7 @@ describe('AnalyticsService', () => {
       ];
 
       documentsRepoMock.createQueryBuilder.mockReturnValue(
-        buildQbMock([
-          { totalDocuments: '0', totalEntities: '0' },
-        ]),
+        buildQbMock([{ totalDocuments: '0', totalEntities: '0' }]),
       );
       piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(
         buildQbMock(deIdRows),
@@ -138,9 +139,7 @@ describe('AnalyticsService', () => {
       const replaceEntry = result.deIdMethodUsage.find(
         (m) => m.method === 'replace',
       );
-      const maskEntry = result.deIdMethodUsage.find(
-        (m) => m.method === 'mask',
-      );
+      const maskEntry = result.deIdMethodUsage.find((m) => m.method === 'mask');
 
       if (replaceEntry && maskEntry) {
         expect(replaceEntry.percentage + maskEntry.percentage).toBeCloseTo(100);

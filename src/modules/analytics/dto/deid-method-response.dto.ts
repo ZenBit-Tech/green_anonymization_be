@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export default class DeIdMethodResponseDto {
-  @ApiProperty({ description: 'De-identification method (replace, mask, redact, hash)' })
+  @ApiProperty({
+    description: 'De-identification method (replace, mask, redact, hash)',
+  })
   method: string = '';
 
   @ApiProperty()

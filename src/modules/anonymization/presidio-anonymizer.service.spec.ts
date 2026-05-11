@@ -54,10 +54,18 @@ describe('PresidioAnonymizerService', () => {
   });
 
   it('should register for all 4 compliance frameworks', () => {
-    expect(service.complianceNames).toContain(COMPLIANCE_FRAMEWORKS.GDPR_EU.code);
-    expect(service.complianceNames).toContain(COMPLIANCE_FRAMEWORKS.GDPR_UK.code);
-    expect(service.complianceNames).toContain(COMPLIANCE_FRAMEWORKS.FADP_CH.code);
-    expect(service.complianceNames).toContain(COMPLIANCE_FRAMEWORKS.HIPAA_US.code);
+    expect(service.complianceNames).toContain(
+      COMPLIANCE_FRAMEWORKS.GDPR_EU.code,
+    );
+    expect(service.complianceNames).toContain(
+      COMPLIANCE_FRAMEWORKS.GDPR_UK.code,
+    );
+    expect(service.complianceNames).toContain(
+      COMPLIANCE_FRAMEWORKS.FADP_CH.code,
+    );
+    expect(service.complianceNames).toContain(
+      COMPLIANCE_FRAMEWORKS.HIPAA_US.code,
+    );
     expect(service.complianceNames).toHaveLength(4);
   });
 
@@ -72,14 +80,19 @@ describe('PresidioAnonymizerService', () => {
       setupHttpMocks();
       const profile = FRAMEWORK_PROFILES.HIPAA_US;
 
-      await service.anonymize('John Smith test', COMPLIANCE_FRAMEWORKS.HIPAA_US);
+      await service.anonymize(
+        'John Smith test',
+        COMPLIANCE_FRAMEWORKS.HIPAA_US,
+      );
 
-      const analyzeBody = (httpService.post as jest.Mock).mock.calls[0][1] as Record<string, unknown>;
+      const analyzeBody = (httpService.post as jest.Mock).mock
+        .calls[0][1] as Record<string, unknown>;
       expect(analyzeBody.entities).toEqual(profile.entities);
       expect(analyzeBody.score_threshold).toBe(profile.scoreThreshold);
       expect(analyzeBody.ad_hoc_recognizers).toBeUndefined();
 
-      const anonymizeBody = (httpService.post as jest.Mock).mock.calls[1][1] as Record<string, unknown>;
+      const anonymizeBody = (httpService.post as jest.Mock).mock
+        .calls[1][1] as Record<string, unknown>;
       expect(anonymizeBody.anonymizers).toEqual(profile.anonymizers);
     });
 
@@ -89,7 +102,8 @@ describe('PresidioAnonymizerService', () => {
 
       await service.anonymize('text', COMPLIANCE_FRAMEWORKS.GDPR_EU);
 
-      const analyzeBody = (httpService.post as jest.Mock).mock.calls[0][1] as Record<string, unknown>;
+      const analyzeBody = (httpService.post as jest.Mock).mock
+        .calls[0][1] as Record<string, unknown>;
       expect(analyzeBody.entities).toEqual(profile.entities);
       expect(analyzeBody.ad_hoc_recognizers).toBeUndefined();
     });
@@ -99,7 +113,8 @@ describe('PresidioAnonymizerService', () => {
 
       await service.anonymize('text', COMPLIANCE_FRAMEWORKS.GDPR_UK);
 
-      const analyzeBody = (httpService.post as jest.Mock).mock.calls[0][1] as Record<string, unknown>;
+      const analyzeBody = (httpService.post as jest.Mock).mock
+        .calls[0][1] as Record<string, unknown>;
       expect(analyzeBody.ad_hoc_recognizers).toBeDefined();
       expect(
         (analyzeBody.ad_hoc_recognizers as unknown[]).length,
@@ -111,7 +126,8 @@ describe('PresidioAnonymizerService', () => {
 
       await service.anonymize('text', COMPLIANCE_FRAMEWORKS.FADP_CH);
 
-      const analyzeBody = (httpService.post as jest.Mock).mock.calls[0][1] as Record<string, unknown>;
+      const analyzeBody = (httpService.post as jest.Mock).mock
+        .calls[0][1] as Record<string, unknown>;
       expect(analyzeBody.ad_hoc_recognizers).toBeDefined();
       expect(
         (analyzeBody.ad_hoc_recognizers as unknown[]).length,
@@ -166,7 +182,8 @@ describe('PresidioAnonymizerService', () => {
         unknownCompliance as typeof COMPLIANCE_FRAMEWORKS.GDPR_EU,
       );
 
-      const analyzeBody = (httpService.post as jest.Mock).mock.calls[0][1] as Record<string, unknown>;
+      const analyzeBody = (httpService.post as jest.Mock).mock
+        .calls[0][1] as Record<string, unknown>;
       expect(analyzeBody.entities).toEqual(FRAMEWORK_PROFILES.GDPR_EU.entities);
     });
   });
