@@ -26,6 +26,10 @@ async function bootstrap() {
 
   const configService = new ConfigService();
 
+  const corsOrigins = configService
+    .getOrThrow<string>('FRONTEND_ORIGIN')
+    .split(',');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -35,7 +39,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: [configService.getOrThrow<string>('FRONTEND_ORIGIN')],
+    origin: corsOrigins,
     allowedHeaders: [
       'Content-Type',
       'Authorization',
