@@ -70,7 +70,12 @@ export default class ProcessingService {
             'No metadata found in anonymization result',
           );
         }
-        const piiEntities = anonymizationResult?.metadata?.entities.map((e) =>
+        const { entities, items = [] } = anonymizationResult.metadata;
+        const operatorByEntity = new Map(
+          items.map((item) => [item.entity_type, item.operator]),
+        );
+
+        const piiEntities = entities.map((e) =>
           manager.create(PIIEntities, {
             documentId: savedDocument.id,
             entityType: mapPIIEntityType(e.entity_type),
@@ -78,6 +83,7 @@ export default class ProcessingService {
             end: e.end,
             score: e.score ?? 0.0,
             confidence: mapConfidence(e.score),
+            deIdMethod: operatorByEntity.get(e.entity_type) ?? null,
           }),
         );
 
