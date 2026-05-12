@@ -9,8 +9,13 @@ services:
 
   presidio-analyzer:
     container_name: presidio_analyzer_testing
-    image: mcr.microsoft.com/presidio-analyzer:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.presidio-analyzer
+    volumes:
+      - ./presidio-analyzer-nlp-config.yml:/app/presidio-analyzer-nlp-config.yml
     environment:
+      - NLP_CONF_FILE=/app/presidio-analyzer-nlp-config.yml
     ports:
       - 127.0.0.1:${PRESIDIO_ANALYZER_PORT}:3000
 
