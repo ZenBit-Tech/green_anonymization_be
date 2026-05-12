@@ -1,5 +1,4 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { Request } from 'express';
 import PricingService from '../pricing.service';
 
 @Injectable()
@@ -9,7 +8,7 @@ export default class SubscriptionLimitGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context
       .switchToHttp()
-      .getRequest<Request & { user?: { email: string } }>();
+      .getRequest<{ user?: { email: string } }>();
 
     const email = request.user?.email;
     if (!email) return false;

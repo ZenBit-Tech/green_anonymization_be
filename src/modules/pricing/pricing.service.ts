@@ -11,7 +11,6 @@ import UserSubscription from '@common/db/entities/user-subscription.entity';
 import Documents from '@common/db/entities/documents.entity';
 import UserService from '@modules/user/user.service';
 import {
-  FREE_PLAN_DOCUMENTS_PER_DAY,
   PlanName,
   PRO_PLAN_SUBSCRIPTION_DAYS,
   SubscriptionStatus,
@@ -41,7 +40,7 @@ export default class PricingService {
         where: { isActive: true },
         order: { priceCents: 'ASC' },
       });
-      return plans.map((p) => this.mapPlanToDto(p));
+      return plans.map((p) => PricingService.mapPlanToDto(p));
     } catch {
       throw new InternalServerErrorException('Failed to load plans');
     }
@@ -61,17 +60,22 @@ export default class PricingService {
     return {
       status: subscription.status,
       expiresAt: subscription.expiresAt,
-      plan: this.mapPlanToDto(subscription.plan),
+      plan: PricingService.mapPlanToDto(subscription.plan),
       usedToday,
       dailyLimit: subscription.plan.documentsPerDay,
     };
   }
 
-  async selectPlan(email: string, planId: string): Promise<CurrentSubscriptionResponseDto> {
+  async selectPlan(
+    email: string,
+    planId: string,
+  ): Promise<CurrentSubscriptionResponseDto> {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException(USER_NOT_FOUND);
 
-    const plan = await this.planRepo.findOne({ where: { uuid: planId, isActive: true } });
+    const plan = await this.planRepo.findOne({
+      where: { uuid: planId, isActive: true },
+    });
     if (!plan) throw new NotFoundException(PLAN_NOT_FOUND);
 
     try {
@@ -82,9 +86,10 @@ export default class PricingService {
           { status: SubscriptionStatus.CANCELLED, cancelledAt: new Date() },
         );
 
-        const expiresAt = plan.name === PlanName.FREE
-          ? null
-          : this.addDays(new Date(), PRO_PLAN_SUBSCRIPTION_DAYS);
+        const expiresAt =
+          plan.name === PlanName.FREE
+            ? null
+            : PricingService.addDays(new Date(), PRO_PLAN_SUBSCRIPTION_DAYS);
 
         await manager.save(
           manager.create(UserSubscription, {
@@ -170,7 +175,9 @@ export default class PricingService {
     });
   }
 
-  private mapPlanToDto(plan: SubscriptionPlan): SubscriptionPlanResponseDto {
+  private static mapPlanToDto(
+    plan: SubscriptionPlan,
+  ): SubscriptionPlanResponseDto {
     return {
       uuid: plan.uuid,
       name: plan.name,
@@ -180,7 +187,7 @@ export default class PricingService {
     };
   }
 
-  private addDays(date: Date, days: number): Date {
+  private static addDays(date: Date, days: number): Date {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;

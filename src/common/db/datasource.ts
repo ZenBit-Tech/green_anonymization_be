@@ -40,7 +40,14 @@ const dbConfig = getDatabaseConfig();
 
 export const dataSourceOptions: DataSourceOptions = {
   ...dbConfig,
-  entities: [User, ContactMessage, Documents, PIIEntities, SubscriptionPlan, UserSubscription],
+  entities: [
+    User,
+    ContactMessage,
+    Documents,
+    PIIEntities,
+    SubscriptionPlan,
+    UserSubscription,
+  ],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
   logging: false,

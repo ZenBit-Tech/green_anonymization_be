@@ -38,9 +38,14 @@ export default class UserController {
   ) {}
 
   @ApiOperation({ summary: 'Complete user registration' })
-  @ApiCreatedResponse({ description: 'User successfully registered', type: User })
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
+    type: User,
+  })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized (invalid or missing JWT)' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
   @ApiForbiddenResponse({ description: 'User is already registered' })
   @Throttle({ default: { limit: 5, ttl: 3600000 } })
   @Post('register')
@@ -56,7 +61,9 @@ export default class UserController {
 
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiOkResponse({ description: 'User retrieved successfully', type: User })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized (invalid or missing JWT)' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
   @ApiForbiddenResponse({ description: 'User is not fully registered' })
   @Throttle({ default: { limit: 20, ttl: 3600000 } })
   @Get('me')

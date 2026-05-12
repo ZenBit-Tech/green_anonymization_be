@@ -32,7 +32,11 @@ export default class UserSubscription {
   @JoinColumn({ name: 'plan_id' })
   plan!: SubscriptionPlan;
 
-  @Column({ type: 'enum', enum: SubscriptionStatus, default: SubscriptionStatus.ACTIVE })
+  @Column({
+    type: 'enum',
+    enum: SubscriptionStatus,
+    default: SubscriptionStatus.ACTIVE,
+  })
   status: SubscriptionStatus = SubscriptionStatus.ACTIVE;
 
   @Column({ type: 'datetime', name: 'started_at' })
