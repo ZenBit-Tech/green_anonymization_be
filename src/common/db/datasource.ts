@@ -5,6 +5,8 @@ import ContactMessage from './entities/contactMessage.entity';
 import User from './entities/user.entity';
 import Documents from './entities/documents.entity';
 import PIIEntities from './entities/PIIEntities.entity';
+import SubscriptionPlan from './entities/subscription-plan.entity';
+import UserSubscription from './entities/user-subscription.entity';
 
 config();
 const configService = new ConfigService();
@@ -38,7 +40,7 @@ const dbConfig = getDatabaseConfig();
 
 export const dataSourceOptions: DataSourceOptions = {
   ...dbConfig,
-  entities: [User, ContactMessage, Documents, PIIEntities],
+  entities: [User, ContactMessage, Documents, PIIEntities, SubscriptionPlan, UserSubscription],
   migrations: ['dist/migrations/*.js'],
   synchronize: false,
   logging: false,

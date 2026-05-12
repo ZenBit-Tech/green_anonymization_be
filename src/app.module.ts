@@ -13,6 +13,7 @@ import anonymizationConfig from '@modules/anonymization/anonymization.config';
 import AnonymizationModule from '@modules/anonymization/anonymization.module';
 import ProcessingModule from '@modules/processing/processing.module';
 import AnalyticsModule from '@modules/analytics/analytics.module';
+import PricingModule from '@modules/pricing/pricing.module';
 import AppController from './app.controller';
 import AppService from './app.service';
 
@@ -36,6 +37,7 @@ import AppService from './app.service';
     AnonymizationModule,
     ProcessingModule,
     AnalyticsModule,
+    PricingModule,
   ],
   controllers: [AppController, UserController],
   providers: [

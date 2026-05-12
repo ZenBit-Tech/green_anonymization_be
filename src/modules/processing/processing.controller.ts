@@ -30,6 +30,8 @@ import extractTextFromFile from './utils/file-text';
 import ProcessingService from './processing.service';
 import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 import PIIEntityDto from './dto/piiEntity.dto';
+import SubscriptionLimitGuard from '@modules/pricing/guards/subscription-limit.guard';
+import { ProcessingResult } from './types/ProcessingResult';
 
 @ApiTags('Processing')
 @Controller('processing')
@@ -80,7 +82,7 @@ export default class ProcessingController {
     description: 'Unexpected server error during anonymization process',
   })
   @Post('anonymize')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionLimitGuard)
   @UseInterceptors(FileInterceptor('file'))
   async anonymize(
     @UserEmail() email: string,
@@ -112,7 +114,7 @@ export default class ProcessingController {
     } else {
       throw new BadRequestException('No input provided');
     }
-    let result;
+    let result: ProcessingResult;
     try {
       result = await this.processingService.process(
         selectedFramework,
