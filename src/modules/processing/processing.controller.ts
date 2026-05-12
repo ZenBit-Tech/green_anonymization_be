@@ -4,6 +4,7 @@ import {
   Controller,
   InternalServerErrorException,
   Post,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -30,6 +31,7 @@ import extractTextFromFile from './utils/file-text';
 import ProcessingService from './processing.service';
 import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 import PIIEntityDto from './dto/piiEntity.dto';
+import GenerateFileRequestDto from './dto/generateFileRequest.dto';
 
 @ApiTags('Processing')
 @Controller('processing')
@@ -49,6 +51,11 @@ export default class ProcessingController {
     schema: {
       type: 'object',
       properties: {
+        selectedFrameworkCode: {
+          type: 'string',
+          description:
+            'code of selected compliance framework. Example: "HIPAA_US"',
+        },
         file: {
           type: 'string',
           format: 'binary',
@@ -134,5 +141,22 @@ export default class ProcessingController {
         excludeExtraneousValues: true,
       }),
     });
+  }
+
+  @Post('generate-file')
+  @UseGuards(JwtAuthGuard)
+  async generateFile(@Body() data: GenerateFileRequestDto, @Res() res) {
+    const file = await this.processingService.generateFile(
+      data.text,
+      data.extension,
+    );
+
+    res.set({
+      'Content-Type': file.mimeType,
+      'Content-Disposition': `attachment; filename="${file.filename}"`,
+      'Content-Length': file.buffer.length,
+    });
+
+    res.end(file.buffer);
   }
 }

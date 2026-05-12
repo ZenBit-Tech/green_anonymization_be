@@ -86,3 +86,11 @@ export const COMPLIANCE_FRAMEWORKS = {
 
 export type ComplianceFramework =
   (typeof COMPLIANCE_FRAMEWORKS)[keyof typeof COMPLIANCE_FRAMEWORKS];
+
+export const DATE_FORMAT = 'yyyy-MM-dd';
+
+export enum FileExtensions {
+  TXT = 'txt',
+  PDF = 'pdf',
+  DOCX = 'docx',
+}
