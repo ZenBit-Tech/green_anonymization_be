@@ -2,7 +2,7 @@ import { Inject } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import {
-  Compliance,
+  COMPLIANCE_FRAMEWORKS,
   PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT,
   PRESIDIO_ANONYMIZER_ANONYMIZE_ENDPOINT,
 } from '@common/constants';
@@ -15,7 +15,7 @@ import {
 } from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
-  complianceName = Compliance.GDPR;
+  complianceName = COMPLIANCE_FRAMEWORKS.GDPR_EU.code;
 
   constructor(
     @Inject(anonymizationConfig.KEY)
@@ -26,7 +26,15 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
   }
 
   async anonymize(text: string): Promise<AnonymizationResult> {
-    const analyzerResults = await this.analyze(text);
+    let analyzerResults = await this.analyze(text);
+    analyzerResults = analyzerResults.map(
+      (item): AnonymizationEntity => ({
+        start: item.start,
+        end: item.end,
+        entity_type: item.entity_type,
+        score: item.score,
+      }),
+    );
 
     try {
       const response = await firstValueFrom(
@@ -42,13 +50,12 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
       );
 
       const anonymizedText = response.data.text;
-      const entities: AnonymizationEntity[] = response.data.items;
 
       const result: AnonymizationResult = {
         originalText: text,
         anonymizedText,
         metadata: {
-          entities,
+          entities: analyzerResults,
         },
       };
 
@@ -58,7 +65,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
     }
   }
 
-  private async analyze(text: string): Promise<string> {
+  private async analyze(text: string): Promise<AnonymizationEntity[]> {
     // TODO: Detect language using https://github.com/nitotm/efficient-language-detector-js
 
     try {

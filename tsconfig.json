@@ -20,7 +20,7 @@
         "@common/*": ["./common/*"],
         "@entities/*": ["./common/db/entities/*"],
     },
-    "types": ["jest", "node"],
+    "types": ["jest", "node", "multer", "express"],
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,

@@ -1,8 +1,8 @@
-import { Compliance } from '@common/constants';
+import { ComplianceFrameworkConfig } from '@/common/constants';
 
 export default class AnonymizerNotFoundError extends Error {
-  constructor(complianceName: Compliance) {
-    super(`No anonymizer found for compliance: ${complianceName}`);
+  constructor(compliance: ComplianceFrameworkConfig) {
+    super(`No anonymizer found for compliance: ${compliance.name}`);
     this.name = 'AnonymizerNotFoundError';
   }
 }

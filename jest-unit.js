@@ -6,6 +6,7 @@ module.exports = {
   testRegex: '.*\\.spec\\.ts$',
   transform: { '^.+\\.(t|j)s$': 'ts-jest' },
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
     '^@common/(.*)$': '<rootDir>/common/$1',
     '^@entities/(.*)$': '<rootDir>/common/db/entities/$1',
     '^@modules/(.*)$': '<rootDir>/modules/$1',
