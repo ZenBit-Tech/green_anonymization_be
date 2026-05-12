@@ -86,7 +86,6 @@ async function checkAllServiceHealth(): Promise<ServiceHealth[]> {
       `Health check attempt ${attempt}/${ALL_SERVICE_HEALTH_CHECKS_MAX_ATTEMPTS}`,
     );
 
-    checkServiceHealth('Ollama', ollamaPort, 'api/tags');
     checkServiceHealth('Presidio Anonymizer', presidioAnonymizerPort);
     checkServiceHealth('Presidio Analyzer', presidioAnalyzerPort);
 
