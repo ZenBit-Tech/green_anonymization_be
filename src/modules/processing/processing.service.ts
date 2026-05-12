@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
+import DocumentsService from '@modules/documents/documents.service';
 import { DataSource } from 'typeorm';
 import { ComplianceFrameworkConfig, FileExtensions } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
@@ -24,6 +25,7 @@ export default class ProcessingService {
     private readonly userService: UserService,
     private readonly dataSource: DataSource,
     private readonly anonymizationService: AnonymizationService,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   async process(
@@ -45,13 +47,12 @@ export default class ProcessingService {
       return await this.dataSource.transaction(async (manager) => {
         const anonymizationResult: AnonymizationResult =
           await this.anonymizationService.anonymize(compliance, text);
-
         const user: User | null = await this.userService.findByEmail(email);
-
         if (!user) {
           throw new BadRequestException('User not found');
         }
         await this.userService.setDefaultFramework(user.email, compliance.code);
+
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: compliance.code,
@@ -62,9 +63,7 @@ export default class ProcessingService {
           filePath: 'cloud/path/placeholder',
           verifiedAt: new Date(),
         });
-
         const savedDocument = await manager.save(document);
-
         if (!anonymizationResult.metadata) {
           throw new InternalServerErrorException(
             'No metadata found in anonymization result',
@@ -80,13 +79,17 @@ export default class ProcessingService {
             confidence: mapConfidence(e.score),
           }),
         );
-
         const savedPIIEntities = await manager.save(piiEntities);
-
+        const documentWithText =
+          await this.documentsService.uploadAnonymizedText(
+            savedDocument,
+            anonymizationResult.anonymizedText,
+            manager,
+          );
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,
-          document: savedDocument,
+          document: documentWithText,
           piiEntities: savedPIIEntities,
         };
       });
