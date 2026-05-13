@@ -40,7 +40,7 @@ export default class PIIEntities {
   confidence: Confidence;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
-  deIdMethod!: string | null;
+  deIdMethod?: string;
 
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;

@@ -83,7 +83,7 @@ export default class ProcessingService {
             end: e.end,
             score: e.score ?? 0.0,
             confidence: mapConfidence(e.score),
-            deIdMethod: operatorByEntity.get(e.entity_type) ?? null,
+            deIdMethod: operatorByEntity.get(e.entity_type),
           }),
         );
 
