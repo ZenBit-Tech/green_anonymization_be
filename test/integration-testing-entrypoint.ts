@@ -145,10 +145,13 @@ async function shutdownInfrastructure(): Promise<void> {
 async function runIntegrationTests(): Promise<void> {
   log('Running integration tests...');
   try {
-    const output = execSync('npx jest --config ./test/jest-integration.json', {
-      stdio: 'pipe',
-      encoding: 'utf-8',
-    });
+    const output = execSync(
+      'npx jest --config ./test/jest-integration.json --coverage',
+      {
+        stdio: 'pipe',
+        encoding: 'utf-8',
+      },
+    );
     log(output);
     log('Integration tests completed successfully');
   } catch (error) {
