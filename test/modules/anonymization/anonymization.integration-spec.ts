@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Compliance } from '@common/constants';
+
+import { COMPLIANCE_FRAMEWORKS, ComplianceFramework } from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import { ConfigModule } from '@nestjs/config';
 import { HttpModule } from '@nestjs/axios';
@@ -36,7 +37,7 @@ describe('Anonymization (integration)', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const textArrayLong = [textLong, textLong, textLong, textLong, textLong];
 
-  const testIdempotency = (compliance: Compliance, text: string) => {
+  const testIdempotency = (compliance: ComplianceFramework, text: string) => {
     it('should idempotently anonymize same input across multiple calls', async () => {
       const result1 = await service.anonymize(compliance, text);
       const result2 = await service.anonymize(compliance, text);
@@ -47,7 +48,10 @@ describe('Anonymization (integration)', () => {
     });
   };
 
-  const testPerformance = (compliance: Compliance, textArray: string[]) => {
+  const testPerformance = (
+    compliance: ComplianceFramework,
+    textArray: string[],
+  ) => {
     it('should handle rapid successive requests', async () => {
       const startTime = performance.now();
 
@@ -97,17 +101,23 @@ describe('Anonymization (integration)', () => {
 
   describe('HIPAA anonymization', () => {
     it('should handle HIPAA compliance', async () => {
-      const result = await service.anonymize(Compliance.HIPAA, textShort);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.HIPAA_US,
+        textShort,
+      );
       expect(result).toBeDefined();
     });
 
-    testIdempotency(Compliance.HIPAA, textLong);
-    testPerformance(Compliance.HIPAA, textArrayShort);
+    testIdempotency(COMPLIANCE_FRAMEWORKS.HIPAA_US, textLong);
+    testPerformance(COMPLIANCE_FRAMEWORKS.HIPAA_US, textArrayShort);
   });
 
   describe('GDPR anonymization', () => {
     it('should handle GDPR compliance', async () => {
-      const result = await service.anonymize(Compliance.GDPR, textShort);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        textShort,
+      );
       expect(result).toBeDefined();
     });
 
@@ -115,7 +125,10 @@ describe('Anonymization (integration)', () => {
       const input =
         'In my notes I might write something like “Hey this is Alex from Cherkasy, email me at alex.petrenko@gmail.com if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together.';
 
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
 
       const regex =
         /^In my notes I might write something like “Hey this is <[^>]+> from <[^>]+>, email me at <[^>]+> if needed,” mixed with random comments, typos, or extra phrases that include names, locations, and numbers all tangled together\.$/;
@@ -125,25 +138,37 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: Tokyo', async () => {
       const input = 'I am from Tokyo.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^I am from <[^>]+>\.$/);
     });
 
     it('should anonymize: São Paulo', async () => {
       const input = 'Currently in São Paulo.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Currently in <[^>]+>\.$/);
     });
 
     it('should anonymize: Nairobi', async () => {
       const input = 'Living near Nairobi.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Living near <[^>]+>\.$/);
     });
 
     it('should anonymize: Berlin to Munich', async () => {
       const input = 'I moved from Berlin to Munich.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^I moved from <[^>]+> to <[^>]+>\.$/,
       );
@@ -151,7 +176,10 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: Alex Paris and alex@mail.com', async () => {
       const input = 'Hi I am Alex from Paris, email alex@mail.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Hi I am <[^>]+> from <[^>]+>, email <[^>]+>\.$/,
       );
@@ -159,7 +187,10 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: John London and john123@yahoo.com', async () => {
       const input = 'Contact John in London at john123@yahoo.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Contact <[^>]+> in <[^>]+> at <[^>]+>\.$/,
       );
@@ -167,7 +198,10 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: Maria Madrid and maria@gmail.com', async () => {
       const input = 'User Maria in Madrid uses maria@gmail.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^User <[^>]+> in <[^>]+> uses <[^>]+>\.$/,
       );
@@ -175,7 +209,10 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: Ahmed Dubai and ahmed@outlook.com', async () => {
       const input = 'Reach Ahmed from Dubai via ahmed@outlook.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Reach <[^>]+> from <[^>]+> via <[^>]+>\.$/,
       );
@@ -183,7 +220,10 @@ describe('Anonymization (integration)', () => {
 
     it('should anonymize: Wei Shanghai and wei@qq.com', async () => {
       const input = 'Ping Wei in Shanghai at wei@qq.com.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Ping <[^>]+> in <[^>]+> at <[^>]+>\.$/,
       );
@@ -200,17 +240,20 @@ describe('Anonymization (integration)', () => {
     runLocationTestsGDPR(() => service);
     runPersonTestsGDPR(() => service);
 
-    testIdempotency(Compliance.GDPR, textLong);
-    testPerformance(Compliance.GDPR, textArrayShort);
+    testIdempotency(COMPLIANCE_FRAMEWORKS.GDPR_EU, textLong);
+    testPerformance(COMPLIANCE_FRAMEWORKS.GDPR_EU, textArrayShort);
   });
 
   describe('FADP anonymization', () => {
     it('should handle FADP compliance', async () => {
-      const result = await service.anonymize(Compliance.FADP, textShort);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.FADP_CH,
+        textShort,
+      );
       expect(result).toBeDefined();
     });
 
-    testIdempotency(Compliance.FADP, textLong);
-    testPerformance(Compliance.FADP, textArrayShort);
+    testIdempotency(COMPLIANCE_FRAMEWORKS.FADP_CH, textLong);
+    testPerformance(COMPLIANCE_FRAMEWORKS.FADP_CH, textArrayShort);
   });
 });

@@ -1,4 +1,4 @@
-import { Compliance } from '../../../src/common/constants';
+import { COMPLIANCE_FRAMEWORKS } from '@common/constants';
 import AnonymizationService from '../../../src/modules/anonymization/anonymization.service';
 
 const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
@@ -13,7 +13,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
       const input =
         "I work at Global Tech Solutions LLC, or sometimes we shorten it to GTS, though legally it's registered as Global Tech Solutions Limited, and internally we refer to it as “the Group” or just “Head Office.”";
 
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
 
       const regex =
         /^I work at <[^>]+>, or sometimes we shorten it to <[^>]+>, though legally it's registered as <[^>]+>, and internally we refer to it as “<[^>]+>” or just “<[^>]+>.”$/;
@@ -23,55 +26,82 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Google', async () => {
       const input = 'I work at Google.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^I work at <[^>]+>\.$/);
     });
 
     it('should anonymize: Tata Consultancy Services', async () => {
       const input = 'Employed by Tata Consultancy Services.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Employed by <[^>]+>\.$/);
     });
 
     it('should anonymize: Aramco (Arabic organization)', async () => {
       const input = 'Working for Aramco.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Working for <[^>]+>\.$/);
     });
 
     it('should anonymize: NHS UK', async () => {
       const input = 'At NHS UK currently.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^At <[^>]+> currently\.$/);
     });
 
     it('should anonymize: ACME Corp', async () => {
       const input = 'Freelancing via ACME Corp.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Freelancing via <[^>]+>\.$/);
     });
 
     it('should anonymize: Apple Inc', async () => {
       const input = 'I work at Apple Inc.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^I work at <[^>]+>\.$/);
     });
 
     it('should anonymize: Samsung Electronics', async () => {
       const input = 'Employed by Samsung Electronics.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Employed by <[^>]+>\.$/);
     });
 
     it('should anonymize: Toyota Motor Corporation', async () => {
       const input = 'My father works for Toyota Motor Corporation.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^My father works for <[^>]+>\.$/);
     });
 
     it('should anonymize: Nestlé S.A.', async () => {
       const input = 'I interviewed at Nestlé S.A. last month.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^I interviewed at <[^>]+> last month\.$/,
       );
@@ -79,7 +109,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Volkswagen Group', async () => {
       const input = 'Contracted with Volkswagen Group for the project.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Contracted with <[^>]+> for the project\.$/,
       );
@@ -87,7 +120,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Siemens AG', async () => {
       const input = 'Partnership established with Siemens AG.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Partnership established with <[^>]+>\.$/,
       );
@@ -95,7 +131,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: BASF SE', async () => {
       const input = 'Chemical supplies from BASF SE arrived today.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Chemical supplies from <[^>]+> arrived today\.$/,
       );
@@ -103,7 +142,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: BMW AG', async () => {
       const input = 'Dealership franchise from BMW AG.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Dealership franchise from <[^>]+>\.$/,
       );
@@ -111,13 +153,19 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Zurich Insurance Group', async () => {
       const input = 'Policy holder with Zurich Insurance Group.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Policy holder with <[^>]+>\.$/);
     });
 
     it('should anonymize: Allianz SE', async () => {
       const input = 'Coverage through Allianz SE is excellent.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Coverage through <[^>]+> is excellent\.$/,
       );
@@ -125,7 +173,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Gazprom', async () => {
       const input = 'Energy contract with Gazprom finalized.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Energy contract with <[^>]+> finalized\.$/,
       );
@@ -133,7 +184,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Rosneft', async () => {
       const input = 'Supply agreement from Rosneft approved.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Supply agreement from <[^>]+> approved\.$/,
       );
@@ -141,7 +195,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Lukoil', async () => {
       const input = 'Investment opportunity with Lukoil explored.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Investment opportunity with <[^>]+> explored\.$/,
       );
@@ -149,7 +206,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Yandex', async () => {
       const input = 'Tech partnership with Yandex announced.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Tech partnership with <[^>]+> announced\.$/,
       );
@@ -157,7 +217,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Sberbank', async () => {
       const input = 'Banking services from Sberbank utilized.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Banking services from <[^>]+> utilized\.$/,
       );
@@ -165,7 +228,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Huawei Technologies', async () => {
       const input = 'Equipment supplied by Huawei Technologies.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Equipment supplied by <[^>]+>\.$/,
       );
@@ -173,7 +239,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Alibaba Group', async () => {
       const input = 'Marketplace integration with Alibaba Group.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Marketplace integration with <[^>]+>\.$/,
       );
@@ -181,7 +250,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Tencent Holdings', async () => {
       const input = 'Digital services from Tencent Holdings licensed.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Digital services from <[^>]+> licensed\.$/,
       );
@@ -189,13 +261,19 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: State Bank of India', async () => {
       const input = 'Account opened at State Bank of India.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Account opened at <[^>]+>\.$/);
     });
 
     it('should anonymize: Reliance Industries', async () => {
       const input = 'Joint venture with Reliance Industries initiated.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Joint venture with <[^>]+> initiated\.$/,
       );
@@ -203,7 +281,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Infosys Limited', async () => {
       const input = 'Consulting services from Infosys Limited retained.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Consulting services from <[^>]+> retained\.$/,
       );
@@ -211,7 +292,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Wipro Technologies', async () => {
       const input = 'Software development by Wipro Technologies completed.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Software development by <[^>]+> completed\.$/,
       );
@@ -219,7 +303,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Kirloskar Group', async () => {
       const input = 'Industrial equipment from Kirloskar Group delivered.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Industrial equipment from <[^>]+> delivered\.$/,
       );
@@ -227,7 +314,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Hero MotoCorp', async () => {
       const input = 'Motorcycle purchased from Hero MotoCorp dealership.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Motorcycle purchased from <[^>]+> dealership\.$/,
       );
@@ -235,7 +325,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Mahindra & Mahindra', async () => {
       const input = 'Vehicle maintenance at Mahindra & Mahindra facility.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Vehicle maintenance at <[^>]+> facility\.$/,
       );
@@ -243,7 +336,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Petrobras', async () => {
       const input = 'Fuel supply contract with Petrobras signed.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Fuel supply contract with <[^>]+> signed\.$/,
       );
@@ -251,7 +347,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Vale S.A.', async () => {
       const input = 'Mining operations managed by Vale S.A.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Mining operations managed by <[^>]+>\.$/,
       );
@@ -259,13 +358,19 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Itaú Unibanco', async () => {
       const input = 'Mortgage approved by Itaú Unibanco.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(/^Mortgage approved by <[^>]+>\.$/);
     });
 
     it('should anonymize: JBS S.A.', async () => {
       const input = 'Meat supplier JBS S.A. provides quality products.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Meat supplier <[^>]+> provides quality products\.$/,
       );
@@ -273,7 +378,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Embraer', async () => {
       const input = 'Aircraft manufactured by Embraer delivered.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Aircraft manufactured by <[^>]+> delivered\.$/,
       );
@@ -281,7 +389,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Natura &Co', async () => {
       const input = 'Beauty products from Natura &Co purchased.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Beauty products from <[^>]+> purchased\.$/,
       );
@@ -289,7 +400,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Bradespa', async () => {
       const input = 'Pulp supplier Bradespa confirmed delivery.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Pulp supplier <[^>]+> confirmed delivery\.$/,
       );
@@ -297,7 +411,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Keurig Dr Pepper', async () => {
       const input = 'Beverage distributor Keurig Dr Pepper restocked.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Beverage distributor <[^>]+> restocked\.$/,
       );
@@ -305,7 +422,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Grupo Antolin', async () => {
       const input = 'Auto parts supplied by Grupo Antolin.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Auto parts supplied by <[^>]+>\.$/,
       );
@@ -313,7 +433,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Mapfre Insurance', async () => {
       const input = 'Coverage renewed with Mapfre Insurance.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Coverage renewed with <[^>]+>\.$/,
       );
@@ -321,7 +444,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Grupo Bancario Santander', async () => {
       const input = 'Investment account managed by Grupo Bancario Santander.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Investment account managed by <[^>]+>\.$/,
       );
@@ -329,7 +455,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Mercado Libre', async () => {
       const input = 'Auction listing posted on Mercado Libre.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Auction listing posted on <[^>]+>\.$/,
       );
@@ -337,7 +466,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Grupo Mexico', async () => {
       const input = 'Mining concession granted to Grupo Mexico.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Mining concession granted to <[^>]+>\.$/,
       );
@@ -345,7 +477,10 @@ const runOrganizationTestsGDPR = (getService: () => AnonymizationService) => {
 
     it('should anonymize: Cemex SAB', async () => {
       const input = 'Cement orders placed with Cemex SAB.';
-      const result = await service.anonymize(Compliance.GDPR, input);
+      const result = await service.anonymize(
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        input,
+      );
       expect(result.anonymizedText).toMatch(
         /^Cement orders placed with <[^>]+>\.$/,
       );
