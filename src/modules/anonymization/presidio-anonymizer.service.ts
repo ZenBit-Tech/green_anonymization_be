@@ -15,7 +15,7 @@ import {
 } from './anonymization.types';
 
 export default class PresidioAnonymizerService extends AbstractAnonymizerService {
-  complianceName = COMPLIANCE_FRAMEWORKS.GDPR_EU.code;
+  complianceNames = Object.values(COMPLIANCE_FRAMEWORKS).map((f) => f.code);
 
   constructor(
     @Inject(anonymizationConfig.KEY)
@@ -67,7 +67,6 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
 
   private async analyze(text: string): Promise<AnonymizationEntity[]> {
     // TODO: Detect language using https://github.com/nitotm/efficient-language-detector-js
-
     try {
       const response = await firstValueFrom(
         this.httpService.post(
