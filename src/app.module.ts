@@ -16,6 +16,7 @@ import AnalyticsModule from '@modules/analytics/analytics.module';
 import DocumentsModule from '@modules/documents/documents.module';
 import AppController from './app.controller';
 import AppService from './app.service';
+import FileGenerationModule from './modules/file-generation/file-generation.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import AppService from './app.service';
     ProcessingModule,
     AnalyticsModule,
     DocumentsModule,
+    FileGenerationModule,
   ],
   controllers: [AppController, UserController],
   providers: [
