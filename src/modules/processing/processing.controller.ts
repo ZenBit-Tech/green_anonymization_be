@@ -11,11 +11,14 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
+  ApiProduces,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -143,6 +146,36 @@ export default class ProcessingController {
     });
   }
 
+  @ApiOperation({
+    summary: 'Generate a downloadable file from provided text',
+    description:
+      'Generates a TXT, PDF, or DOCX file from the provided text input.',
+  })
+  @ApiBearerAuth()
+  @ApiBody({
+    type: GenerateFileRequestDto,
+  })
+  @ApiProduces(
+    'text/plain',
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  )
+  @ApiOkResponse({
+    description: 'Generated file returned successfully',
+    schema: {
+      type: 'string',
+      format: 'binary',
+    },
+  })
+  @ApiBadRequestResponse({
+    description: 'Invalid request body or unsupported file extension',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Invalid or missing JWT authentication',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Unexpected error during file generation',
+  })
   @Post('generate-file')
   @UseGuards(JwtAuthGuard)
   async generateFile(@Body() data: GenerateFileRequestDto, @Res() res) {

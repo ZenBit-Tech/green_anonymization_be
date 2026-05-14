@@ -13,18 +13,11 @@ import {
   getRandomValue,
   toFixedDigitString,
 } from './utils';
-
-type GeneratedEntity = {
-  type: PIIEntityType;
-  value: string;
-};
-
-type ManualGenerationResult = {
-  syntheticText: string;
-  generatedEntities: GeneratedEntity[];
-};
-
-type GeneratorMethod = () => string;
+import {
+  GeneratorMethod,
+  ManualGenerationResult,
+  GeneratedEntity,
+} from './types';
 
 @Injectable()
 export default class ManualGenerationService {
