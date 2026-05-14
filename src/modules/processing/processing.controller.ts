@@ -35,6 +35,7 @@ import ProcessingService from './processing.service';
 import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 import PIIEntityDto from './dto/piiEntity.dto';
 import GenerateFileRequestDto from './dto/generateFileRequest.dto';
+import { ProcessingResult } from './types/ProcessingResult';
 
 @ApiTags('Processing')
 @Controller('processing')
@@ -97,11 +98,10 @@ export default class ProcessingController {
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
-    // const selection = await this.complianceService.getSelectionByEmail(email);
-
     if (!data?.selectedFrameworkCode) {
       throw new BadRequestException('No framework selected');
     }
+
     const selectedFramework = await this.complianceService.getFrameworkByCode(
       data.selectedFrameworkCode,
     );
@@ -122,7 +122,8 @@ export default class ProcessingController {
     } else {
       throw new BadRequestException('No input provided');
     }
-    let result;
+
+    let result: ProcessingResult;
     try {
       result = await this.processingService.process(
         selectedFramework,

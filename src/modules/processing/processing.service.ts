@@ -43,16 +43,21 @@ export default class ProcessingService {
       };
     }
 
+    const user: User | null = await this.userService.findByEmail(email);
+    if (!user) throw new BadRequestException('User not found');
+
+    const anonymizationResult: AnonymizationResult =
+      await this.anonymizationService.anonymize(compliance, text);
+
+    await this.userService.setDefaultFramework(user.email, compliance.code);
+
     try {
       return await this.dataSource.transaction(async (manager) => {
-        const anonymizationResult: AnonymizationResult =
-          await this.anonymizationService.anonymize(compliance, text);
-        const user: User | null = await this.userService.findByEmail(email);
-        if (!user) {
-          throw new BadRequestException('User not found');
+        if (!anonymizationResult.metadata) {
+          throw new InternalServerErrorException(
+            'No metadata found in anonymization result',
+          );
         }
-        await this.userService.setDefaultFramework(user.email, compliance.code);
-
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: compliance.code,
@@ -64,12 +69,8 @@ export default class ProcessingService {
           verifiedAt: new Date(),
         });
         const savedDocument = await manager.save(document);
-        if (!anonymizationResult.metadata) {
-          throw new InternalServerErrorException(
-            'No metadata found in anonymization result',
-          );
-        }
-        const piiEntities = anonymizationResult?.metadata?.entities.map((e) =>
+
+        const piiEntities = anonymizationResult.metadata.entities.map((e) =>
           manager.create(PIIEntities, {
             documentId: savedDocument.id,
             entityType: mapPIIEntityType(e.entity_type),
@@ -94,94 +95,9 @@ export default class ProcessingService {
         };
       });
     } catch (err) {
-      throw new BadRequestException(
-        `Failed to persist anonymization result, error: ${err}`,
-      );
+      if (err instanceof BadRequestException) throw err;
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new BadRequestException('Failed to persist anonymization result');
     }
-  }
-
-  async generateFile(text: string, extension: FileExtensions) {
-    if (!text) {
-      throw new BadRequestException('No text provided for file generation');
-    }
-
-    switch (extension) {
-      case FileExtensions.TXT:
-        return this.generateTxt(text);
-
-      case FileExtensions.PDF:
-        return this.generatePdf(text);
-
-      case FileExtensions.DOCX:
-        return this.generateDocx(text);
-
-      default:
-        throw new BadRequestException('Unsupported file extension');
-    }
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private generateTxt(text: string) {
-    return {
-      buffer: Buffer.from(text, 'utf-8'),
-      mimeType: 'text/plain',
-      filename: 'generated-file.txt',
-    };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private async generatePdf(text: string) {
-    return new Promise<{
-      buffer: Buffer;
-      mimeType: string;
-      filename: string;
-    }>((resolve, reject) => {
-      const doc = new PDFDocument();
-
-      const chunks: Buffer[] = [];
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      doc.on('data', (chunk) => chunks.push(chunk));
-
-      doc.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-
-        resolve({
-          buffer,
-          mimeType: 'application/pdf',
-          filename: 'generated-file.pdf',
-        });
-      });
-
-      doc.on('error', reject);
-
-      doc.text(text);
-
-      doc.end();
-    });
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private async generateDocx(text: string) {
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text,
-            }),
-          ],
-        },
-      ],
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-
-    return {
-      buffer,
-      mimeType:
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      filename: 'generated-file.docx',
-    };
   }
 }
