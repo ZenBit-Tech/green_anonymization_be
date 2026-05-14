@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsInt, IsString, Max, Min } from 'class-validator';
 
-export default class GenerateSyntheticDataDto {
+export default class GenerateSyntheticDataRequestDto {
   @ApiProperty({
     example: 'document-id',
   })

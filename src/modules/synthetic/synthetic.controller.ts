@@ -1,4 +1,11 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  InternalServerErrorException,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+
 import {
   ApiBody,
   ApiOperation,
@@ -8,8 +15,11 @@ import {
 } from '@nestjs/swagger';
 
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
-import GenerateSyntheticDataDto from './dto/generate-synthetic-data.dto';
+
 import SyntheticDataService from './synthetic.service';
+
+import GenerateSyntheticDataRequestDto from './dto/generate-synthetic-data-request.dto';
+import GenerateSyntheticDataResponseDto from './dto/generate-synthetic-data-response.dto';
 
 @ApiTags('SyntheticData')
 @Controller('synthetic-data')
@@ -19,17 +29,33 @@ export default class SyntheticDataController {
   @ApiOperation({
     summary: 'Generate synthetic documents from a de-identified document',
   })
-  @ApiBody({ type: GenerateSyntheticDataDto })
+  @ApiBody({
+    type: GenerateSyntheticDataRequestDto,
+  })
   @ApiResponse({
     status: 201,
     description: 'Returns generated synthetic documents',
+    type: GenerateSyntheticDataResponseDto,
   })
   @ApiUnauthorizedResponse({
     description: 'JWT missing or invalid',
   })
   @Post('generate')
   @UseGuards(JwtAuthGuard)
-  generate(@Body() dto: GenerateSyntheticDataDto) {
-    return this.syntheticDataService.generate(dto);
+  async generate(
+    @Body() dto: GenerateSyntheticDataRequestDto,
+  ): Promise<GenerateSyntheticDataResponseDto> {
+    try {
+      return await this.syntheticDataService.generate({
+        documentId: dto.documentId,
+        count: dto.count,
+      });
+    } catch (error) {
+      throw new InternalServerErrorException(
+        error instanceof Error
+          ? error.message
+          : 'Failed to generate synthetic data',
+      );
+    }
   }
 }

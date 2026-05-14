@@ -1,12 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import GenerateSyntheticDataDto from './dto/generate-synthetic-data.dto';
+
+type GenerateSyntheticDataInput = {
+  documentId: string;
+  count: number;
+};
 
 @Injectable()
 export default class SyntheticDataService {
   // eslint-disable-next-line class-methods-use-this
-  async generate(dto: GenerateSyntheticDataDto) {
+  async generate(input: GenerateSyntheticDataInput) {
     const syntheticDocuments = Array.from(
-      { length: dto.count },
+      { length: input.count },
       (_, index) => ({
         id: `synthetic-${index + 1}`,
         entities: [
@@ -26,8 +30,6 @@ export default class SyntheticDataService {
       }),
     );
 
-    return {
-      syntheticDocuments,
-    };
+    return { syntheticDocuments };
   }
 }
