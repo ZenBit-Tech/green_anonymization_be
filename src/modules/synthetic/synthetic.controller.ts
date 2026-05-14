@@ -52,9 +52,7 @@ export default class SyntheticDataController {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        error instanceof Error
-          ? error.message
-          : 'Failed to generate synthetic data',
+        'Failed to generate synthetic data',
       );
     }
   }
