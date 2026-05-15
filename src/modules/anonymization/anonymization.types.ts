@@ -1,4 +1,4 @@
-export type PresidioAnonymizedItem = {
+export type AnonymizedEntityItem = {
   start: number;
   end: number;
   entity_type: string;
@@ -8,7 +8,7 @@ export type PresidioAnonymizedItem = {
 
 export type AnonymizationMetadata = {
   entities: AnonymizationEntity[];
-  items?: PresidioAnonymizedItem[];
+  items?: AnonymizedEntityItem[];
 };
 
 export type AnonymizationEntity = {

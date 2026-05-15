@@ -13,7 +13,7 @@ import type { AnonymizationConfig } from './anonymization.config';
 import {
   AnonymizationEntity,
   AnonymizationResult,
-  PresidioAnonymizedItem,
+  AnonymizedEntityItem,
 } from './anonymization.types';
 import {
   FRAMEWORK_PROFILES,
@@ -60,7 +60,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
         anonymizedText: response.data.text as string,
         metadata: {
           entities: analyzerResults,
-          items: (response.data.items ?? []) as PresidioAnonymizedItem[],
+          items: (response.data.items ?? []) as AnonymizedEntityItem[],
         },
       };
     } catch {
@@ -101,7 +101,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
   private static getProfile(code: string): FrameworkProfile {
     const profile = FRAMEWORK_PROFILES[code];
     if (!profile) {
-      return FRAMEWORK_PROFILES.GDPR_EU;
+      throw new Error(`No anonymization profile found for framework: ${code}`);
     }
     return profile;
   }

@@ -169,22 +169,19 @@ describe('PresidioAnonymizerService', () => {
       ).rejects.toThrow('Presidio anonymization failed');
     });
 
-    it('should fallback to GDPR_EU profile for unknown compliance code', async () => {
-      setupHttpMocks();
+    it('should throw for unknown compliance code', async () => {
       const unknownCompliance = {
         code: 'UNKNOWN_CODE',
         name: 'Unknown',
         isActive: false,
       };
 
-      await service.anonymize(
-        'text',
-        unknownCompliance as typeof COMPLIANCE_FRAMEWORKS.GDPR_EU,
-      );
-
-      const analyzeBody = (httpService.post as jest.Mock).mock
-        .calls[0][1] as Record<string, unknown>;
-      expect(analyzeBody.entities).toEqual(FRAMEWORK_PROFILES.GDPR_EU.entities);
+      await expect(
+        service.anonymize(
+          'text',
+          unknownCompliance as typeof COMPLIANCE_FRAMEWORKS.GDPR_EU,
+        ),
+      ).rejects.toThrow('No anonymization profile found for framework: UNKNOWN_CODE');
     });
   });
 });
