@@ -1,66 +1,137 @@
 import {
-  ForbiddenException,
+  BadRequestException,
   Injectable,
-  NotFoundException,
-  UnauthorizedException,
+  InternalServerErrorException,
 } from '@nestjs/common';
-import DocumentsService from '@modules/documents/documents.service';
-import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
-import PiiEntityMapper from '@common/mappers/pii-entity.mapper';
-import ArchiveGeneratorService from './archive-generator.service';
+import { Document, Packer, Paragraph } from 'docx';
+import PDFDocument from 'pdfkit';
+
+import { FileExtensions } from '@common/constants';
+import SyntheticDataService from '@modules/synthetic/synthetic.service';
+import ArchiveGeneratorService, {
+  ArchiveEntry,
+} from './archive-generator.service';
 
 @Injectable()
 export default class FileGenerationService {
   constructor(
-    private readonly documentsService: DocumentsService,
+    private readonly syntheticDataService: SyntheticDataService,
     private readonly archiveGeneratorService: ArchiveGeneratorService,
   ) {}
 
   async generateArchive(input: {
     documentId: string;
     userEmail: string;
-  }): Promise<Buffer> {
-    const { documentId, userEmail } = input;
+    count: number;
+    extension: FileExtensions;
+  }) {
+    const { documentId, userEmail, count, extension } = input;
+    console.log(documentId, userEmail, count, extension);
+    const syntheticResult = await this.syntheticDataService.generate({
+      email: userEmail,
+      documentId,
+      count,
+    });
+    console.log([syntheticResult.syntheticDocuments]);
 
-    let documentDetailDto: DocumentDetailDto;
-    try {
-      documentDetailDto = await this.documentsService.findByIdForEmail(
-        documentId,
-        userEmail,
-      );
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException('Document or user not found');
-      }
-
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof UnauthorizedException
-      ) {
-        throw new UnauthorizedException(
-          'Unauthorized to access requested document',
-        );
-      }
-
-      throw new Error('Document not found or access denied');
-    }
-
-    const { anonymizedText, piiEntities } = documentDetailDto;
-
-    const piiEntityModels = piiEntities.map((piiEntityDto) =>
-      PiiEntityMapper.dtoToDomain(piiEntityDto),
+    const files = await Promise.all(
+      syntheticResult.syntheticDocuments.map((doc, index) =>
+        this.generateFile(
+          doc.syntheticText,
+          extension,
+          `synthetic-${index + 1}`,
+        ),
+      ),
     );
 
-    let archive: Buffer;
-    try {
-      archive = this.archiveGeneratorService.generateArchive({
-        anonymizedText,
-        piiEntityModels,
-      });
-    } catch (error) {
-      throw new Error('Failed to generate archive');
+    console.log([files]);
+    return this.archiveGeneratorService.generateArchive(files);
+  }
+
+  private async generateFile(
+    text: string,
+    extension: FileExtensions,
+    baseName: string,
+  ): Promise<ArchiveEntry> {
+    if (!text) {
+      throw new BadRequestException('No text provided for file generation');
     }
 
-    return archive;
+    switch (extension) {
+      case FileExtensions.TXT:
+        return this.generateTxt(text, baseName);
+
+      case FileExtensions.PDF:
+        return this.generatePdf(text, baseName);
+
+      case FileExtensions.DOCX:
+        return this.generateDocx(text, baseName);
+
+      default:
+        throw new BadRequestException('Unsupported file extension');
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private generateTxt(text: string, baseName: string): ArchiveEntry {
+    return {
+      buffer: Buffer.from(text, 'utf-8'),
+      filename: `${baseName}.txt`,
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async generatePdf(
+    text: string,
+    baseName: string,
+  ): Promise<ArchiveEntry> {
+    return new Promise<ArchiveEntry>((resolve, reject) => {
+      const doc = new PDFDocument();
+      const chunks: Buffer[] = [];
+
+      doc.on('data', (chunk) => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      });
+
+      doc.on('end', () => {
+        resolve({
+          buffer: Buffer.concat(chunks),
+          filename: `${baseName}.pdf`,
+        });
+      });
+
+      doc.on('error', reject);
+
+      doc.text(text);
+      doc.end();
+    });
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async generateDocx(
+    text: string,
+    baseName: string,
+  ): Promise<ArchiveEntry> {
+    try {
+      const doc = new Document({
+        sections: [
+          {
+            children: [new Paragraph({ text })],
+          },
+        ],
+      });
+
+      const buffer = await Packer.toBuffer(doc);
+
+      return {
+        buffer,
+        filename: `${baseName}.docx`,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to generate DOCX file: ${(error as Error).message}`,
+      );
+    }
   }
 }

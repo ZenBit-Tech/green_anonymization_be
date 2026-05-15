@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiBody, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import ManualGenerationService from './manualGeneration.service';
+import ManualGenerationService from '../synthetic/manualGeneration.service';
 import GenerateManualDataDto from './dto/generateManualData.dto';
 
 @ApiTags('generation')

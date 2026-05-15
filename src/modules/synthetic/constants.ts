@@ -57,6 +57,78 @@ export const minUKNINONumber = 0;
 
 export const maxUKNINONumber = 999999;
 
+export const randomLocations = [
+  '742 Evergreen Terrace, Springfield',
+  '221B Baker Street, London',
+  '1600 Pennsylvania Avenue NW, Washington',
+  '12 Grimmauld Place, London',
+  '31 Spooner Street, Quahog',
+];
+
+export const randomMedicalClinicalEvents = [
+  'Annual physical examination',
+  'Emergency room admission',
+  'Outpatient consultation',
+  'Cardiology follow-up',
+  'Neurology assessment',
+];
+
+export const randomMedicalDiseaseDisorders = [
+  'Hypertension',
+  'Type 2 Diabetes',
+  'Migraine',
+  'Asthma',
+  'Chronic Kidney Disease',
+];
+
+export const randomMedicalMedications = [
+  'Lisinopril',
+  'Metformin',
+  'Ibuprofen',
+  'Atorvastatin',
+  'Amoxicillin',
+];
+
+export const randomMedicalTherapeuticProcedures = [
+  'MRI scan',
+  'CT angiography',
+  'Physical therapy',
+  'Blood transfusion',
+  'Vaccination',
+];
+
+export const randomMedicalBiologicalAttributes = [
+  'Blood Type O+',
+  'BMI 24.1',
+  'Heart Rate 72 bpm',
+  'Blood Pressure 118/76',
+  'Height 175 cm',
+];
+
+export const randomMedicalFamilyHistory = [
+  'Family history of hypertension',
+  'Family history of diabetes',
+  'No known hereditary conditions',
+  'Family history of stroke',
+  'Family history of asthma',
+];
+
+export const randomMedicalHistory = [
+  'Previous appendectomy',
+  'Former smoker',
+  'History of seasonal allergies',
+  'Recovered from pneumonia',
+  'Prior knee surgery',
+];
+
+export const randomSensitiveCategories = [
+  'Religious affiliation',
+  'Political opinion',
+  'Trade union membership',
+  'Biometric identifier',
+  'Ethnic background',
+];
+
 export const validUKNINOPrefixes = [
   'AA',
   'AB',

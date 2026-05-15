@@ -16,6 +16,7 @@ import {
 
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 
+import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import SyntheticDataService from './synthetic.service';
 
 import GenerateSyntheticDataRequestDto from './dto/generate-synthetic-data-request.dto';
@@ -43,10 +44,12 @@ export default class SyntheticDataController {
   @Post('generate')
   @UseGuards(JwtAuthGuard)
   async generate(
+    @UserEmail() email: string,
     @Body() dto: GenerateSyntheticDataRequestDto,
   ): Promise<GenerateSyntheticDataResponseDto> {
     try {
       return await this.syntheticDataService.generate({
+        email,
         documentId: dto.documentId,
         count: dto.count,
       });

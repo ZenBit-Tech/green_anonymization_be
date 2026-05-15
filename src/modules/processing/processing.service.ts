@@ -7,14 +7,12 @@ import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
 import DocumentsService from '@modules/documents/documents.service';
 import { DataSource } from 'typeorm';
-import { ComplianceFrameworkConfig, FileExtensions } from '@/common/constants';
+import { ComplianceFrameworkConfig } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
 import PIIEntities from '@/common/db/entities/PIIEntities.entity';
 import User from '@/common/db/entities/user.entity';
 import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
 import formatDate from '@common/utils/formatDate';
-import PDFDocument from 'pdfkit';
-import { Document, Packer, Paragraph } from 'docx';
 import { ProcessingResult } from './types/ProcessingResult';
 import mapConfidence from './utils/mapConfidence';
 import mapPIIEntityType from './utils/mapPIIEntityType';
@@ -48,7 +46,7 @@ export default class ProcessingService {
 
     const anonymizationResult: AnonymizationResult =
       await this.anonymizationService.anonymize(compliance, text);
-
+    console.log({ anonymizationResult });
     await this.userService.setDefaultFramework(user.email, compliance.code);
 
     try {
@@ -110,90 +108,5 @@ export default class ProcessingService {
       if (err instanceof InternalServerErrorException) throw err;
       throw new BadRequestException('Failed to persist anonymization result');
     }
-  }
-
-  async generateFile(text: string, extension: FileExtensions) {
-    if (!text) {
-      throw new BadRequestException('No text provided for file generation');
-    }
-
-    switch (extension) {
-      case FileExtensions.TXT:
-        return this.generateTxt(text);
-
-      case FileExtensions.PDF:
-        return this.generatePdf(text);
-
-      case FileExtensions.DOCX:
-        return this.generateDocx(text);
-
-      default:
-        throw new BadRequestException('Unsupported file extension');
-    }
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private generateTxt(text: string) {
-    return {
-      buffer: Buffer.from(text, 'utf-8'),
-      mimeType: 'text/plain',
-      filename: 'generated-file.txt',
-    };
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private async generatePdf(text: string) {
-    return new Promise<{
-      buffer: Buffer;
-      mimeType: string;
-      filename: string;
-    }>((resolve, reject) => {
-      const doc = new PDFDocument();
-
-      const chunks: Buffer[] = [];
-
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      doc.on('data', (chunk) => chunks.push(chunk));
-
-      doc.on('end', () => {
-        const buffer = Buffer.concat(chunks);
-
-        resolve({
-          buffer,
-          mimeType: 'application/pdf',
-          filename: 'generated-file.pdf',
-        });
-      });
-
-      doc.on('error', reject);
-
-      doc.text(text);
-
-      doc.end();
-    });
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  private async generateDocx(text: string) {
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text,
-            }),
-          ],
-        },
-      ],
-    });
-
-    const buffer = await Packer.toBuffer(doc);
-
-    return {
-      buffer,
-      mimeType:
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      filename: 'generated-file.docx',
-    };
   }
 }

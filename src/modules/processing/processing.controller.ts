@@ -4,21 +4,17 @@ import {
   Controller,
   InternalServerErrorException,
   Post,
-  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
-  ApiBearerAuth,
   ApiBody,
   ApiConsumes,
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
-  ApiOkResponse,
   ApiOperation,
-  ApiProduces,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -34,7 +30,6 @@ import DocumentDto from './dto/document.dto';
 import extractTextFromFile from './utils/file-text';
 import ProcessingService from './processing.service';
 import PIIEntityDto from './dto/piiEntity.dto';
-import GenerateFileRequestDto from './dto/generateFileRequest.dto';
 import { ProcessingResult } from './types/ProcessingResult';
 
 @ApiTags('Processing')
@@ -152,52 +147,5 @@ export default class ProcessingController {
         excludeExtraneousValues: true,
       }),
     });
-  }
-
-  @ApiOperation({
-    summary: 'Generate a downloadable file from provided text',
-    description:
-      'Generates a TXT, PDF, or DOCX file from the provided text input.',
-  })
-  @ApiBearerAuth()
-  @ApiBody({
-    type: GenerateFileRequestDto,
-  })
-  @ApiProduces(
-    'text/plain',
-    'application/pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  )
-  @ApiOkResponse({
-    description: 'Generated file returned successfully',
-    schema: {
-      type: 'string',
-      format: 'binary',
-    },
-  })
-  @ApiBadRequestResponse({
-    description: 'Invalid request body or unsupported file extension',
-  })
-  @ApiUnauthorizedResponse({
-    description: 'Invalid or missing JWT authentication',
-  })
-  @ApiInternalServerErrorResponse({
-    description: 'Unexpected error during file generation',
-  })
-  @Post('generate-file')
-  @UseGuards(JwtAuthGuard)
-  async generateFile(@Body() data: GenerateFileRequestDto, @Res() res) {
-    const file = await this.processingService.generateFile(
-      data.text,
-      data.extension,
-    );
-
-    res.set({
-      'Content-Type': file.mimeType,
-      'Content-Disposition': `attachment; filename="${file.filename}"`,
-      'Content-Length': file.buffer.length,
-    });
-
-    res.end(file.buffer);
   }
 }

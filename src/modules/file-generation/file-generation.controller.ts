@@ -22,6 +22,7 @@ import {
 import UserEmail from '@common/utils/decorators/user-email.decorator';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import type { Response } from 'express';
+import { FileExtensions } from '@/common/constants';
 import FileGenerationService from './file-generation.service';
 
 @ApiTags('File Generation')
@@ -63,9 +64,11 @@ export default class FileGenerationController {
     description: 'Internal server error occured during archive generation',
   })
   @UseGuards(JwtAuthGuard)
-  @Get('generate-archive/:id')
+  @Get('generate-archive/:id/:count/:extension')
   async generateArchive(
     @Param('id') documentId: string,
+    @Param('count') count: number,
+    @Param('extension') extension: FileExtensions,
     @UserEmail() userEmail: string,
     @Res() res: Response,
   ): Promise<void> {
@@ -73,7 +76,10 @@ export default class FileGenerationController {
       const archive = await this.fileGenerationService.generateArchive({
         documentId,
         userEmail,
+        count,
+        extension,
       });
+      console.log({ archive });
 
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader(
