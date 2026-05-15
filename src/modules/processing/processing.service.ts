@@ -66,8 +66,9 @@ export default class ProcessingService {
           filePath: 'cloud/path/placeholder',
           verifiedAt: new Date(),
         });
+        console.log({ document });
         const savedDocument = await manager.save(document);
-
+        console.log({ savedDocument });
         if (!anonymizationResult.metadata) {
           throw new InternalServerErrorException(
             'No metadata found in anonymization result',
@@ -89,13 +90,16 @@ export default class ProcessingService {
             deIdMethod: operatorByEntity.get(e.entity_type),
           }),
         );
+        console.log([piiEntities]);
         const savedPIIEntities = await manager.save(piiEntities);
+        console.log({ savedPIIEntities });
         const documentWithText =
           await this.documentsService.uploadAnonymizedText(
             savedDocument,
             anonymizationResult.anonymizedText,
             manager,
           );
+        console.log({ documentWithText });
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,
