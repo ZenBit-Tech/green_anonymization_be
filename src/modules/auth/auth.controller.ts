@@ -30,8 +30,14 @@ export default class AuthController {
   @ApiBadRequestResponse({ description: 'Invalid email provided' })
   @Throttle({ default: { limit: 15, ttl: 3600000 } })
   @Post('login')
-  async login(@Body() dto: LoginRequestDto): Promise<{ message: string }> {
-    await this.authService.generateMagicToken(dto.destination);
+  async login(
+    @Body() dto: LoginRequestDto,
+    @Req() req,
+  ): Promise<{ message: string }> {
+    await this.authService.generateMagicToken(
+      dto.destination,
+      req.headers.origin as string,
+    );
     return { message: 'Magic link sent to email' };
   }
 
