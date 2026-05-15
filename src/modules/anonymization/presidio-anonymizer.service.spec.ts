@@ -181,7 +181,9 @@ describe('PresidioAnonymizerService', () => {
           'text',
           unknownCompliance as typeof COMPLIANCE_FRAMEWORKS.GDPR_EU,
         ),
-      ).rejects.toThrow('No anonymization profile found for framework: UNKNOWN_CODE');
+      ).rejects.toThrow(
+        'No anonymization profile found for framework: UNKNOWN_CODE',
+      );
     });
   });
 });
