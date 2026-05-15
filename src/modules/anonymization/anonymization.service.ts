@@ -11,7 +11,10 @@ export default class AnonymizationService {
   constructor(
     @Inject(ANONYMIZER_SERVICES_TOKEN) services: AbstractAnonymizerService[],
   ) {
-    this.serviceMap = new Map(services.map((s) => [s.complianceName, s]));
+    this.serviceMap = new Map();
+    services.forEach((s) =>
+      s.complianceNames.forEach((c) => this.serviceMap.set(c, s)),
+    );
   }
 
   async anonymize(
@@ -34,7 +37,6 @@ export default class AnonymizationService {
       throw new AnonymizerNotFoundError(compliance);
     }
 
-    const result = await service.anonymize(text);
-    return result;
+    return service.anonymize(text, compliance);
   }
 }

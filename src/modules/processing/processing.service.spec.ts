@@ -1,4 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
+import {
+  BadRequestException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DataSource, EntityManager } from 'typeorm';
 import {
@@ -9,9 +12,11 @@ import {
 } from '@common/constants';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
+import DocumentsService from '@modules/documents/documents.service';
+import Documents from '@/common/db/entities/documents.entity';
 import User from '@/common/db/entities/user.entity';
+import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
 import ProcessingService from './processing.service';
-import { AnonymizationResult } from '../anonymization/anonymization.types';
 import mapConfidence from './utils/mapConfidence';
 import mapPIIEntityType from './utils/mapPIIEntityType';
 
@@ -36,6 +41,13 @@ describe('ProcessingService', () => {
     >(),
   };
 
+  const documentsServiceMock = {
+    uploadAnonymizedText: jest.fn<
+      Promise<Documents>,
+      [Documents, string, EntityManager?]
+    >(),
+  };
+
   const managerMock = {
     create: jest.fn(),
     save: jest.fn(),
@@ -50,12 +62,17 @@ describe('ProcessingService', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
+    documentsServiceMock.uploadAnonymizedText.mockImplementation(
+      async (doc) => doc,
+    );
+
     const module = await Test.createTestingModule({
       providers: [
         ProcessingService,
         { provide: UserService, useValue: userServiceMock },
         { provide: DataSource, useValue: dataSourceMock },
         { provide: AnonymizationService, useValue: anonymizationServiceMock },
+        { provide: DocumentsService, useValue: documentsServiceMock },
       ],
     }).compile();
 
@@ -79,7 +96,7 @@ describe('ProcessingService', () => {
     });
 
     it('persists document and entities', async () => {
-      const user = { uuid: 'user-id' } as User;
+      const user = { uuid: 'user-id', email: 'test@mail.com' } as User;
 
       const anonymizationResult: AnonymizationResult = {
         originalText: 'text',
@@ -90,6 +107,7 @@ describe('ProcessingService', () => {
       };
 
       userServiceMock.findByEmail.mockResolvedValue(user);
+      userServiceMock.setDefaultFramework.mockResolvedValue(user.uuid);
       anonymizationServiceMock.anonymize.mockResolvedValue(anonymizationResult);
 
       mockedMapPIIEntityType.mockReturnValue('PERSON' as PIIEntityType);
@@ -135,7 +153,11 @@ describe('ProcessingService', () => {
     });
 
     it('throws if metadata is missing', async () => {
-      userServiceMock.findByEmail.mockResolvedValue({ uuid: 'id' } as User);
+      userServiceMock.findByEmail.mockResolvedValue({
+        uuid: 'id',
+        email: 'test@mail.com',
+      } as User);
+      userServiceMock.setDefaultFramework.mockResolvedValue('id');
       anonymizationServiceMock.anonymize.mockResolvedValue({
         originalText: 'text',
         anonymizedText: 'anon',
@@ -143,7 +165,7 @@ describe('ProcessingService', () => {
 
       await expect(
         service.process(COMPLIANCE_FRAMEWORKS.GDPR_EU, 'text', 'test@mail.com'),
-      ).rejects.toThrow(BadRequestException);
+      ).rejects.toThrow(InternalServerErrorException);
     });
 
     it('propagates anonymization errors', async () => {
@@ -155,7 +177,11 @@ describe('ProcessingService', () => {
     });
 
     it('wraps transaction errors', async () => {
-      userServiceMock.findByEmail.mockResolvedValue({ uuid: 'id' } as User);
+      userServiceMock.findByEmail.mockResolvedValue({
+        uuid: 'id',
+        email: 'test@mail.com',
+      } as User);
+      userServiceMock.setDefaultFramework.mockResolvedValue('id');
       anonymizationServiceMock.anonymize.mockResolvedValue({
         originalText: 'text',
         anonymizedText: 'anon',

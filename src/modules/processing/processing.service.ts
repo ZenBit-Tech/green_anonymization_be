@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import AnonymizationService from '@modules/anonymization/anonymization.service';
 import UserService from '@modules/user/user.service';
+import DocumentsService from '@modules/documents/documents.service';
 import { DataSource } from 'typeorm';
 import { ComplianceFrameworkConfig } from '@/common/constants';
 import Documents from '@/common/db/entities/documents.entity';
@@ -21,6 +22,7 @@ export default class ProcessingService {
     private readonly userService: UserService,
     private readonly dataSource: DataSource,
     private readonly anonymizationService: AnonymizationService,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   async process(
@@ -38,17 +40,21 @@ export default class ProcessingService {
       };
     }
 
+    const user: User | null = await this.userService.findByEmail(email);
+    if (!user) throw new BadRequestException('User not found');
+
+    const anonymizationResult: AnonymizationResult =
+      await this.anonymizationService.anonymize(compliance, text);
+
+    await this.userService.setDefaultFramework(user.email, compliance.code);
+
     try {
       return await this.dataSource.transaction(async (manager) => {
-        const anonymizationResult: AnonymizationResult =
-          await this.anonymizationService.anonymize(compliance, text);
-
-        const user: User | null = await this.userService.findByEmail(email);
-
-        if (!user) {
-          throw new BadRequestException('User not found');
+        if (!anonymizationResult.metadata) {
+          throw new InternalServerErrorException(
+            'No metadata found in anonymization result',
+          );
         }
-        await this.userService.setDefaultFramework(user.email, compliance.code);
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: compliance.code,
@@ -56,7 +62,7 @@ export default class ProcessingService {
           fileName: originalFileName
             ? `${originalFileName}-${compliance.name}-${Date.now()}`
             : `${compliance.name}-${Date.now()}.txt`,
-          filePath: 'cloud/path/placeholder',
+          filePath: '',
           verifiedAt: new Date(),
         });
 
@@ -67,7 +73,12 @@ export default class ProcessingService {
             'No metadata found in anonymization result',
           );
         }
-        const piiEntities = anonymizationResult?.metadata?.entities.map((e) =>
+        const { entities, items = [] } = anonymizationResult.metadata;
+        const operatorByEntity = new Map(
+          items.map((item) => [item.entity_type, item.operator]),
+        );
+
+        const piiEntities = entities.map((e) =>
           manager.create(PIIEntities, {
             documentId: savedDocument.id,
             entityType: mapPIIEntityType(e.entity_type),
@@ -75,22 +86,30 @@ export default class ProcessingService {
             end: e.end,
             score: e.score ?? 0.0,
             confidence: mapConfidence(e.score),
+            deIdMethod: operatorByEntity.get(e.entity_type),
           }),
         );
 
         const savedPIIEntities = await manager.save(piiEntities);
 
+        const documentWithText =
+          await this.documentsService.uploadAnonymizedText(
+            savedDocument,
+            anonymizationResult.anonymizedText,
+            manager,
+          );
+
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,
-          document: savedDocument,
+          document: documentWithText,
           piiEntities: savedPIIEntities,
         };
       });
     } catch (err) {
-      throw new BadRequestException(
-        `Failed to persist anonymization result, error: ${err}`,
-      );
+      if (err instanceof BadRequestException) throw err;
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new BadRequestException('Failed to persist anonymization result');
     }
   }
 }

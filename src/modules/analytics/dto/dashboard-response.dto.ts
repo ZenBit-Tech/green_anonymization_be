@@ -5,6 +5,7 @@ import ComplianceUsageResponseDto from './compliance-usage-response.dto';
 import ProcessingHistoryResponseDto from './processing-history-response.dto';
 import ConfidenceRangeResponseDto from './confidence-range-response.dto';
 import RecentActivityResponseDto from './recent-activity-response.dto';
+import DeIdMethodResponseDto from './deid-method-response.dto';
 
 export default class DashboardResponseDto {
   @ApiProperty({ type: DashboardStatsResponseDto, nullable: true })
@@ -27,4 +28,7 @@ export default class DashboardResponseDto {
 
   @ApiProperty({ type: [RecentActivityResponseDto] })
   recentActivity: RecentActivityResponseDto[] = [];
+
+  @ApiProperty({ type: [DeIdMethodResponseDto] })
+  deIdMethodUsage: DeIdMethodResponseDto[] = [];
 }

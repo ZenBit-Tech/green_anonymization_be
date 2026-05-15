@@ -31,6 +31,7 @@ import {
   ComplianceUsageData,
   ConfidenceRangeData,
   DashboardData,
+  DeIdMethodData,
   EntityTypeData,
   ProcessingHistoryData,
   RecentActivityData,
@@ -62,6 +63,7 @@ export default class AnalyticsService {
       processingHistoryResult,
       confidenceDistributionResult,
       recentActivityResult,
+      deIdMethodUsageResult,
     ] = await Promise.allSettled([
       this.getStats(userId),
       this.getEntityTypes(userId),
@@ -69,6 +71,7 @@ export default class AnalyticsService {
       this.getProcessingHistory(userId, ANALYTICS_HISTORY_DAYS),
       this.getConfidenceDistribution(userId),
       this.getRecentActivity(userId, ANALYTICS_RECENT_ACTIVITY_LIMIT),
+      this.getDeIdMethodUsage(userId),
     ]);
 
     if (statsResult.status === 'rejected')
@@ -95,6 +98,11 @@ export default class AnalyticsService {
         'getRecentActivity failed',
         recentActivityResult.reason,
       );
+    if (deIdMethodUsageResult.status === 'rejected')
+      this.logger.error(
+        'getDeIdMethodUsage failed',
+        deIdMethodUsageResult.reason,
+      );
 
     return {
       stats: statsResult.status === 'fulfilled' ? statsResult.value : null,
@@ -115,6 +123,10 @@ export default class AnalyticsService {
       recentActivity:
         recentActivityResult.status === 'fulfilled'
           ? recentActivityResult.value
+          : [],
+      deIdMethodUsage:
+        deIdMethodUsageResult.status === 'fulfilled'
+          ? deIdMethodUsageResult.value
           : [],
     };
   }
@@ -357,6 +369,39 @@ export default class AnalyticsService {
     } catch (err) {
       this.logger.error('getRecentActivity query failed', err);
       throw new InternalServerErrorException('Failed to load recent activity');
+    }
+  }
+
+  private async getDeIdMethodUsage(userId: string): Promise<DeIdMethodData[]> {
+    try {
+      const rows = await this.piiEntitiesRepo
+        .createQueryBuilder('e')
+        .innerJoin('e.document', 'd')
+        .select('e.deIdMethod', 'method')
+        .addSelect('COUNT(e.id)', 'count')
+        .where('d.userId = :userId', { userId })
+        .andWhere('e.deIdMethod IS NOT NULL')
+        .groupBy('e.deIdMethod')
+        .orderBy('count', 'DESC')
+        .getRawMany<{ method: string; count: string }>();
+
+      const total = rows.reduce((sum, r) => sum + Number(r.count), 0);
+
+      return rows.map((r) => ({
+        method: r.method,
+        count: Number(r.count),
+        percentage:
+          total > 0
+            ? Math.round(
+                (Number(r.count) / total) * ANALYTICS_PERCENTAGE_MULTIPLIER,
+              ) / ANALYTICS_PERCENTAGE_DIVISOR
+            : 0,
+      }));
+    } catch (err) {
+      this.logger.error('getDeIdMethodUsage query failed', err);
+      throw new InternalServerErrorException(
+        'Failed to load de-identification method usage',
+      );
     }
   }
 

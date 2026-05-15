@@ -15,12 +15,20 @@ async function bootstrap() {
       'API documentation for the backend of out data anonymizer app',
     )
     .setVersion('0.1')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'jwt',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api', app, document);
 
   const configService = new ConfigService();
+
+  const corsOrigins = configService
+    .getOrThrow<string>('FRONTEND_ORIGIN')
+    .split(',');
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -31,7 +39,7 @@ async function bootstrap() {
   );
 
   app.enableCors({
-    origin: [configService.getOrThrow<string>('FRONTEND_ORIGIN')],
+    origin: corsOrigins,
     allowedHeaders: [
       'Content-Type',
       'Authorization',
