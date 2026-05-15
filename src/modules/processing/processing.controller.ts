@@ -49,7 +49,14 @@ export default class ProcessingController {
     description: 'File upload or raw text input',
     schema: {
       type: 'object',
+      required: ['selectedFrameworkCode'],
       properties: {
+        selectedFrameworkCode: {
+          type: 'string',
+          example: 'GDPR_EU',
+          description:
+            'Compliance framework code (GDPR_EU, GDPR_UK, FADP_CH, HIPAA_US)',
+        },
         file: {
           type: 'string',
           format: 'binary',
@@ -88,13 +95,19 @@ export default class ProcessingController {
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
-    if (!data?.selectedFrameworkCode) {
+    const frameworkCode =
+      data?.selectedFrameworkCode ||
+      (await this.complianceService.getSelectionByEmail(email).then(
+        (s) => s.frameworkCode,
+        () => null,
+      ));
+
+    if (!frameworkCode) {
       throw new BadRequestException('No framework selected');
     }
 
-    const selectedFramework = await this.complianceService.getFrameworkByCode(
-      data.selectedFrameworkCode,
-    );
+    const selectedFramework =
+      await this.complianceService.getFrameworkByCode(frameworkCode);
     if (!selectedFramework) {
       throw new BadRequestException('Framework with selected code not found');
     }
@@ -112,7 +125,6 @@ export default class ProcessingController {
     } else {
       throw new BadRequestException('No input provided');
     }
-
     let result: ProcessingResult;
     try {
       result = await this.processingService.process(

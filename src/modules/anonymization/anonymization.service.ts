@@ -37,7 +37,6 @@ export default class AnonymizationService {
       throw new AnonymizerNotFoundError(compliance);
     }
 
-    const result = await service.anonymize(text);
-    return result;
+    return service.anonymize(text, compliance);
   }
 }

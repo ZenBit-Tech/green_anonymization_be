@@ -105,7 +105,10 @@ describe('AnonymizationService (unit)', () => {
 
       await service.anonymize(COMPLIANCE_FRAMEWORKS.GDPR_EU, input);
 
-      expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledWith(input);
+      expect(mockGdprAnonymizerService.anonymize).toHaveBeenCalledWith(
+        input,
+        COMPLIANCE_FRAMEWORKS.GDPR_EU,
+      );
     });
 
     it('should return the result from anonymizer', async () => {
