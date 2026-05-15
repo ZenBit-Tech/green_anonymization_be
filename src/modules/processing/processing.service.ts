@@ -40,18 +40,21 @@ export default class ProcessingService {
       };
     }
 
+    const user: User | null = await this.userService.findByEmail(email);
+    if (!user) throw new BadRequestException('User not found');
+
+    const anonymizationResult: AnonymizationResult =
+      await this.anonymizationService.anonymize(compliance, text);
+
+    await this.userService.setDefaultFramework(user.email, compliance.code);
+
     try {
       return await this.dataSource.transaction(async (manager) => {
-        const anonymizationResult: AnonymizationResult =
-          await this.anonymizationService.anonymize(compliance, text);
-
-        const user: User | null = await this.userService.findByEmail(email);
-
-        if (!user) {
-          throw new BadRequestException('User not found');
+        if (!anonymizationResult.metadata) {
+          throw new InternalServerErrorException(
+            'No metadata found in anonymization result',
+          );
         }
-        await this.userService.setDefaultFramework(user.email, compliance.code);
-
         const document = manager.create(Documents, {
           userId: user.uuid,
           chosenCompliance: compliance.code,
@@ -104,9 +107,9 @@ export default class ProcessingService {
         };
       });
     } catch (err) {
-      throw new BadRequestException(
-        `Failed to persist anonymization result, error: ${err}`,
-      );
+      if (err instanceof BadRequestException) throw err;
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new BadRequestException('Failed to persist anonymization result');
     }
   }
 }
