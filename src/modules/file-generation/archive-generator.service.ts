@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import PiiEntityModel from '../../common/domain/models/pii-entity.model';
+import PiiEntityModel from '@common/domain/models/pii-entity.model';
 
 @Injectable()
 export default class ArchiveGeneratorService {

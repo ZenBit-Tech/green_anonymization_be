@@ -4,10 +4,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import DocumentsService from '@modules/documents/documents.service';
+import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
+import PiiEntityMapper from '@common/mappers/pii-entity.mapper';
 import ArchiveGeneratorService from './archive-generator.service';
-import DocumentsService from '../documents/documents.service';
-import PiiEntityMapper from '../../common/mappers/pii-entity.mapper';
-import DocumentDetailDto from '../documents/dto/document-detail.dto';
 
 @Injectable()
 export default class FileGenerationService {

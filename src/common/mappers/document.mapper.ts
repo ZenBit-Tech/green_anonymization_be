@@ -1,5 +1,5 @@
-import Documents from '../db/entities/documents.entity';
-import DocumentModel from '../domain/models/document.model';
+import DocumentModel from '@common/domain/models/document.model';
+import Documents from '@common/db/entities/documents.entity';
 
 export default class DocumentMapper {
   static typeOrmToDomain(document: Documents): DocumentModel {

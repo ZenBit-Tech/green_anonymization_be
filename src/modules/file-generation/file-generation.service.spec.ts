@@ -4,12 +4,12 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import DocumentsService from '@modules/documents/documents.service';
+import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
+import PIIEntityDto from '@modules/processing/dto/piiEntity.dto';
+import { PIIEntityType, Confidence } from '@common/constants';
 import FileGenerationService from './file-generation.service';
 import ArchiveGeneratorService from './archive-generator.service';
-import DocumentsService from '../documents/documents.service';
-import DocumentDetailDto from '../documents/dto/document-detail.dto';
-import PIIEntityDto from '../processing/dto/piiEntity.dto';
-import { PIIEntityType, Confidence } from '../../common/constants';
 
 describe('FileGenerationService', () => {
   let fileGenerationService: FileGenerationService;

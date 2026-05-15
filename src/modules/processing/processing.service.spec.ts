@@ -12,8 +12,8 @@ import UserService from '@modules/user/user.service';
 import DocumentsService from '@modules/documents/documents.service';
 import Documents from '@/common/db/entities/documents.entity';
 import User from '@/common/db/entities/user.entity';
+import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
 import ProcessingService from './processing.service';
-import { AnonymizationResult } from '../anonymization/anonymization.types';
 import mapConfidence from './utils/mapConfidence';
 import mapPIIEntityType from './utils/mapPIIEntityType';
 

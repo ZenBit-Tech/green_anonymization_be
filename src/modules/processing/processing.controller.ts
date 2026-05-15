@@ -22,13 +22,13 @@ import {
 import ComplianceService from '@modules/compliance/compliance.service';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
+import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { plainToInstance } from 'class-transformer';
 import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
 import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
 import DocumentDto from './dto/document.dto';
 import extractTextFromFile from './utils/file-text';
 import ProcessingService from './processing.service';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 import PIIEntityDto from './dto/piiEntity.dto';
 
 @ApiTags('Processing')

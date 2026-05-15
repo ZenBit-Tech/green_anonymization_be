@@ -19,10 +19,10 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import UserEmail from '@common/utils/decorators/user-email.decorator';
+import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import type { Response } from 'express';
 import FileGenerationService from './file-generation.service';
-import UserEmail from '../../common/utils/decorators/user-email.decorator';
-import JwtAuthGuard from '../auth/guards/jwt-auth.guard';
 
 @ApiTags('File Generation')
 @Controller('file-generation')
