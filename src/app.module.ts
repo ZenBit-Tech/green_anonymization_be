@@ -17,6 +17,7 @@ import DocumentsModule from '@modules/documents/documents.module';
 import AppController from './app.controller';
 import AppService from './app.service';
 import FileGenerationModule from './modules/file-generation/file-generation.module';
+import SyntheticDataModule from './modules/synthetic/synthetic.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import FileGenerationModule from './modules/file-generation/file-generation.modu
     AnalyticsModule,
     DocumentsModule,
     FileGenerationModule,
+    SyntheticDataModule,
   ],
   controllers: [AppController, UserController],
   providers: [
