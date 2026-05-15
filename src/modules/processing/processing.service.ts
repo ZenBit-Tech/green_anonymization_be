@@ -100,4 +100,89 @@ export default class ProcessingService {
       throw new BadRequestException('Failed to persist anonymization result');
     }
   }
+
+  async generateFile(text: string, extension: FileExtensions) {
+    if (!text) {
+      throw new BadRequestException('No text provided for file generation');
+    }
+
+    switch (extension) {
+      case FileExtensions.TXT:
+        return this.generateTxt(text);
+
+      case FileExtensions.PDF:
+        return this.generatePdf(text);
+
+      case FileExtensions.DOCX:
+        return this.generateDocx(text);
+
+      default:
+        throw new BadRequestException('Unsupported file extension');
+    }
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private generateTxt(text: string) {
+    return {
+      buffer: Buffer.from(text, 'utf-8'),
+      mimeType: 'text/plain',
+      filename: 'generated-file.txt',
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async generatePdf(text: string) {
+    return new Promise<{
+      buffer: Buffer;
+      mimeType: string;
+      filename: string;
+    }>((resolve, reject) => {
+      const doc = new PDFDocument();
+
+      const chunks: Buffer[] = [];
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      doc.on('data', (chunk) => chunks.push(chunk));
+
+      doc.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+
+        resolve({
+          buffer,
+          mimeType: 'application/pdf',
+          filename: 'generated-file.pdf',
+        });
+      });
+
+      doc.on('error', reject);
+
+      doc.text(text);
+
+      doc.end();
+    });
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  private async generateDocx(text: string) {
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text,
+            }),
+          ],
+        },
+      ],
+    });
+
+    const buffer = await Packer.toBuffer(doc);
+
+    return {
+      buffer,
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      filename: 'generated-file.docx',
+    };
+  }
 }
