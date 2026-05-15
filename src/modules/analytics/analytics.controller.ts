@@ -39,6 +39,7 @@ export default class AnalyticsController {
       processingHistory: data.processingHistory,
       confidenceDistribution: data.confidenceDistribution,
       recentActivity: data.recentActivity,
+      deIdMethodUsage: data.deIdMethodUsage,
     };
   }
 }

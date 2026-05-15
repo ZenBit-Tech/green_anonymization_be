@@ -16,6 +16,8 @@ import AnalyticsModule from '@modules/analytics/analytics.module';
 import DocumentsModule from '@modules/documents/documents.module';
 import AppController from './app.controller';
 import AppService from './app.service';
+import FileGenerationModule from './modules/file-generation/file-generation.module';
+import SyntheticDataModule from './modules/synthetic/synthetic.module';
 import GenerationModule from './modules/generation/generation.module';
 
 @Module({
@@ -39,6 +41,8 @@ import GenerationModule from './modules/generation/generation.module';
     ProcessingModule,
     AnalyticsModule,
     DocumentsModule,
+    FileGenerationModule,
+    SyntheticDataModule,
     GenerationModule,
   ],
   controllers: [AppController, UserController],
