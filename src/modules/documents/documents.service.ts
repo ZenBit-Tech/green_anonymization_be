@@ -72,7 +72,7 @@ export default class DocumentsService {
     const doc = await this.findOwnedDocument(id, email, true);
 
     const anonymizedText = await this.s3.getText(doc.filePath);
-
+    console.log(anonymizedText);
     return plainToInstance(
       DocumentDetailDto,
       { ...doc, anonymizedText },

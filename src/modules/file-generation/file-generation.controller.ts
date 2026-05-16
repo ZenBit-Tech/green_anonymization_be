@@ -10,20 +10,19 @@ import {
 } from '@nestjs/swagger';
 import {
   BadRequestException,
+  Body,
   Controller,
-  Get,
   InternalServerErrorException,
   NotFoundException,
-  Param,
+  Post,
   Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import UserEmail from '@common/utils/decorators/user-email.decorator';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import type { Response } from 'express';
-import { FileExtensions } from '@/common/constants';
 import FileGenerationService from './file-generation.service';
+import GenerateArchiveRequestDto from './dto/generateArchiveRequest.dto';
 
 @ApiTags('File Generation')
 @Controller('file-generation')
@@ -64,46 +63,42 @@ export default class FileGenerationController {
     description: 'Internal server error occured during archive generation',
   })
   @UseGuards(JwtAuthGuard)
-  @Get('generate-archive/:id/:count/:extension')
+  @Post('generate-archive')
   async generateArchive(
-    @Param('id') documentId: string,
-    @Param('count') count: number,
-    @Param('extension') extension: FileExtensions,
-    @UserEmail() userEmail: string,
+    @Body() input: GenerateArchiveRequestDto,
     @Res() res: Response,
   ): Promise<void> {
     try {
+      const { documentId, anonymizedTexts, extension } = input;
+
       const archive = await this.fileGenerationService.generateArchive({
         documentId,
-        userEmail,
-        count,
+        anonymizedTexts,
         extension,
       });
-      console.log({ archive });
 
       res.setHeader('Content-Type', 'application/zip');
       res.setHeader(
         'Content-Disposition',
         `attachment; filename="archive.zip"`,
       );
+
       res.send(archive);
     } catch (error) {
       if (error instanceof BadRequestException) {
-        throw new BadRequestException('Invalid document ID or user email');
+        throw new BadRequestException('Invalid request');
       }
 
       if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException(
-          'Unauthorized to access requested document',
-        );
+        throw new UnauthorizedException('Unauthorized');
       }
 
       if (error instanceof NotFoundException) {
-        throw new NotFoundException('Document or user not found');
+        throw new NotFoundException('Not found');
       }
 
       throw new InternalServerErrorException(
-        'Internal server error occured during archive generation',
+        `Internal server error occured during archive generation: ${error}`,
       );
     }
   }

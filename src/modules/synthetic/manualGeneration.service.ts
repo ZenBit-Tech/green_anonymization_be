@@ -112,12 +112,19 @@ export default class ManualGenerationService {
           return acc;
         }
 
+        const placeholder =
+          PII_PLACEHOLDERS[pii.entityType] ?? `[${pii.entityType}]`;
+
+        if (!acc.includes(placeholder)) {
+          return acc;
+        }
+
         generatedEntities.push({
           type: pii.entityType,
           value: generated,
         });
 
-        return this.replacePlaceholderOnce(acc, pii.entityType, generated);
+        return acc.replace(placeholder, generated);
       }, text);
 
       return {

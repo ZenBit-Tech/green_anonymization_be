@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import archiver from 'archiver';
-import { Writable } from 'stream';
+import { ZipArchive } from 'archiver';
+import { PassThrough } from 'stream';
 
 export type ArchiveEntry = {
   filename: string;
@@ -9,49 +9,65 @@ export type ArchiveEntry = {
 
 @Injectable()
 export default class ArchiveGeneratorService {
-  // eslint-disable-next-line class-methods-use-this
-  async generateArchive(entries: ArchiveEntry[]) {
+  static async generateArchive(entries: ArchiveEntry[]): Promise<Buffer> {
     return new Promise((resolve, reject) => {
-      const archive = archiver('zip', {
+      const archive = new ZipArchive({
         zlib: { level: 9 },
       });
 
+      const output = new PassThrough();
       const chunks: Buffer[] = [];
 
-      const writable = new Writable({
-        write(chunk, _encoding, callback) {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-          callback();
-        },
+      output.on('data', (chunk: Buffer) => {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
       });
 
-      writable.on('finish', () => {
+      output.on('end', () => {
         resolve(Buffer.concat(chunks));
       });
 
-      writable.on('error', reject);
+      output.on('error', (error) => {
+        reject(
+          new InternalServerErrorException(
+            `Output stream error: ${error.message}`,
+          ),
+        );
+      });
 
-      archive.on('error', reject);
-
-      archive.on('end', () => {});
-
-      archive.pipe(writable);
-
-      try {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const entry of entries) {
-          console.log(entry);
-          archive.append(entry.buffer, { name: entry.filename });
+      archive.on('warning', (error: NodeJS.ErrnoException) => {
+        // Ignore missing-file warnings if desired
+        if (error.code !== 'ENOENT') {
+          reject(
+            new InternalServerErrorException(
+              `Archive warning: ${error.message}`,
+            ),
+          );
         }
+      });
 
-        archive.finalize();
-      } catch (err) {
-        reject(err);
-      }
-    }).catch((err) => {
-      throw new InternalServerErrorException(
-        `Archive generation failed: ${err?.message ?? err}`,
-      );
+      archive.on('error', (error: Error) => {
+        reject(
+          new InternalServerErrorException(
+            `Archive generation failed: ${error.message}`,
+          ),
+        );
+      });
+
+      archive.pipe(output);
+
+      entries.forEach((entry) => {
+        archive.append(entry.buffer, {
+          name: entry.filename,
+        });
+      });
+
+      archive.finalize().catch((error: Error) => {
+        reject(
+          new InternalServerErrorException(
+            `Archive finalization failed: ${error.message}`,
+          ),
+        );
+      });
     });
   }
 }

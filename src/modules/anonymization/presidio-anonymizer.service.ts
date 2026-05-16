@@ -92,7 +92,9 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
           body,
         ),
       );
-      return response.data as AnonymizationEntity[];
+      return PresidioAnonymizerService.removeOverlappingEntities(
+        response.data as AnonymizationEntity[],
+      );
     } catch {
       throw new Error('Presidio analysis failed');
     }
@@ -104,5 +106,32 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
       throw new Error(`No anonymization profile found for framework: ${code}`);
     }
     return profile;
+  }
+
+  private static removeOverlappingEntities(
+    entities: AnonymizationEntity[],
+  ): AnonymizationEntity[] {
+    const sorted = [...entities].sort((a, b) => {
+      if ((b.score ?? 0) !== (a.score ?? 0)) {
+        return (b.score ?? 0) - (a.score ?? 0);
+      }
+
+      return b.end - b.start - (a.end - a.start);
+    });
+
+    const kept: AnonymizationEntity[] = [];
+
+    sorted.forEach((entity) => {
+      const overlaps = kept.some(
+        (existing) =>
+          entity.start < existing.end && entity.end > existing.start,
+      );
+
+      if (!overlaps) {
+        kept.push(entity);
+      }
+    });
+
+    return kept.sort((a, b) => a.start - b.start);
   }
 }

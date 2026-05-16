@@ -7,47 +7,33 @@ import { Document, Packer, Paragraph } from 'docx';
 import PDFDocument from 'pdfkit';
 
 import { FileExtensions } from '@common/constants';
-import SyntheticDataService from '@modules/synthetic/synthetic.service';
 import ArchiveGeneratorService, {
   ArchiveEntry,
 } from './archive-generator.service';
 
 @Injectable()
 export default class FileGenerationService {
-  constructor(
-    private readonly syntheticDataService: SyntheticDataService,
-    private readonly archiveGeneratorService: ArchiveGeneratorService,
-  ) {}
-
   async generateArchive(input: {
     documentId: string;
-    userEmail: string;
-    count: number;
+    anonymizedTexts: string[];
     extension: FileExtensions;
   }) {
-    const { documentId, userEmail, count, extension } = input;
-    console.log(documentId, userEmail, count, extension);
-    const syntheticResult = await this.syntheticDataService.generate({
-      email: userEmail,
-      documentId,
-      count,
-    });
-    console.log([syntheticResult.syntheticDocuments]);
+    const { anonymizedTexts, extension } = input;
+
+    if (!anonymizedTexts?.length) {
+      throw new BadRequestException('No texts provided');
+    }
 
     const files = await Promise.all(
-      syntheticResult.syntheticDocuments.map((doc, index) =>
-        this.generateFile(
-          doc.syntheticText,
-          extension,
-          `synthetic-${index + 1}`,
-        ),
+      anonymizedTexts.map((text, index) =>
+        this.generateFile(text, extension, `synthetic-${index + 1}`),
       ),
     );
 
-    console.log([files]);
-    return this.archiveGeneratorService.generateArchive(files);
+    return ArchiveGeneratorService.generateArchive(files);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   private async generateFile(
     text: string,
     extension: FileExtensions,
@@ -59,29 +45,27 @@ export default class FileGenerationService {
 
     switch (extension) {
       case FileExtensions.TXT:
-        return this.generateTxt(text, baseName);
+        return FileGenerationService.generateTxt(text, baseName);
 
       case FileExtensions.PDF:
-        return this.generatePdf(text, baseName);
+        return FileGenerationService.generatePdf(text, baseName);
 
       case FileExtensions.DOCX:
-        return this.generateDocx(text, baseName);
+        return FileGenerationService.generateDocx(text, baseName);
 
       default:
         throw new BadRequestException('Unsupported file extension');
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private generateTxt(text: string, baseName: string): ArchiveEntry {
+  private static generateTxt(text: string, baseName: string): ArchiveEntry {
     return {
       buffer: Buffer.from(text, 'utf-8'),
       filename: `${baseName}.txt`,
     };
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private async generatePdf(
+  private static async generatePdf(
     text: string,
     baseName: string,
   ): Promise<ArchiveEntry> {
@@ -108,8 +92,7 @@ export default class FileGenerationService {
     });
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  private async generateDocx(
+  private static async generateDocx(
     text: string,
     baseName: string,
   ): Promise<ArchiveEntry> {
