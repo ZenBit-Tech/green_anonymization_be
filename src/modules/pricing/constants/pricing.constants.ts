@@ -12,10 +12,10 @@ export enum SubscriptionStatus {
 export type FeatureKey =
   | 'pii_detection'
   | 'standard_deid'
+  | 'basic_report'
   | 'advanced_deid'
+  | 'synthetic_data'
   | 'custom_rules'
-  | 'batch'
-  | 'audit_logs'
   | 'priority_support';
 
 export const FREE_PLAN_DOCUMENTS_PER_DAY = 5;
