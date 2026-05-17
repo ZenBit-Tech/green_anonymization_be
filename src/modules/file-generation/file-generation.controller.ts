@@ -1,9 +1,8 @@
 import {
   ApiBadRequestResponse,
+  ApiBody,
   ApiInternalServerErrorResponse,
-  ApiNotFoundResponse,
   ApiOperation,
-  ApiParam,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -30,17 +29,16 @@ export default class FileGenerationController {
   constructor(private readonly fileGenerationService: FileGenerationService) {}
 
   @ApiOperation({
-    summary:
-      'Generate archive with multiple file formats containing synthetic data for a requested document',
+    summary: 'Generate ZIP archive containing synthetic files (TXT, PDF, DOCX)',
+    description:
+      'Converts synthetic texts into files and returns them packaged as a ZIP archive.',
   })
-  @ApiParam({
-    name: 'id',
-    description: 'The unique identifier of the document',
-    type: 'string',
+  @ApiBody({
+    type: GenerateArchiveRequestDto,
   })
   @ApiResponse({
     status: 200,
-    description: 'Successfully generated archive containing synthetic data',
+    description: 'ZIP archive successfully generated',
     content: {
       'application/zip': {
         schema: {
@@ -51,16 +49,14 @@ export default class FileGenerationController {
     },
   })
   @ApiBadRequestResponse({
-    description: 'Invalid document ID or user email',
+    description:
+      'Invalid request: missing texts, empty input, or unsupported file extension',
   })
   @ApiUnauthorizedResponse({
-    description: 'Unauthorized to access requested document',
-  })
-  @ApiNotFoundResponse({
-    description: 'Document or user not found',
+    description: 'Missing or invalid JWT token',
   })
   @ApiInternalServerErrorResponse({
-    description: 'Internal server error occured during archive generation',
+    description: 'Unexpected error during archive generation',
   })
   @UseGuards(JwtAuthGuard)
   @Post('generate-archive')

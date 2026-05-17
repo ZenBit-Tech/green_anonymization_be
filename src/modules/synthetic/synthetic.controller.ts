@@ -8,6 +8,7 @@ import {
 
 import {
   ApiBody,
+  ApiInternalServerErrorResponse,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -29,17 +30,22 @@ export default class SyntheticDataController {
 
   @ApiOperation({
     summary: 'Generate synthetic documents from a de-identified document',
+    description:
+      'Takes anonymized document text and generates synthetic variants preserving structure and entity types.',
   })
   @ApiBody({
     type: GenerateSyntheticDataRequestDto,
   })
   @ApiResponse({
-    status: 201,
-    description: 'Returns generated synthetic documents',
+    status: 200,
+    description: 'Synthetic documents successfully generated',
     type: GenerateSyntheticDataResponseDto,
   })
   @ApiUnauthorizedResponse({
-    description: 'JWT missing or invalid',
+    description: 'Missing or invalid JWT token',
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Failed to generate synthetic data',
   })
   @Post('generate')
   @UseGuards(JwtAuthGuard)

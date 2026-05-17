@@ -1,7 +1,7 @@
 import { PIIEntityType } from '@/common/constants';
 
 export type GeneratedEntity = {
-  type: PIIEntityType;
+  entity_type: PIIEntityType;
   value: string;
 };
 
@@ -11,3 +11,13 @@ export type ManualGenerationResult = {
 };
 
 export type GeneratorMethod = () => string;
+
+export type SyntheticDocument = {
+  id: string;
+  syntheticText: string;
+  entities: GeneratedEntity[];
+};
+
+export type GenerateSyntheticDataResult = {
+  syntheticDocuments: SyntheticDocument[];
+};

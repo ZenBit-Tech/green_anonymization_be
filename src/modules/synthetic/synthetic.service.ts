@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import DocumentsService from '../documents/documents.service';
 import DocumentDetailDto from '../documents/dto/document-detail.dto';
 import ManualGenerationService from './manualGeneration.service';
+import { GenerateSyntheticDataResult } from './types';
 
 type GenerateSyntheticDataInput = {
   email: string;
@@ -16,7 +17,9 @@ export default class SyntheticDataService {
     private readonly manualGenerationService: ManualGenerationService,
   ) {}
 
-  async generate(input: GenerateSyntheticDataInput) {
+  async generate(
+    input: GenerateSyntheticDataInput,
+  ): Promise<GenerateSyntheticDataResult> {
     const anonymizedDocument: DocumentDetailDto =
       await this.documentService.findByIdForEmail(
         input.documentId,
@@ -33,7 +36,7 @@ export default class SyntheticDataService {
           id: `${input.documentId}-synthetic-${index + 1}`,
           syntheticText: manualResult.syntheticText,
           entities: manualResult.generatedEntities.map((e) => ({
-            entity_type: e.type,
+            entity_type: e.entity_type,
             value: e.value,
           })),
         };

@@ -17,7 +17,7 @@ export default class FileGenerationService {
     documentId: string;
     anonymizedTexts: string[];
     extension: FileExtensions;
-  }) {
+  }): Promise<Buffer> {
     const { anonymizedTexts, extension } = input;
 
     if (!anonymizedTexts?.length) {

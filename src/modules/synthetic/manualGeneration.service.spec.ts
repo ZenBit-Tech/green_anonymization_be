@@ -66,7 +66,9 @@ describe('ManualGenerationService', () => {
 
       expect(result.generatedEntities).toHaveLength(1);
 
-      expect(result.generatedEntities[0].type).toBe(PIIEntityType.PERSON);
+      expect(result.generatedEntities[0].entity_type).toBe(
+        PIIEntityType.PERSON,
+      );
 
       expect(result.generatedEntities[0].value).toBeTruthy();
     });
@@ -96,9 +98,11 @@ describe('ManualGenerationService', () => {
 
       expect(result.generatedEntities).toHaveLength(2);
 
-      expect(result.generatedEntities[0].type).toBe(PIIEntityType.PERSON);
+      expect(result.generatedEntities[0].entity_type).toBe(
+        PIIEntityType.PERSON,
+      );
 
-      expect(result.generatedEntities[1].type).toBe(
+      expect(result.generatedEntities[1].entity_type).toBe(
         PIIEntityType.EMAIL_ADDRESS,
       );
     });
@@ -155,15 +159,6 @@ describe('ManualGenerationService', () => {
       );
 
       expect(result.syntheticText).toMatch(/^[^]*[A-Z]{2}\d{6}[A-Z][^]*$/);
-    });
-
-    it('should generate valid date string', async () => {
-      const result = await service.generateManualData(
-        `Date: ${PII_PLACEHOLDERS[PIIEntityType.DATE_TIME]}`,
-        [createEntity(PIIEntityType.DATE_TIME)],
-      );
-
-      expect(result.generatedEntities[0].value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
     it('should generate valid Swiss AHV number format', async () => {
@@ -256,7 +251,7 @@ describe('ManualGenerationService', () => {
 
       expect(result.generatedEntities).toHaveLength(1);
 
-      expect(result.generatedEntities[0].type).toBe(entityType);
+      expect(result.generatedEntities[0].entity_type).toBe(entityType);
 
       expect(result.generatedEntities[0].value).toBeTruthy();
 

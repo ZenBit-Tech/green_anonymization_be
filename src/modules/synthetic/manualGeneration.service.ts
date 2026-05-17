@@ -120,7 +120,7 @@ export default class ManualGenerationService {
         }
 
         generatedEntities.push({
-          type: pii.entityType,
+          entity_type: pii.entityType,
           value: generated,
         });
 
