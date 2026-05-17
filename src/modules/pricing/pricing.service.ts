@@ -115,7 +115,7 @@ export default class PricingService {
         );
       });
 
-      return this.getCurrentSubscription(email);
+      return await this.getCurrentSubscription(email);
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
       throw new InternalServerErrorException('Failed to update subscription');
