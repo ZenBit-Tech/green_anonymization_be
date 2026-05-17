@@ -35,7 +35,6 @@ export default class ArchiveGeneratorService {
       });
 
       archive.on('warning', (error: NodeJS.ErrnoException) => {
-        // Ignore missing-file warnings if desired
         if (error.code !== 'ENOENT') {
           reject(
             new InternalServerErrorException(

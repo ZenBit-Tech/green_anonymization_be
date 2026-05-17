@@ -18,7 +18,7 @@ const CH_AHV_RECOGNIZER_SCORE = 0.95;
 
 export const PII_PLACEHOLDERS: Record<PIIEntityType, string> = {
   [PIIEntityType.PERSON]: '[PERSON]',
-  [PIIEntityType.DATE_TIME]: '[DATE]',
+  [PIIEntityType.DATE_TIME]: '[DATE_TIME]',
   [PIIEntityType.DATE]: '[DATE]',
   [PIIEntityType.EMAIL_ADDRESS]: '[EMAIL_ADDRESS]',
   [PIIEntityType.PHONE_NUMBER]: '[PHONE_NUMBER]',

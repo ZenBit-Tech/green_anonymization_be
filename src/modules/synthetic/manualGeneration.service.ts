@@ -37,7 +37,7 @@ export default class ManualGenerationService {
   > = {
     [PIIEntityType.PERSON]: this.generatePerson.bind(this),
     [PIIEntityType.PHONE_NUMBER]: this.generatePhoneNumber.bind(this),
-    [PIIEntityType.DATE_TIME]: this.generateDate.bind(this),
+    [PIIEntityType.DATE_TIME]: this.generateDateTime.bind(this),
     [PIIEntityType.DATE]: this.generateDate.bind(this),
     [PIIEntityType.EMAIL_ADDRESS]: this.generateEmailAddress.bind(this),
     [PIIEntityType.IP_ADDRESS]: this.generateIpAddress.bind(this),
@@ -136,16 +136,6 @@ export default class ManualGenerationService {
         `Failed to manually generate synthetic data, error: ${error}`,
       );
     }
-  }
-
-  private replacePlaceholderOnce(
-    text: string,
-    entityType: PIIEntityType,
-    replacement: string,
-  ): string {
-    const placeholder = PII_PLACEHOLDERS[entityType] ?? `[${entityType}]`;
-
-    return text.replace(placeholder, replacement);
   }
 
   private generatePiiEntity(piiEntity: PIIEntityDto): string | null {
@@ -285,8 +275,7 @@ export default class ManualGenerationService {
     const checksum = randomNumberBetween(10, 99);
 
     const account = toFixedDigitString(
-      // eslint-disable-next-line @typescript-eslint/no-loss-of-precision
-      randomNumberBetween(0, 999999999999999999),
+      randomNumberBetween(0, 999999999999999),
       18,
     );
 
