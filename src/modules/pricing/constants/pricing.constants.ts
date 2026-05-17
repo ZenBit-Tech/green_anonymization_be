@@ -21,3 +21,5 @@ export type FeatureKey =
 export const FREE_PLAN_DOCUMENTS_PER_DAY = 5;
 export const PRO_PLAN_PRICE_CENTS = 4900;
 export const PRO_PLAN_SUBSCRIPTION_DAYS = 30;
+export const MS_PER_DAY = 24 * 60 * 60 * 1000;
+export const DAILY_LIMIT_REACHED_CODE = 'DAILY_LIMIT_REACHED';

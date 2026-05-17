@@ -5,12 +5,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import SubscriptionPlan from '@common/db/entities/subscription-plan.entity';
 import UserSubscription from '@common/db/entities/user-subscription.entity';
 import Documents from '@common/db/entities/documents.entity';
 import UserService from '@modules/user/user.service';
 import {
+  DAILY_LIMIT_REACHED_CODE,
+  MS_PER_DAY,
   PlanName,
   PRO_PLAN_SUBSCRIPTION_DAYS,
   SubscriptionStatus,
@@ -49,36 +51,47 @@ export default class PricingService {
   async getCurrentSubscription(
     email: string,
   ): Promise<CurrentSubscriptionResponseDto> {
-    const user = await this.userService.findByEmail(email);
-    if (!user) throw new NotFoundException(USER_NOT_FOUND);
+    try {
+      const user = await this.userService.findByEmail(email);
+      if (!user) throw new NotFoundException(USER_NOT_FOUND);
 
-    const subscription = await this.findActiveSubscription(user.uuid);
-    if (!subscription) throw new NotFoundException(SUBSCRIPTION_NOT_FOUND);
+      const subscription = await this.findActiveSubscription(user.uuid);
+      if (!subscription) throw new NotFoundException(SUBSCRIPTION_NOT_FOUND);
 
-    const usedToday = await this.countDocumentsToday(user.uuid);
+      const { count: usedToday, firstCreatedAt } =
+        await this.countDocumentsToday(user.uuid);
+      const resetAt = PricingService.calcResetAt(
+        subscription.plan.documentsPerDay,
+        firstCreatedAt,
+      );
 
-    return {
-      status: subscription.status,
-      expiresAt: subscription.expiresAt,
-      plan: PricingService.mapPlanToDto(subscription.plan),
-      usedToday,
-      dailyLimit: subscription.plan.documentsPerDay,
-    };
+      return {
+        status: subscription.status,
+        expiresAt: subscription.expiresAt,
+        plan: PricingService.mapPlanToDto(subscription.plan),
+        usedToday,
+        dailyLimit: subscription.plan.documentsPerDay,
+        resetAt,
+      };
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
+      throw new InternalServerErrorException('Failed to load subscription');
+    }
   }
 
   async selectPlan(
     email: string,
     planId: string,
   ): Promise<CurrentSubscriptionResponseDto> {
-    const user = await this.userService.findByEmail(email);
-    if (!user) throw new NotFoundException(USER_NOT_FOUND);
-
-    const plan = await this.planRepo.findOne({
-      where: { uuid: planId, isActive: true },
-    });
-    if (!plan) throw new NotFoundException(PLAN_NOT_FOUND);
-
     try {
+      const user = await this.userService.findByEmail(email);
+      if (!user) throw new NotFoundException(USER_NOT_FOUND);
+
+      const plan = await this.planRepo.findOne({
+        where: { uuid: planId, isActive: true },
+      });
+      if (!plan) throw new NotFoundException(PLAN_NOT_FOUND);
+
       await this.subscriptionRepo.manager.transaction(async (manager) => {
         await manager.update(
           UserSubscription,
@@ -101,59 +114,70 @@ export default class PricingService {
           }),
         );
       });
-    } catch {
+
+      return this.getCurrentSubscription(email);
+    } catch (err) {
+      if (err instanceof NotFoundException) throw err;
       throw new InternalServerErrorException('Failed to update subscription');
     }
-
-    return this.getCurrentSubscription(email);
   }
 
   async assignFreePlan(userId: string): Promise<void> {
-    const freePlan = await this.planRepo.findOne({
-      where: { name: PlanName.FREE, isActive: true },
-    });
+    try {
+      const freePlan = await this.planRepo.findOne({
+        where: { name: PlanName.FREE, isActive: true },
+      });
 
-    if (!freePlan) {
-      throw new InternalServerErrorException(
-        'Free plan not found. Run seed migration.',
+      if (!freePlan) {
+        throw new InternalServerErrorException(
+          'Free plan not found. Run seed migration.',
+        );
+      }
+
+      const existing = await this.subscriptionRepo.findOne({
+        where: { userId, status: SubscriptionStatus.ACTIVE },
+      });
+      if (existing) return;
+
+      await this.subscriptionRepo.save(
+        this.subscriptionRepo.create({
+          userId,
+          planId: freePlan.uuid,
+          status: SubscriptionStatus.ACTIVE,
+          startedAt: new Date(),
+          expiresAt: null,
+        }),
       );
+    } catch (err) {
+      if (err instanceof InternalServerErrorException) throw err;
+      throw new InternalServerErrorException('Failed to assign free plan');
     }
-
-    const existing = await this.subscriptionRepo.findOne({
-      where: { userId, status: SubscriptionStatus.ACTIVE },
-    });
-    if (existing) return;
-
-    await this.subscriptionRepo.save(
-      this.subscriptionRepo.create({
-        userId,
-        planId: freePlan.uuid,
-        status: SubscriptionStatus.ACTIVE,
-        startedAt: new Date(),
-        expiresAt: null,
-      }),
-    );
   }
 
   async checkDailyLimitByEmail(email: string): Promise<void> {
-    const user = await this.userService.findByEmail(email);
-    if (!user) return;
+    try {
+      const user = await this.userService.findByEmail(email);
+      if (!user) return;
 
-    const subscription = await this.findActiveSubscription(user.uuid);
-    if (!subscription) return;
+      const subscription = await this.findActiveSubscription(user.uuid);
+      if (!subscription) return;
 
-    const { documentsPerDay } = subscription.plan;
-    if (documentsPerDay === null) return;
+      const { documentsPerDay } = subscription.plan;
+      if (documentsPerDay === null) return;
 
-    const usedToday = await this.countDocumentsToday(user.uuid);
+      const { count: usedToday } = await this.countDocumentsToday(user.uuid);
 
-    if (usedToday >= documentsPerDay) {
-      throw new ForbiddenException({
-        code: 'DAILY_LIMIT_REACHED',
-        message: `Daily limit of ${documentsPerDay} documents reached`,
-        limit: documentsPerDay,
-        used: usedToday,
-      });
+      if (usedToday >= documentsPerDay) {
+        throw new ForbiddenException({
+          code: DAILY_LIMIT_REACHED_CODE,
+          message: `Daily limit of ${documentsPerDay} documents reached`,
+          limit: documentsPerDay,
+          used: usedToday,
+        });
+      }
+    } catch (err) {
+      if (err instanceof ForbiddenException) throw err;
+      throw new InternalServerErrorException('Failed to check daily limit');
     }
   }
 
@@ -166,13 +190,24 @@ export default class PricingService {
     });
   }
 
-  private async countDocumentsToday(userId: string): Promise<number> {
+  private async countDocumentsToday(
+    userId: string,
+  ): Promise<{ count: number; firstCreatedAt: Date | null }> {
     const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
 
-    return this.documentsRepo.count({
-      where: { userId, createdAt: MoreThanOrEqual(startOfDay) },
-    });
+    const row = await this.documentsRepo
+      .createQueryBuilder('d')
+      .select('COUNT(d.id)', 'count')
+      .addSelect('MIN(d.createdAt)', 'firstCreatedAt')
+      .where('d.userId = :userId', { userId })
+      .andWhere('d.createdAt >= :startOfDay', { startOfDay })
+      .getRawOne<{ count: string; firstCreatedAt: Date | null }>();
+
+    return {
+      count: Number(row?.count ?? 0),
+      firstCreatedAt: row?.firstCreatedAt ?? null,
+    };
   }
 
   private static mapPlanToDto(
@@ -191,5 +226,15 @@ export default class PricingService {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  private static calcResetAt(
+    documentsPerDay: number | null,
+    firstCreatedAt: Date | null,
+  ): string | null {
+    if (documentsPerDay === null) return null;
+    if (!firstCreatedAt) return null;
+    const resetAt = new Date(firstCreatedAt.getTime() + MS_PER_DAY);
+    return resetAt.toISOString();
   }
 }

@@ -12,7 +12,7 @@ import {
 @Entity({ name: 'subscription_plans' })
 export default class SubscriptionPlan {
   @PrimaryGeneratedColumn('uuid')
-  uuid: string = '';
+  uuid!: string;
 
   @Column({ type: 'enum', enum: PlanName })
   name!: PlanName;
@@ -21,7 +21,7 @@ export default class SubscriptionPlan {
   priceCents: number = 0;
 
   @Column({ type: 'int', name: 'documents_per_day', nullable: true })
-  documentsPerDay: number | null = null;
+  documentsPerDay!: number | null;
 
   @Column({ type: 'json' })
   features: FeatureKey[] = [];

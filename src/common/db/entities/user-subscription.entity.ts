@@ -15,7 +15,7 @@ import SubscriptionPlan from './subscription-plan.entity';
 @Index('IDX_USER_SUBSCRIPTIONS_USER_STATUS', ['userId', 'status'])
 export default class UserSubscription {
   @PrimaryGeneratedColumn('uuid')
-  uuid: string = '';
+  uuid!: string;
 
   @Index('IDX_USER_SUBSCRIPTIONS_USER_ID')
   @Column({ type: 'uuid', name: 'user_id' })
@@ -43,10 +43,10 @@ export default class UserSubscription {
   startedAt: Date = new Date();
 
   @Column({ type: 'datetime', name: 'expires_at', nullable: true })
-  expiresAt: Date | null = null;
+  expiresAt!: Date | null;
 
   @Column({ type: 'datetime', name: 'cancelled_at', nullable: true })
-  cancelledAt: Date | null = null;
+  cancelledAt!: Date | null;
 
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date = new Date();

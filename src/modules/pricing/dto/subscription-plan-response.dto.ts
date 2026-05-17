@@ -3,20 +3,20 @@ import { FeatureKey, PlanName } from '../constants/pricing.constants';
 
 export default class SubscriptionPlanResponseDto {
   @ApiProperty()
-  uuid: string = '';
+  uuid!: string;
 
   @ApiProperty({ enum: PlanName })
-  name: PlanName = PlanName.FREE;
+  name!: PlanName;
 
   @ApiProperty({ description: 'Price in cents (0 = free)' })
-  priceCents: number = 0;
+  priceCents!: number;
 
   @ApiProperty({
     nullable: true,
     description: 'Max documents per day. null = unlimited',
   })
-  documentsPerDay: number | null = null;
+  documentsPerDay!: number | null;
 
   @ApiProperty({ type: [String] })
-  features: FeatureKey[] = [];
+  features!: FeatureKey[];
 }

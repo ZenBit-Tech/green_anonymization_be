@@ -1,6 +1,9 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -21,6 +24,7 @@ export default class PricingController {
 
   @ApiOperation({ summary: 'Get all available subscription plans' })
   @ApiOkResponse({ type: [SubscriptionPlanResponseDto] })
+  @ApiInternalServerErrorResponse({ description: 'Failed to load plans' })
   @Get('plans')
   async getPlans(): Promise<SubscriptionPlanResponseDto[]> {
     return this.pricingService.getPlans();
@@ -29,7 +33,7 @@ export default class PricingController {
   @ApiOperation({ summary: 'Get current user subscription and daily usage' })
   @ApiOkResponse({ type: CurrentSubscriptionResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
-  @ApiNotFoundResponse({ description: 'No active subscription found' })
+  @ApiNotFoundResponse({ description: 'User or active subscription not found' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('current')
@@ -43,9 +47,11 @@ export default class PricingController {
   @ApiOkResponse({ type: CurrentSubscriptionResponseDto })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiNotFoundResponse({ description: 'Plan not found' })
+  @ApiBadRequestResponse({ description: 'Invalid plan UUID' })
+  @ApiForbiddenResponse({ description: 'Failed to update subscription' })
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  @Post('select')
+  @Post('subscriptions')
   async selectPlan(
     @UserEmail() email: string,
     @Body() dto: SelectPlanDto,
