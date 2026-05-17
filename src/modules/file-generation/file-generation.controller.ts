@@ -94,7 +94,7 @@ export default class FileGenerationController {
       }
 
       throw new InternalServerErrorException(
-        `Internal server error occured during archive generation: ${error}`,
+        `Internal server error occured during archive generation`,
       );
     }
   }
