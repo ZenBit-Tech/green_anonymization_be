@@ -41,7 +41,6 @@ describe('FileGenerationService', () => {
   describe('generateArchive', () => {
     it('should generate archive from TXT files', async () => {
       const result = await fileGenerationService.generateArchive({
-        documentId: 'doc-1',
         anonymizedTexts: ['Hello world'],
         extension: FileExtensions.TXT,
       });
@@ -60,7 +59,6 @@ describe('FileGenerationService', () => {
 
     it('should generate multiple files', async () => {
       await fileGenerationService.generateArchive({
-        documentId: 'doc-1',
         anonymizedTexts: ['A', 'B', 'C'],
         extension: FileExtensions.TXT,
       });
@@ -77,7 +75,6 @@ describe('FileGenerationService', () => {
     it('should throw BadRequestException when no texts provided', async () => {
       await expect(
         fileGenerationService.generateArchive({
-          documentId: 'doc-1',
           anonymizedTexts: [],
           extension: FileExtensions.TXT,
         }),
@@ -87,7 +84,6 @@ describe('FileGenerationService', () => {
     it('should throw BadRequestException for empty text item', async () => {
       await expect(
         fileGenerationService.generateArchive({
-          documentId: 'doc-1',
           anonymizedTexts: [''],
           extension: FileExtensions.TXT,
         }),
@@ -96,7 +92,6 @@ describe('FileGenerationService', () => {
 
     it('should use correct file extension for PDF', async () => {
       await fileGenerationService.generateArchive({
-        documentId: 'doc-1',
         anonymizedTexts: ['Hello'],
         extension: FileExtensions.PDF,
       });
@@ -109,7 +104,6 @@ describe('FileGenerationService', () => {
 
     it('should use correct file extension for DOCX', async () => {
       await fileGenerationService.generateArchive({
-        documentId: 'doc-1',
         anonymizedTexts: ['Hello'],
         extension: FileExtensions.DOCX,
       });

@@ -65,10 +65,9 @@ export default class FileGenerationController {
     @Res() res: Response,
   ): Promise<void> {
     try {
-      const { documentId, anonymizedTexts, extension } = input;
+      const { anonymizedTexts, extension } = input;
 
       const archive = await this.fileGenerationService.generateArchive({
-        documentId,
         anonymizedTexts,
         extension,
       });

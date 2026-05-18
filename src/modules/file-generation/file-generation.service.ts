@@ -14,7 +14,6 @@ import ArchiveGeneratorService, {
 @Injectable()
 export default class FileGenerationService {
   async generateArchive(input: {
-    documentId: string;
     anonymizedTexts: string[];
     extension: FileExtensions;
   }): Promise<Buffer> {

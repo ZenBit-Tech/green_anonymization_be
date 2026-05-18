@@ -1,4 +1,3 @@
-import { FileExtensions } from '@/common/constants';
 import {
   IsUUID,
   IsArray,
@@ -6,11 +5,9 @@ import {
   IsString,
   IsEnum,
 } from 'class-validator';
+import { FileExtensions } from '@/common/constants';
 
 export default class GenerateArchiveRequestDto {
-  @IsUUID()
-  documentId: string;
-
   @IsArray()
   @ArrayNotEmpty()
   @IsString({ each: true })
