@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseUUIDPipe,
   Patch,
@@ -20,11 +22,12 @@ import {
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import DocumentsService from './documents.service';
-import DocumentDetailDto from './dto/document-detail.dto';
+import DocumentDetailResponseDto from './dto/document-detail.dto';
 import DocumentListResponseDto from './dto/document-list-response.dto';
-import DocumentTextDto from './dto/document-text.dto';
+import DocumentTextResponseDto from './dto/document-text.dto';
 import PaginationQueryDto from './dto/pagination-query.dto';
 import UpdateDocumentDto from './dto/update-document.dto';
+import UpdateEntitySelectionDto from './dto/update-entity-selection.dto';
 
 @ApiTags('Documents')
 @ApiBearerAuth('jwt')
@@ -50,7 +53,7 @@ export default class DocumentsController {
   @ApiOperation({
     summary: 'Get a single document with anonymized text from S3',
   })
-  @ApiOkResponse({ type: DocumentDetailDto })
+  @ApiOkResponse({ type: DocumentDetailResponseDto })
   @ApiNotFoundResponse({
     description: 'Document or anonymized text not found',
   })
@@ -60,15 +63,34 @@ export default class DocumentsController {
   async findOne(
     @UserEmail() email: string,
     @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<DocumentDetailDto> {
+  ): Promise<DocumentDetailResponseDto> {
     return this.documentsService.findByIdForEmail(id, email);
+  }
+
+  @Patch(':id/entities/selection')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Update selected PII entities for a document' })
+  @ApiNotFoundResponse({ description: 'Document not found' })
+  @ApiForbiddenResponse({
+    description: 'Document does not belong to current user',
+  })
+  async updateEntitySelection(
+    @UserEmail() email: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateEntitySelectionDto,
+  ): Promise<void> {
+    return this.documentsService.updateEntitySelection(
+      id,
+      email,
+      dto.selectedEntityIds,
+    );
   }
 
   @Patch(':id')
   @ApiOperation({
     summary: 'Replace anonymized text in S3 for the given document',
   })
-  @ApiOkResponse({ type: DocumentTextDto })
+  @ApiOkResponse({ type: DocumentTextResponseDto })
   @ApiNotFoundResponse({ description: 'Document not found' })
   @ApiForbiddenResponse({
     description: 'Document does not belong to current user',
@@ -77,7 +99,7 @@ export default class DocumentsController {
     @UserEmail() email: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateDocumentDto,
-  ): Promise<DocumentTextDto> {
+  ): Promise<DocumentTextResponseDto> {
     return this.documentsService.updateTextForEmail(id, email, dto.text);
   }
 }

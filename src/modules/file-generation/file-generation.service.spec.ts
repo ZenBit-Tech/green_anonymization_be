@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import DocumentsService from '@modules/documents/documents.service';
-import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
+import DocumentDetailResponseDto from '@modules/documents/dto/document-detail.dto';
 import PIIEntityDto from '@modules/processing/dto/piiEntity.dto';
 import { PIIEntityType, Confidence } from '@common/constants';
 import FileGenerationService from './file-generation.service';
@@ -38,8 +38,8 @@ describe('FileGenerationService', () => {
   });
 
   const createMockDocumentDetail = (
-    overrides?: Partial<DocumentDetailDto>,
-  ): DocumentDetailDto =>
+    overrides?: Partial<DocumentDetailResponseDto>,
+  ): DocumentDetailResponseDto =>
     ({
       id: mockDocumentId,
       fileName: 'test-document.txt',
@@ -51,7 +51,7 @@ describe('FileGenerationService', () => {
       anonymizedText: mockAnonymizedText,
       piiEntities: [],
       ...overrides,
-    }) as DocumentDetailDto;
+    }) as DocumentDetailResponseDto;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
