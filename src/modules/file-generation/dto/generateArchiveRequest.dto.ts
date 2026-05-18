@@ -1,10 +1,4 @@
-import {
-  IsUUID,
-  IsArray,
-  ArrayNotEmpty,
-  IsString,
-  IsEnum,
-} from 'class-validator';
+import { IsArray, ArrayNotEmpty, IsString, IsEnum } from 'class-validator';
 import { FileExtensions } from '@/common/constants';
 
 export default class GenerateArchiveRequestDto {
