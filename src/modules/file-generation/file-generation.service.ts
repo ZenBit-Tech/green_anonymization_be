@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import DocumentsService from '@modules/documents/documents.service';
-import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
+import DocumentDetailResponseDto from '@modules/documents/dto/document-detail.dto';
 import PiiEntityMapper from '@common/mappers/pii-entity.mapper';
 import ArchiveGeneratorService from './archive-generator.service';
 
@@ -22,7 +22,7 @@ export default class FileGenerationService {
   }): Promise<Buffer> {
     const { documentId, userEmail } = input;
 
-    let documentDetailDto: DocumentDetailDto;
+    let documentDetailDto: DocumentDetailResponseDto;
     try {
       documentDetailDto = await this.documentsService.findByIdForEmail(
         documentId,
