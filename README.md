@@ -69,7 +69,7 @@ $ npm install
 ### Important Notes
 
 - Ensure all ports defined in your `.env` file are not in use by other processes on your machine before starting the infrastructure.
-- Check your `.env` file for the configured ports (`DB_PORT`, `PRESIDIO_ANONYMIZER_PORT`, and `PRESIDIO_ANALYZER_PORT`), as well as Ollama port `11434`.
+- Check your `.env` file for the configured ports (`DB_PORT`, `PRESIDIO_ANONYMIZER_PORT`, and `PRESIDIO_ANALYZER_PORT`).
 - If you cannot kill the processes on your machine that are already using the mentioned ports, you need to change the ports in `.env` and `compose.yml`.
 
 ## Compile and run the project
