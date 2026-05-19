@@ -24,6 +24,7 @@ import UserEmail from '@/common/utils/decorators/user-email.decorator';
 import { FileInterceptor } from '@nestjs/platform-express';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { plainToInstance } from 'class-transformer';
+import SubscriptionLimitGuard from '@modules/pricing/guards/subscription-limit.guard';
 import AnonymizeRequestDto from './dto/anonymizeRequest.dto';
 import AnonymizeResponseDto from './dto/anonymizeResponse.dto';
 import DocumentDto from './dto/document.dto';
@@ -88,7 +89,7 @@ export default class ProcessingController {
     description: 'Unexpected server error during anonymization process',
   })
   @Post('anonymize')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, SubscriptionLimitGuard)
   @UseInterceptors(FileInterceptor('file'))
   async anonymize(
     @UserEmail() email: string,

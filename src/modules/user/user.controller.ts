@@ -20,9 +20,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import UserEmail from '@common/utils/decorators/user-email.decorator';
 import User from '@common/db/entities/user.entity';
+import PricingService from '@modules/pricing/pricing.service';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';
@@ -32,22 +33,21 @@ import SessionResponseDto from './dto/sessionResponse.dto';
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('user')
 export default class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly pricingService: PricingService,
+  ) {}
 
   @ApiOperation({ summary: 'Complete user registration' })
   @ApiCreatedResponse({
     description: 'User successfully registered',
     type: User,
   })
-  @ApiBadRequestResponse({
-    description: 'Invalid input data',
-  })
+  @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized (invalid or missing JWT)',
   })
-  @ApiForbiddenResponse({
-    description: 'User is already registered',
-  })
+  @ApiForbiddenResponse({ description: 'User is already registered' })
   @Throttle({ default: { limit: 5, ttl: 3600000 } })
   @Post('register')
   @UseGuards(JwtAuthGuard)
@@ -55,14 +55,13 @@ export default class UserController {
     @UserEmail() email: string,
     @Body() dto: CreateAccountDto,
   ): Promise<ReturnUserDto> {
-    return this.userService.register(dto, email);
+    const user = await this.userService.register(dto, email);
+    await this.pricingService.assignFreePlan(user.uuid);
+    return user;
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
-  @ApiOkResponse({
-    description: 'User retrieved successfully',
-    type: User,
-  })
+  @ApiOkResponse({ description: 'User retrieved successfully', type: User })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized (invalid or missing JWT)',
   })
@@ -77,24 +76,18 @@ export default class UserController {
     @Req() req: Request & { user: { email: string } },
   ): Promise<ReturnUserDto | null> {
     const user = await this.userService.findByEmail(req.user.email);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
+    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
+  @SkipThrottle()
   @Get('session')
   @UseGuards(JwtAuthGuard)
-  async session(@Req() req): Promise<SessionResponseDto> {
+  async session(
+    @Req() req: Request & { user: { email: string } },
+  ): Promise<SessionResponseDto> {
     const { email } = req.user;
-
     const user = await this.userService.findByEmail(email as string);
-
-    return {
-      registered: !!user,
-      user: user ?? null,
-    };
+    return { registered: !!user, user: user ?? null };
   }
 }
