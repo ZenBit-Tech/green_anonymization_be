@@ -58,11 +58,13 @@ export default class PricingService {
       const subscription = await this.findActiveSubscription(user.uuid);
       if (!subscription) throw new NotFoundException(SUBSCRIPTION_NOT_FOUND);
 
-      const { count: usedToday, firstCreatedAt } =
-        await this.countDocumentsToday(user.uuid);
+      const { count: usedToday } = await this.countDocumentsToday(
+        user.uuid,
+        user.timezone,
+      );
       const resetAt = PricingService.calcResetAt(
         subscription.plan.documentsPerDay,
-        firstCreatedAt,
+        user.timezone,
       );
 
       return {
@@ -72,6 +74,7 @@ export default class PricingService {
         usedToday,
         dailyLimit: subscription.plan.documentsPerDay,
         resetAt,
+        timezone: user.timezone,
       };
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
@@ -165,7 +168,10 @@ export default class PricingService {
       const { documentsPerDay } = subscription.plan;
       if (documentsPerDay === null) return;
 
-      const { count: usedToday } = await this.countDocumentsToday(user.uuid);
+      const { count: usedToday } = await this.countDocumentsToday(
+        user.uuid,
+        user.timezone,
+      );
 
       if (usedToday >= documentsPerDay) {
         throw new ForbiddenException({
@@ -192,22 +198,32 @@ export default class PricingService {
 
   private async countDocumentsToday(
     userId: string,
-  ): Promise<{ count: number; firstCreatedAt: Date | null }> {
-    const startOfDay = new Date();
-    startOfDay.setUTCHours(0, 0, 0, 0);
+    timezone: string,
+  ): Promise<{ count: number }> {
+    const startOfDay = PricingService.getStartOfDay(timezone);
 
     const row = await this.documentsRepo
       .createQueryBuilder('d')
       .select('COUNT(d.id)', 'count')
-      .addSelect('MIN(d.createdAt)', 'firstCreatedAt')
       .where('d.userId = :userId', { userId })
       .andWhere('d.createdAt >= :startOfDay', { startOfDay })
-      .getRawOne<{ count: string; firstCreatedAt: Date | null }>();
+      .getRawOne<{ count: string }>();
 
-    return {
-      count: Number(row?.count ?? 0),
-      firstCreatedAt: row?.firstCreatedAt ?? null,
-    };
+    return { count: Number(row?.count ?? 0) };
+  }
+
+  private static getStartOfDay(timezone: string): Date {
+    const now = new Date();
+    const dateStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+    }).format(now);
+    const utcMs = now.getTime();
+    const tzMs = new Date(
+      now.toLocaleString('en-US', { timeZone: timezone }),
+    ).getTime();
+    const offsetMs = utcMs - tzMs;
+    const midnightUtc = new Date(`${dateStr}T00:00:00Z`);
+    return new Date(midnightUtc.getTime() + offsetMs);
   }
 
   private static mapPlanToDto(
@@ -230,11 +246,12 @@ export default class PricingService {
 
   private static calcResetAt(
     documentsPerDay: number | null,
-    firstCreatedAt: Date | null,
+    timezone: string,
   ): string | null {
     if (documentsPerDay === null) return null;
-    if (!firstCreatedAt) return null;
-    const resetAt = new Date(firstCreatedAt.getTime() + MS_PER_DAY);
-    return resetAt.toISOString();
+    const nextMidnight = new Date(
+      PricingService.getStartOfDay(timezone).getTime() + MS_PER_DAY,
+    );
+    return nextMidnight.toISOString();
   }
 }
