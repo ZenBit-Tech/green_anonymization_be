@@ -4,11 +4,6 @@ export const NODE_ENV = {
   PRODUCTION: 'production',
   DEVELOPMENT: 'development',
 };
-export const enum Compliance {
-  GDPR = 'GDPR',
-  HIPAA = 'HIPAA',
-  FADP = 'FADP',
-}
 
 export const MAGIC_LINK_EXPIRATION = '60m';
 export const ACCESS_TOKEN_EXPIRATION = '15m';
