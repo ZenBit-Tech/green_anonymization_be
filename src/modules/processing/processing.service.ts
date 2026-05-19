@@ -40,14 +40,12 @@ export default class ProcessingService {
         piiEntities: [],
       };
     }
-
     const user: User | null = await this.userService.findByEmail(email);
     if (!user) throw new BadRequestException('User not found');
-
     const anonymizationResult: AnonymizationResult =
       await this.anonymizationService.anonymize(compliance, text);
-    await this.userService.setDefaultFramework(user.email, compliance.code);
 
+    await this.userService.setDefaultFramework(user.email, compliance.code);
     try {
       return await this.dataSource.transaction(async (manager) => {
         if (!anonymizationResult.metadata) {
@@ -94,6 +92,7 @@ export default class ProcessingService {
             anonymizationResult.anonymizedText,
             manager,
           );
+
         return {
           originalText: anonymizationResult.originalText,
           anonymizedText: anonymizationResult.anonymizedText,

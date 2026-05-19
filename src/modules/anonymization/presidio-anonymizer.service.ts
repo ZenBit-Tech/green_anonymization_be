@@ -38,9 +38,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
     compliance: ComplianceFrameworkConfig,
   ): Promise<AnonymizationResult> {
     const profile = PresidioAnonymizerService.getProfile(compliance.code);
-
     const analyzerResults = await this.analyze(text, profile);
-
     try {
       const response = await firstValueFrom(
         this.httpService.post(
@@ -79,7 +77,6 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
         entities: profile.entities,
         score_threshold: profile.scoreThreshold,
       };
-
       if (profile.adHocRecognizers.length > 0) {
         body.ad_hoc_recognizers = profile.adHocRecognizers;
       }
@@ -92,6 +89,7 @@ export default class PresidioAnonymizerService extends AbstractAnonymizerService
           body,
         ),
       );
+
       return PresidioAnonymizerService.removeOverlappingEntities(
         response.data as AnonymizationEntity[],
       );
