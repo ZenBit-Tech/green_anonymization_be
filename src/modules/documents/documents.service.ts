@@ -118,17 +118,21 @@ export default class DocumentsService {
     await this.findOwnedDocument(id, email);
 
     try {
-      await this.piiRepo.update(
-        { documentId: id, isSelected: true },
-        { isSelected: false },
-      );
-
-      if (selectedEntityIds.length > 0) {
-        await this.piiRepo.update(
-          { documentId: id, id: In(selectedEntityIds) },
-          { isSelected: true },
+      await this.repo.manager.transaction(async (manager) => {
+        await manager.update(
+          PIIEntities,
+          { documentId: id, isSelected: true },
+          { isSelected: false },
         );
-      }
+
+        if (selectedEntityIds.length > 0) {
+          await manager.update(
+            PIIEntities,
+            { documentId: id, id: In(selectedEntityIds) },
+            { isSelected: true },
+          );
+        }
+      });
     } catch (err) {
       throw new InternalServerErrorException(
         `Failed to update entity selection: ${(err as Error).message}`,
