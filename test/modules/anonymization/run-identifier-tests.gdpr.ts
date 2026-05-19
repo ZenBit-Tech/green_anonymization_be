@@ -1,5 +1,5 @@
 import { COMPLIANCE_FRAMEWORKS } from '@common/constants';
-import AnonymizationService from '../../../src/modules/anonymization/anonymization.service';
+import AnonymizationService from 'modules/anonymization/anonymization.service';
 
 const runIdentifierTestsGDPR = (getService: () => AnonymizationService) => {
   describe('GDPR identifier anonymization', () => {
