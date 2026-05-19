@@ -41,6 +41,12 @@ export type RecentActivityData = {
   createdAt: Date;
 };
 
+export type DeIdMethodData = {
+  method: string;
+  count: number;
+  percentage: number;
+};
+
 export type DashboardData = {
   stats: StatsData | null;
   entityTypes: EntityTypeData[];
@@ -48,4 +54,5 @@ export type DashboardData = {
   processingHistory: ProcessingHistoryData[];
   confidenceDistribution: ConfidenceRangeData[];
   recentActivity: RecentActivityData[];
+  deIdMethodUsage: DeIdMethodData[];
 };

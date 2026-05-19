@@ -24,6 +24,8 @@ export enum PIIEntityType {
   PERSON = 'PERSON',
   PHONE_NUMBER = 'PHONE_NUMBER',
   EMAIL_ADDRESS = 'EMAIL_ADDRESS',
+  DATE_TIME = 'DATE_TIME',
+  DATE = 'DATE',
   LOCATION = 'LOCATION',
   IP_ADDRESS = 'IP_ADDRESS',
   MAC_ADDRESS = 'MAC_ADDRESS',
@@ -35,7 +37,16 @@ export enum PIIEntityType {
   MEDICAL_FAMILY_HISTORY = 'MEDICAL_FAMILY_HISTORY',
   MEDICAL_HISTORY = 'MEDICAL_HISTORY',
   US_SSN = 'US_SSN',
-  UK_NINO = 'UK_NINO',
+  UK_NI_NUMBER = 'UK_NI_NUMBER',
+  CH_AHV_NUMBER = 'CH_AHV_NUMBER',
+  CREDIT_CARD = 'CREDIT_CARD',
+  US_BANK_NUMBER = 'US_BANK_NUMBER',
+  IBAN_CODE = 'IBAN_CODE',
+  NRP = 'NRP',
+  URL = 'URL',
+  MEDICAL_LICENSE = 'MEDICAL_LICENSE',
+  US_PASSPORT = 'US_PASSPORT',
+  US_DRIVER_LICENSE = 'US_DRIVER_LICENSE',
   OTHER = 'OTHER',
 }
 
@@ -86,3 +97,11 @@ export const COMPLIANCE_FRAMEWORKS = {
 
 export type ComplianceFramework =
   (typeof COMPLIANCE_FRAMEWORKS)[keyof typeof COMPLIANCE_FRAMEWORKS];
+
+export const DATE_FORMAT = 'yyyy-MM-dd';
+
+export enum FileExtensions {
+  TXT = 'txt',
+  PDF = 'pdf',
+  DOCX = 'docx',
+}

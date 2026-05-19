@@ -2,25 +2,31 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import Documents from '@common/db/entities/documents.entity';
+import PIIEntities from '@common/db/entities/PIIEntities.entity';
 import S3Service from '@common/services/s3.service';
 import UserService from '@modules/user/user.service';
-import DocumentDetailDto from './dto/document-detail.dto';
+import DocumentDetailResponseDto from './dto/document-detail.dto';
 import DocumentListResponseDto from './dto/document-list-response.dto';
 import DocumentSummaryDto from './dto/document-summary.dto';
-import DocumentTextDto from './dto/document-text.dto';
+import DocumentTextResponseDto from './dto/document-text.dto';
 import PaginationQueryDto from './dto/pagination-query.dto';
 
 @Injectable()
 export default class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     @InjectRepository(Documents)
     private readonly repo: Repository<Documents>,
+    @InjectRepository(PIIEntities)
+    private readonly piiRepo: Repository<PIIEntities>,
     private readonly s3: S3Service,
     private readonly userService: UserService,
   ) {}
@@ -68,14 +74,17 @@ export default class DocumentsService {
   async findByIdForEmail(
     id: string,
     email: string,
-  ): Promise<DocumentDetailDto> {
-    const doc = await this.findOwnedDocument(id, email, true);
+  ): Promise<DocumentDetailResponseDto> {
+    const doc = await this.findOwnedDocument(id, email);
 
-    const anonymizedText = await this.s3.getText(doc.filePath);
+    const [piiEntities, anonymizedText] = await Promise.all([
+      this.piiRepo.find({ where: { documentId: id, isSelected: true } }),
+      this.s3.getText(doc.filePath),
+    ]);
 
     return plainToInstance(
-      DocumentDetailDto,
-      { ...doc, anonymizedText },
+      DocumentDetailResponseDto,
+      { ...doc, piiEntities, anonymizedText },
       { excludeExtraneousValues: true },
     );
   }
@@ -84,7 +93,7 @@ export default class DocumentsService {
     id: string,
     email: string,
     text: string,
-  ): Promise<DocumentTextDto> {
+  ): Promise<DocumentTextResponseDto> {
     const doc = await this.findOwnedDocument(id, email);
 
     await this.s3.uploadText(doc.filePath, text);
@@ -93,13 +102,47 @@ export default class DocumentsService {
     try {
       const updated = await this.repo.save(doc);
       return plainToInstance(
-        DocumentTextDto,
+        DocumentTextResponseDto,
         { ...updated, anonymizedText: text },
         { excludeExtraneousValues: true },
       );
     } catch (err) {
       throw new InternalServerErrorException(
         `Failed to persist document update: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  async updateEntitySelection(
+    id: string,
+    email: string,
+    selectedEntityIds: string[],
+  ): Promise<void> {
+    await this.findOwnedDocument(id, email);
+
+    try {
+      await this.repo.manager.transaction(async (manager) => {
+        await manager.update(
+          PIIEntities,
+          { documentId: id, isSelected: true },
+          { isSelected: false },
+        );
+
+        if (selectedEntityIds.length > 0) {
+          await manager.update(
+            PIIEntities,
+            { documentId: id, id: In(selectedEntityIds) },
+            { isSelected: true },
+          );
+        }
+      });
+    } catch (err) {
+      this.logger.error(
+        'Failed to update entity selection',
+        (err as Error).stack,
+      );
+      throw new InternalServerErrorException(
+        'Failed to update entity selection',
       );
     }
   }

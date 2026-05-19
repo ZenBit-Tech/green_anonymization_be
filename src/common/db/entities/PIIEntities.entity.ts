@@ -39,6 +39,12 @@ export default class PIIEntities {
   @Column({ type: 'enum', enum: Confidence })
   confidence: Confidence;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  deIdMethod?: string;
+
+  @Column({ type: 'boolean', default: true })
+  isSelected: boolean;
+
   @CreateDateColumn({ type: 'datetime', precision: 6 })
   createdAt: Date;
 }

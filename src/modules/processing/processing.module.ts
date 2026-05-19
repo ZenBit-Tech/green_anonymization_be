@@ -4,10 +4,11 @@ import DocumentsModule from '@modules/documents/documents.module';
 import Documents from '@/common/db/entities/documents.entity';
 import PIIEntities from '@/common/db/entities/PIIEntities.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import PricingModule from '@modules/pricing/pricing.module';
+import ComplianceModule from '@modules/compliance/compliance.module';
+import UserModule from '@modules/user/user.module';
 import ProcessingService from './processing.service';
 import ProcessingController from './processing.controller';
-import ComplianceModule from '../compliance/compliance.module';
-import UserModule from '../user/user.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import UserModule from '../user/user.module';
     AnonymizationModule,
     ComplianceModule,
     UserModule,
+    PricingModule,
     DocumentsModule,
   ],
   providers: [ProcessingService],
