@@ -2,6 +2,7 @@ import {
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -19,6 +20,8 @@ import PaginationQueryDto from './dto/pagination-query.dto';
 
 @Injectable()
 export default class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     @InjectRepository(Documents)
     private readonly repo: Repository<Documents>,
@@ -134,8 +137,12 @@ export default class DocumentsService {
         }
       });
     } catch (err) {
+      this.logger.error(
+        'Failed to update entity selection',
+        (err as Error).stack,
+      );
       throw new InternalServerErrorException(
-        `Failed to update entity selection: ${(err as Error).message}`,
+        'Failed to update entity selection',
       );
     }
   }
