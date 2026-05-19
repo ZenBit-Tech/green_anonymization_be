@@ -1,0 +1,11 @@
+FROM mcr.microsoft.com/presidio-analyzer:latest
+
+RUN pip install -U \
+    spacy[transformers] \
+    spacy-transformers \
+    transformers \
+    --extra-index-url https://download.pytorch.org/whl/cpu
+
+RUN pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+RUN python -m spacy download en_core_web_trf
