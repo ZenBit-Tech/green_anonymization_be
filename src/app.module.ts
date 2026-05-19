@@ -13,6 +13,7 @@ import anonymizationConfig from '@modules/anonymization/anonymization.config';
 import AnonymizationModule from '@modules/anonymization/anonymization.module';
 import ProcessingModule from '@modules/processing/processing.module';
 import AnalyticsModule from '@modules/analytics/analytics.module';
+import PricingModule from '@modules/pricing/pricing.module';
 import DocumentsModule from '@modules/documents/documents.module';
 import AppController from './app.controller';
 import AppService from './app.service';
@@ -39,6 +40,7 @@ import SyntheticDataModule from './modules/synthetic/synthetic.module';
     AnonymizationModule,
     ProcessingModule,
     AnalyticsModule,
+    PricingModule,
     DocumentsModule,
     FileGenerationModule,
     SyntheticDataModule,
