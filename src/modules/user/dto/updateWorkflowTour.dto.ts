@@ -7,7 +7,7 @@ export default class UpdateWorkflowTourDto {
   @IsBoolean()
   skipped?: boolean;
 
-  @ApiPropertyOptional({ example: true })
+  @ApiPropertyOptional({ example: false })
   @IsOptional()
   @IsBoolean()
   dashboard?: boolean;
