@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
 import CreateAccountDto from './dto/createAccount.dto';
 import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
+import ReturnUserDto from './dto/returnUser.dto';
 
 @Injectable()
 export default class UserService {
@@ -155,7 +156,7 @@ export default class UserService {
   async updateWorkflowTour(
     email: string,
     dto: UpdateWorkflowTourDto,
-  ): Promise<User> {
+  ): Promise<ReturnUserDto> {
     const user: User | null = await this.findByEmail(email);
 
     if (!user) {

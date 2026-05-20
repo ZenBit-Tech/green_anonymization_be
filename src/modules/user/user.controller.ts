@@ -24,7 +24,6 @@ import {
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import UserEmail from '@common/utils/decorators/user-email.decorator';
-import User from '@common/db/entities/user.entity';
 import PricingService from '@modules/pricing/pricing.service';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
@@ -44,7 +43,7 @@ export default class UserController {
   @ApiOperation({ summary: 'Complete user registration' })
   @ApiCreatedResponse({
     description: 'User successfully registered',
-    type: User,
+    type: ReturnUserDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiUnauthorizedResponse({
@@ -64,7 +63,10 @@ export default class UserController {
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
-  @ApiOkResponse({ description: 'User retrieved successfully', type: User })
+  @ApiOkResponse({
+    description: 'User retrieved successfully',
+    type: ReturnUserDto,
+  })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized (invalid or missing JWT)',
   })
@@ -102,6 +104,17 @@ export default class UserController {
     return this.userService.updateWorkflowTour(email, dto);
   }
 
+  @ApiOperation({
+    summary: 'Get current user session',
+  })
+  @ApiOkResponse({
+    description: 'Session retrieved successfully',
+    type: SessionResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiBearerAuth('jwt')
   @SkipThrottle()
   @Get('session')
   @UseGuards(JwtAuthGuard)

@@ -31,7 +31,7 @@ export default class ReturnUserDto {
   @ApiPropertyOptional({
     example: {
       skipped: false,
-      dashboard: true,
+      dashboard: false,
       deidentification: false,
       results: false,
       synthetic: false,
