@@ -20,4 +20,7 @@ export default class User {
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   defaultFramework?: string;
+
+  @Column({ type: 'varchar', length: 100, default: 'UTC' })
+  timezone: string = 'UTC';
 }

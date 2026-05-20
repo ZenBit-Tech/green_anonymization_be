@@ -28,4 +28,10 @@ export default class CurrentSubscriptionResponseDto {
     example: '2026-05-16T00:00:00.000Z',
   })
   resetAt!: string | null;
+
+  @ApiProperty({
+    description: 'IANA timezone of the user used to calculate resetAt',
+    example: 'Europe/Kiev',
+  })
+  timezone!: string;
 }
