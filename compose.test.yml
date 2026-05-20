@@ -1,0 +1,23 @@
+name: green-anonymization-be-testing
+
+services:
+  presidio-anonymizer:
+    container_name: presidio_anonymizer_testing
+    image: mcr.microsoft.com/presidio-anonymizer:latest
+    ports:
+      - 127.0.0.1:${PRESIDIO_ANONYMIZER_PORT}:3000
+
+  presidio-analyzer:
+    container_name: presidio_analyzer_testing
+    build:
+      context: .
+      dockerfile: Dockerfile.presidio-analyzer
+    volumes:
+      - ./presidio-analyzer-nlp-config.yml:/app/presidio-analyzer-nlp-config.yml
+    environment:
+      - NLP_CONF_FILE=/app/presidio-analyzer-nlp-config.yml
+    ports:
+      - 127.0.0.1:${PRESIDIO_ANALYZER_PORT}:3000
+
+volumes:
+  database_data:

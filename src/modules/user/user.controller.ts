@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiOkResponse,
@@ -64,7 +65,10 @@ export default class UserController {
   @ApiUnauthorizedResponse({
     description: 'Unauthorized (invalid or missing JWT)',
   })
-  @ApiForbiddenResponse({ description: 'User is not fully registered' })
+  @ApiForbiddenResponse({
+    description: 'User is not fully registered',
+  })
+  @ApiBearerAuth('jwt')
   @Throttle({ default: { limit: 20, ttl: 3600000 } })
   @Get('me')
   @UseGuards(JwtAuthGuard)

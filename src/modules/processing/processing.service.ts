@@ -12,6 +12,7 @@ import Documents from '@/common/db/entities/documents.entity';
 import PIIEntities from '@/common/db/entities/PIIEntities.entity';
 import User from '@/common/db/entities/user.entity';
 import { AnonymizationResult } from '@modules/anonymization/anonymization.types';
+import formatDate from '@common/utils/formatDate';
 import { ProcessingResult } from './types/ProcessingResult';
 import mapConfidence from './utils/mapConfidence';
 import mapPIIEntityType from './utils/mapPIIEntityType';
@@ -39,15 +40,12 @@ export default class ProcessingService {
         piiEntities: [],
       };
     }
-
     const user: User | null = await this.userService.findByEmail(email);
     if (!user) throw new BadRequestException('User not found');
-
     const anonymizationResult: AnonymizationResult =
       await this.anonymizationService.anonymize(compliance, text);
 
     await this.userService.setDefaultFramework(user.email, compliance.code);
-
     try {
       return await this.dataSource.transaction(async (manager) => {
         if (!anonymizationResult.metadata) {
@@ -60,14 +58,12 @@ export default class ProcessingService {
           chosenCompliance: compliance.code,
           fileType: 'Medical Record',
           fileName: originalFileName
-            ? `${originalFileName}-${compliance.name}-${Date.now()}`
-            : `${compliance.name}-${Date.now()}.txt`,
-          filePath: '',
+            ? `${compliance.name}-${formatDate(new Date())}-${originalFileName}`
+            : `${compliance.name}-${formatDate(new Date())}.txt`,
+          filePath: 'cloud/path/placeholder',
           verifiedAt: new Date(),
         });
-
         const savedDocument = await manager.save(document);
-
         if (!anonymizationResult.metadata) {
           throw new InternalServerErrorException(
             'No metadata found in anonymization result',
@@ -89,9 +85,7 @@ export default class ProcessingService {
             deIdMethod: operatorByEntity.get(e.entity_type),
           }),
         );
-
         const savedPIIEntities = await manager.save(piiEntities);
-
         const documentWithText =
           await this.documentsService.uploadAnonymizedText(
             savedDocument,

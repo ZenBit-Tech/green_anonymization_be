@@ -1,279 +1,117 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  ForbiddenException,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
-import DocumentsService from '@modules/documents/documents.service';
-import DocumentDetailDto from '@modules/documents/dto/document-detail.dto';
-import PIIEntityDto from '@modules/processing/dto/piiEntity.dto';
-import { PIIEntityType, Confidence } from '@common/constants';
+import { BadRequestException } from '@nestjs/common';
+import { FileExtensions } from '@common/constants';
 import FileGenerationService from './file-generation.service';
 import ArchiveGeneratorService from './archive-generator.service';
 
+jest.mock('archiver', () => {
+  return {
+    ZipArchive: jest.fn().mockImplementation(() => ({
+      pipe: jest.fn(),
+      append: jest.fn(),
+      finalize: jest.fn().mockResolvedValue(undefined),
+      on: jest.fn(),
+    })),
+  };
+});
+
 describe('FileGenerationService', () => {
   let fileGenerationService: FileGenerationService;
-  let documentsService: jest.Mocked<DocumentsService>;
-  let archiveGeneratorService: jest.Mocked<ArchiveGeneratorService>;
 
-  const mockDocumentId = 'doc-123';
-  const mockUserEmail = 'user@example.com';
-  const mockAnonymizedText = 'This is anonymized text';
-  const mockArchiveBuffer = Buffer.from([
-    0x50, 0x4b, 0x03, 0x04, 0x0a, 0x00, 0x00, 0x00,
-  ]);
-
-  const createMockPiiEntity = (
-    overrides?: Partial<PIIEntityDto>,
-  ): PIIEntityDto => ({
-    id: 'pii-1',
-    documentId: mockDocumentId,
-    entityType: PIIEntityType.PERSON,
-    start: 0,
-    end: 4,
-    score: 0.95,
-    confidence: Confidence.HIGH,
-    createdAt: new Date(),
-    ...overrides,
-  });
-
-  const createMockDocumentDetail = (
-    overrides?: Partial<DocumentDetailDto>,
-  ): DocumentDetailDto =>
-    ({
-      id: mockDocumentId,
-      fileName: 'test-document.txt',
-      fileType: 'text/plain',
-      chosenCompliance: 'GDPR',
-      verifiedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      anonymizedText: mockAnonymizedText,
-      piiEntities: [],
-      ...overrides,
-    }) as DocumentDetailDto;
+  const mockArchiveBuffer = Buffer.from('zip-content');
 
   beforeEach(async () => {
+    jest
+      .spyOn(ArchiveGeneratorService, 'generateArchive')
+      .mockResolvedValue(mockArchiveBuffer);
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        FileGenerationService,
-        {
-          provide: DocumentsService,
-          useValue: {
-            findByIdForEmail: jest.fn(),
-          },
-        },
-        {
-          provide: ArchiveGeneratorService,
-          useValue: {
-            generateArchive: jest.fn(),
-          },
-        },
-      ],
+      providers: [FileGenerationService],
     }).compile();
 
     fileGenerationService = module.get<FileGenerationService>(
       FileGenerationService,
     );
-    documentsService = module.get(
-      DocumentsService,
-    ) as jest.Mocked<DocumentsService>;
-    archiveGeneratorService = module.get(
-      ArchiveGeneratorService,
-    ) as jest.Mocked<ArchiveGeneratorService>;
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('generateArchive', () => {
-    describe('successful archive generation', () => {
-      it('should return a valid Buffer when document exists and user has access', async () => {
-        const mockDocumentDetail = createMockDocumentDetail({
-          piiEntities: [createMockPiiEntity()],
-        });
-
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockReturnValue(
-          mockArchiveBuffer,
-        );
-
-        const result = await fileGenerationService.generateArchive({
-          documentId: mockDocumentId,
-          userEmail: mockUserEmail,
-        });
-
-        expect(result).toEqual(mockArchiveBuffer);
-        expect(result).toBeInstanceOf(Buffer);
+    it('should generate archive from TXT files', async () => {
+      const result = await fileGenerationService.generateArchive({
+        anonymizedTexts: ['Hello world'],
+        extension: FileExtensions.TXT,
       });
 
-      it('should return a valid Buffer with multiple PII entities', async () => {
-        const mockPiiEntity1 = createMockPiiEntity();
-        const mockPiiEntity2 = createMockPiiEntity({
-          id: 'pii-2',
-          entityType: PIIEntityType.EMAIL_ADDRESS,
-          start: 5,
-          end: 20,
-          score: 0.99,
-        });
-        const mockDocumentDetail = createMockDocumentDetail({
-          piiEntities: [mockPiiEntity1, mockPiiEntity2],
-        });
+      expect(result).toBe(mockArchiveBuffer);
 
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockReturnValue(
-          mockArchiveBuffer,
-        );
-
-        const result = await fileGenerationService.generateArchive({
-          documentId: mockDocumentId,
-          userEmail: mockUserEmail,
-        });
-
-        expect(result).toBeInstanceOf(Buffer);
-        expect(result.length).toBeGreaterThan(0);
-      });
-
-      it('should return a valid Buffer with large number of PII entities', async () => {
-        const largePiiArray = Array.from({ length: 1000 }, (_, i) =>
-          createMockPiiEntity({ id: `pii-${i}` }),
-        );
-        const mockDocumentDetail = createMockDocumentDetail({
-          piiEntities: largePiiArray,
-        });
-
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockReturnValue(
-          mockArchiveBuffer,
-        );
-
-        const result = await fileGenerationService.generateArchive({
-          documentId: mockDocumentId,
-          userEmail: mockUserEmail,
-        });
-
-        expect(result).toBeInstanceOf(Buffer);
-        expect(result.length).toBeGreaterThan(0);
-      });
-
-      it('should return a valid Buffer when anonymizedText is undefined', async () => {
-        const mockDocumentDetail = createMockDocumentDetail({
-          anonymizedText: undefined,
-        });
-
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockReturnValue(
-          mockArchiveBuffer,
-        );
-
-        const result = await fileGenerationService.generateArchive({
-          documentId: mockDocumentId,
-          userEmail: mockUserEmail,
-        });
-
-        expect(result).toBeInstanceOf(Buffer);
-      });
-
-      it('should return a valid Buffer when anonymizedText is empty', async () => {
-        const mockDocumentDetail = createMockDocumentDetail({
-          anonymizedText: '',
-        });
-
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockReturnValue(
-          mockArchiveBuffer,
-        );
-
-        const result = await fileGenerationService.generateArchive({
-          documentId: mockDocumentId,
-          userEmail: mockUserEmail,
-        });
-
-        expect(result).toBeInstanceOf(Buffer);
-      });
+      expect(ArchiveGeneratorService.generateArchive).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            filename: 'synthetic-1.txt',
+            buffer: Buffer.from('Hello world'),
+          }),
+        ]),
+      );
     });
 
-    describe('error handling - document not found', () => {
-      it('should throw NotFoundException with specific message when document does not exist', async () => {
-        documentsService.findByIdForEmail.mockRejectedValue(
-          new NotFoundException('Original not found error'),
-        );
-
-        await expect(
-          fileGenerationService.generateArchive({
-            documentId: mockDocumentId,
-            userEmail: mockUserEmail,
-          }),
-        ).rejects.toThrow(new NotFoundException('Document or user not found'));
+    it('should generate multiple files', async () => {
+      await fileGenerationService.generateArchive({
+        anonymizedTexts: ['A', 'B', 'C'],
+        extension: FileExtensions.TXT,
       });
+
+      const callArg = (ArchiveGeneratorService.generateArchive as jest.Mock)
+        .mock.calls[0][0];
+
+      expect(callArg).toHaveLength(3);
+      expect(callArg[0].filename).toBe('synthetic-1.txt');
+      expect(callArg[1].filename).toBe('synthetic-2.txt');
+      expect(callArg[2].filename).toBe('synthetic-3.txt');
     });
 
-    describe('error handling - unauthorized access', () => {
-      it('should throw UnauthorizedException when user lacks access due to forbidden', async () => {
-        documentsService.findByIdForEmail.mockRejectedValue(
-          new ForbiddenException('Access denied'),
-        );
-
-        await expect(
-          fileGenerationService.generateArchive({
-            documentId: mockDocumentId,
-            userEmail: mockUserEmail,
-          }),
-        ).rejects.toThrow(
-          new UnauthorizedException(
-            'Unauthorized to access requested document',
-          ),
-        );
-      });
-
-      it('should throw UnauthorizedException when user lacks access due to missing authentication', async () => {
-        documentsService.findByIdForEmail.mockRejectedValue(
-          new UnauthorizedException('Not authenticated'),
-        );
-
-        await expect(
-          fileGenerationService.generateArchive({
-            documentId: mockDocumentId,
-            userEmail: mockUserEmail,
-          }),
-        ).rejects.toThrow(
-          new UnauthorizedException(
-            'Unauthorized to access requested document',
-          ),
-        );
-      });
+    it('should throw BadRequestException when no texts provided', async () => {
+      await expect(
+        fileGenerationService.generateArchive({
+          anonymizedTexts: [],
+          extension: FileExtensions.TXT,
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
-    describe('error handling - archive generation failure', () => {
-      it('should throw Error when archive generation fails', async () => {
-        const mockDocumentDetail = createMockDocumentDetail({
-          piiEntities: [createMockPiiEntity()],
-        });
-
-        documentsService.findByIdForEmail.mockResolvedValue(mockDocumentDetail);
-        archiveGeneratorService.generateArchive.mockImplementation(() => {
-          throw new Error('Archive generation failed');
-        });
-
-        await expect(
-          fileGenerationService.generateArchive({
-            documentId: mockDocumentId,
-            userEmail: mockUserEmail,
-          }),
-        ).rejects.toThrow('Failed to generate archive');
-      });
+    it('should throw BadRequestException for empty text item', async () => {
+      await expect(
+        fileGenerationService.generateArchive({
+          anonymizedTexts: [''],
+          extension: FileExtensions.TXT,
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
-    describe('error handling - unexpected errors', () => {
-      it('should throw Error for unexpected exceptions from dependencies', async () => {
-        documentsService.findByIdForEmail.mockRejectedValue(
-          new Error('Connection failed'),
-        );
-
-        await expect(
-          fileGenerationService.generateArchive({
-            documentId: mockDocumentId,
-            userEmail: mockUserEmail,
-          }),
-        ).rejects.toThrow('Document not found or access denied');
+    it('should use correct file extension for PDF', async () => {
+      await fileGenerationService.generateArchive({
+        anonymizedTexts: ['Hello'],
+        extension: FileExtensions.PDF,
       });
+
+      const callArg = (ArchiveGeneratorService.generateArchive as jest.Mock)
+        .mock.calls[0][0];
+
+      expect(callArg[0].filename).toBe('synthetic-1.pdf');
+    });
+
+    it('should use correct file extension for DOCX', async () => {
+      await fileGenerationService.generateArchive({
+        anonymizedTexts: ['Hello'],
+        extension: FileExtensions.DOCX,
+      });
+
+      const callArg = (ArchiveGeneratorService.generateArchive as jest.Mock)
+        .mock.calls[0][0];
+
+      expect(callArg[0].filename).toBe('synthetic-1.docx');
     });
   });
 });

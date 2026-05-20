@@ -15,10 +15,10 @@ import ProcessingModule from '@modules/processing/processing.module';
 import AnalyticsModule from '@modules/analytics/analytics.module';
 import PricingModule from '@modules/pricing/pricing.module';
 import DocumentsModule from '@modules/documents/documents.module';
+import FileGenerationModule from '@modules/file-generation/file-generation.module';
+import SyntheticDataModule from '@modules/synthetic/synthetic.module';
 import AppController from './app.controller';
 import AppService from './app.service';
-import FileGenerationModule from './modules/file-generation/file-generation.module';
-import SyntheticDataModule from './modules/synthetic/synthetic.module';
 
 @Module({
   imports: [

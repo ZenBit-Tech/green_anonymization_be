@@ -102,7 +102,6 @@ export default class ProcessingController {
         (s) => s.frameworkCode,
         () => null,
       ));
-
     if (!frameworkCode) {
       throw new BadRequestException('No framework selected');
     }
