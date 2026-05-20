@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Req,
   UseGuards,
   UseInterceptors,
@@ -18,6 +19,7 @@ import {
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
@@ -28,6 +30,7 @@ import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';
 import SessionResponseDto from './dto/sessionResponse.dto';
+import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -78,6 +81,25 @@ export default class UserController {
     const user = await this.userService.findByEmail(req.user.email);
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  @ApiOperation({ summary: 'Update workflow tour progress' })
+  @ApiBody({ type: UpdateWorkflowTourDto })
+  @ApiOkResponse({
+    description: 'Workflow tour updated successfully',
+    type: ReturnUserDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiBearerAuth('jwt')
+  @Patch('workflow-tour')
+  @UseGuards(JwtAuthGuard)
+  async updateWorkflowTour(
+    @UserEmail() email: string,
+    @Body() dto: UpdateWorkflowTourDto,
+  ): Promise<ReturnUserDto> {
+    return this.userService.updateWorkflowTour(email, dto);
   }
 
   @SkipThrottle()

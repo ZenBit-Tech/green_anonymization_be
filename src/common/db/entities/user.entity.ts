@@ -23,4 +23,13 @@ export default class User {
 
   @Column({ type: 'varchar', length: 100, default: 'UTC' })
   timezone: string = 'UTC';
+
+  @Column({ type: 'json', nullable: true })
+  workflowTour?: {
+    skipped: boolean;
+    dashboard: boolean;
+    deidentification: boolean;
+    results: boolean;
+    synthetic: boolean;
+  };
 }

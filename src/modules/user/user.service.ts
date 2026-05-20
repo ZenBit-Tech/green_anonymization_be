@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
 import CreateAccountDto from './dto/createAccount.dto';
+import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 
 @Injectable()
 export default class UserService {
@@ -148,6 +149,33 @@ export default class UserService {
       return user.uuid;
     } catch (err) {
       throw new InternalServerErrorException('Failed to set default framework');
+    }
+  }
+
+  async updateWorkflowTour(
+    email: string,
+    dto: UpdateWorkflowTourDto,
+  ): Promise<User> {
+    const user: User | null = await this.findByEmail(email);
+
+    if (!user) {
+      throw new BadRequestException('Specified user not found');
+    }
+
+    try {
+      user.workflowTour = {
+        skipped: false,
+        dashboard: false,
+        deidentification: false,
+        results: false,
+        synthetic: false,
+        ...user.workflowTour,
+        ...dto,
+      };
+
+      return await this.userRepository.save(user);
+    } catch {
+      throw new InternalServerErrorException('Failed to update workflow tour');
     }
   }
 }
