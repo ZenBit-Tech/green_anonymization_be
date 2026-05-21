@@ -1,3 +1,5 @@
+import { DEFAULT_WORKFLOW_TOUR } from '@/common/constants';
+import type { WorkflowTour } from '@/modules/user/types/workflowTour';
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 
 @Entity({ name: 'user' })
@@ -23,4 +25,11 @@ export default class User {
 
   @Column({ type: 'varchar', length: 100, default: 'UTC' })
   timezone: string = 'UTC';
+
+  @Column({
+    type: 'json',
+    nullable: true,
+    default: () => `'${JSON.stringify(DEFAULT_WORKFLOW_TOUR)}'`,
+  })
+  workflowTour?: WorkflowTour;
 }

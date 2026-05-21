@@ -7,7 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
+import { DEFAULT_WORKFLOW_TOUR } from '@/common/constants';
 import CreateAccountDto from './dto/createAccount.dto';
+import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
+import ReturnUserDto from './dto/returnUser.dto';
 
 @Injectable()
 export default class UserService {
@@ -148,6 +151,29 @@ export default class UserService {
       return user.uuid;
     } catch (err) {
       throw new InternalServerErrorException('Failed to set default framework');
+    }
+  }
+
+  async updateWorkflowTour(
+    email: string,
+    dto: UpdateWorkflowTourDto,
+  ): Promise<ReturnUserDto> {
+    const user: User | null = await this.findByEmail(email);
+
+    if (!user) {
+      throw new NotFoundException('Specified user not found');
+    }
+
+    try {
+      user.workflowTour = {
+        ...DEFAULT_WORKFLOW_TOUR,
+        ...user.workflowTour,
+        ...dto,
+      };
+
+      return await this.userRepository.save(user);
+    } catch {
+      throw new InternalServerErrorException('Failed to update workflow tour');
     }
   }
 }

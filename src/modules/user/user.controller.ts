@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Req,
   UseGuards,
   UseInterceptors,
@@ -18,16 +19,17 @@ import {
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
+  ApiBody,
 } from '@nestjs/swagger';
 import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import UserEmail from '@common/utils/decorators/user-email.decorator';
-import User from '@common/db/entities/user.entity';
 import PricingService from '@modules/pricing/pricing.service';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 import ReturnUserDto from './dto/returnUser.dto';
 import SessionResponseDto from './dto/sessionResponse.dto';
+import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -41,7 +43,7 @@ export default class UserController {
   @ApiOperation({ summary: 'Complete user registration' })
   @ApiCreatedResponse({
     description: 'User successfully registered',
-    type: User,
+    type: ReturnUserDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid input data' })
   @ApiUnauthorizedResponse({
@@ -61,7 +63,10 @@ export default class UserController {
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
-  @ApiOkResponse({ description: 'User retrieved successfully', type: User })
+  @ApiOkResponse({
+    description: 'User retrieved successfully',
+    type: ReturnUserDto,
+  })
   @ApiUnauthorizedResponse({
     description: 'Unauthorized (invalid or missing JWT)',
   })
@@ -80,6 +85,36 @@ export default class UserController {
     return user;
   }
 
+  @ApiOperation({ summary: 'Update workflow tour progress' })
+  @ApiBody({ type: UpdateWorkflowTourDto })
+  @ApiOkResponse({
+    description: 'Workflow tour updated successfully',
+    type: ReturnUserDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiBearerAuth('jwt')
+  @Patch('workflow-tour')
+  @UseGuards(JwtAuthGuard)
+  async updateWorkflowTour(
+    @UserEmail() email: string,
+    @Body() dto: UpdateWorkflowTourDto,
+  ): Promise<ReturnUserDto> {
+    return this.userService.updateWorkflowTour(email, dto);
+  }
+
+  @ApiOperation({
+    summary: 'Get current user session',
+  })
+  @ApiOkResponse({
+    description: 'Session retrieved successfully',
+    type: SessionResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized (invalid or missing JWT)',
+  })
+  @ApiBearerAuth('jwt')
   @SkipThrottle()
   @Get('session')
   @UseGuards(JwtAuthGuard)

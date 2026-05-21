@@ -1,3 +1,5 @@
+import { WorkflowTour } from '@/modules/user/types/workflowTour';
+
 export const DEFAULT_PORT = 3000;
 export const HELLO_MESSAGE = 'Hello World!';
 export const NODE_ENV = {
@@ -105,3 +107,11 @@ export enum FileExtensions {
   PDF = 'pdf',
   DOCX = 'docx',
 }
+
+export const DEFAULT_WORKFLOW_TOUR: WorkflowTour = {
+  skipped: false,
+  dashboard: false,
+  deidentification: false,
+  results: false,
+  synthetic: false,
+};
