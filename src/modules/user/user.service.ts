@@ -7,7 +7,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
-import { DEFAULT_WORKFLOW_TOUR } from '@/common/constants';
 import CreateAccountDto from './dto/createAccount.dto';
 import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 import ReturnUserDto from './dto/returnUser.dto';
@@ -166,7 +165,11 @@ export default class UserService {
 
     try {
       user.workflowTour = {
-        ...DEFAULT_WORKFLOW_TOUR,
+        skipped: false,
+        dashboard: false,
+        deidentification: false,
+        results: false,
+        synthetic: false,
         ...(user.workflowTour ?? {}),
         ...dto,
       };
