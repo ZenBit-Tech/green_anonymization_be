@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import User from '@common/db/entities/user.entity';
+import { DEFAULT_WORKFLOW_TOUR } from '@/common/constants';
 import CreateAccountDto from './dto/createAccount.dto';
 import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 import ReturnUserDto from './dto/returnUser.dto';
@@ -160,16 +161,12 @@ export default class UserService {
     const user: User | null = await this.findByEmail(email);
 
     if (!user) {
-      throw new BadRequestException('Specified user not found');
+      throw new NotFoundException('Specified user not found');
     }
 
     try {
       user.workflowTour = {
-        skipped: false,
-        dashboard: false,
-        deidentification: false,
-        results: false,
-        synthetic: false,
+        ...DEFAULT_WORKFLOW_TOUR,
         ...user.workflowTour,
         ...dto,
       };

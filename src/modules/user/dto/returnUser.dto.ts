@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import type { WorkflowTour } from '@modules/user/types/workflowTour';
 
 export default class ReturnUserDto {
   @ApiProperty({
@@ -37,11 +38,5 @@ export default class ReturnUserDto {
       synthetic: false,
     },
   })
-  workflowTour?: {
-    skipped: boolean;
-    dashboard: boolean;
-    deidentification: boolean;
-    results: boolean;
-    synthetic: boolean;
-  };
+  workflowTour?: WorkflowTour;
 }
