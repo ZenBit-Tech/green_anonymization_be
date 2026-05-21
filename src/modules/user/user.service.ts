@@ -167,7 +167,7 @@ export default class UserService {
     try {
       user.workflowTour = {
         ...DEFAULT_WORKFLOW_TOUR,
-        ...user.workflowTour,
+        ...(user.workflowTour ?? {}),
         ...dto,
       };
 
