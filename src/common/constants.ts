@@ -1,4 +1,4 @@
-import { WorkflowTour } from '@/modules/user/types/workflowTour';
+import type { WorkflowTour } from '@/modules/user/types/workflowTour';
 
 export const DEFAULT_PORT = 3000;
 export const HELLO_MESSAGE = 'Hello World!';
@@ -21,7 +21,6 @@ export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';
 
 export const YEAR_MONTH_FORMAT = '%Y-%m';
 
-// TODO update when more precise list of entity types will be known
 export enum PIIEntityType {
   PERSON = 'PERSON',
   PHONE_NUMBER = 'PHONE_NUMBER',
