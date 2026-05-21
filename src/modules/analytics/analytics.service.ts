@@ -138,8 +138,13 @@ export default class AnalyticsService {
         .leftJoin('d.piiEntities', 'e')
         .select('COUNT(DISTINCT d.id)', 'totalDocuments')
         .addSelect('COUNT(e.id)', 'totalEntities')
+        .addSelect('AVG(e.score)', 'avgScore')
         .where('d.userId = :userId', { userId })
-        .getRawOne<{ totalDocuments: string; totalEntities: string }>();
+        .getRawOne<{
+          totalDocuments: string;
+          totalEntities: string;
+          avgScore: string | null;
+        }>();
 
       const totalDocuments = Number(totals?.totalDocuments ?? 0);
       const totalEntities = Number(totals?.totalEntities ?? 0);
@@ -169,6 +174,14 @@ export default class AnalyticsService {
           `SUM(CASE WHEN DATE_FORMAT(d.createdAt, '${YEAR_MONTH_FORMAT}') = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '${YEAR_MONTH_FORMAT}') THEN 1 ELSE 0 END)`,
           'lastMonthEntities',
         )
+        .addSelect(
+          `AVG(CASE WHEN DATE_FORMAT(d.createdAt, '${YEAR_MONTH_FORMAT}') = DATE_FORMAT(NOW(), '${YEAR_MONTH_FORMAT}') THEN e.score END)`,
+          'thisMonthAvgScore',
+        )
+        .addSelect(
+          `AVG(CASE WHEN DATE_FORMAT(d.createdAt, '${YEAR_MONTH_FORMAT}') = DATE_FORMAT(DATE_SUB(NOW(), INTERVAL 1 MONTH), '${YEAR_MONTH_FORMAT}') THEN e.score END)`,
+          'lastMonthAvgScore',
+        )
         .where('d.userId = :userId', { userId })
         .andWhere(`d.createdAt >= DATE_SUB(NOW(), INTERVAL 2 MONTH)`)
         .getRawOne<{
@@ -176,13 +189,18 @@ export default class AnalyticsService {
           lastMonthDocs: string;
           thisMonthEntities: string;
           lastMonthEntities: string;
+          thisMonthAvgScore: string | null;
+          lastMonthAvgScore: string | null;
         }>();
 
       return {
         totalDocuments,
         totalEntities,
         avgEntitiesPerDoc,
-        successRate: ANALYTICS_DEFAULT_SUCCESS_RATE,
+        successRate:
+          totals?.avgScore != null
+            ? Math.round(Number(totals.avgScore) * 100)
+            : ANALYTICS_DEFAULT_SUCCESS_RATE,
         trends: {
           documentsVsLastMonth: AnalyticsService.calcTrend(
             Number(monthly?.thisMonthDocs ?? 0),
@@ -192,6 +210,14 @@ export default class AnalyticsService {
             Number(monthly?.thisMonthEntities ?? 0),
             Number(monthly?.lastMonthEntities ?? 0),
           ),
+          successRateVsLastMonth:
+            monthly?.thisMonthAvgScore != null &&
+            monthly?.lastMonthAvgScore != null
+              ? AnalyticsService.calcTrend(
+                  Math.round(Number(monthly.thisMonthAvgScore) * 100),
+                  Math.round(Number(monthly.lastMonthAvgScore) * 100),
+                )
+              : null,
         },
       };
     } catch (err) {
