@@ -76,7 +76,10 @@ export default class UserService {
               .createQueryBuilder()
               .insert()
               .into(User)
-              .values({ email })
+              .values({
+                email,
+                workflowTour: DEFAULT_WORKFLOW_TOUR,
+              })
               .orIgnore()
               .execute();
 

@@ -1,4 +1,3 @@
-import { DEFAULT_WORKFLOW_TOUR } from '@/common/constants';
 import type { WorkflowTour } from '@/modules/user/types/workflowTour';
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 
@@ -29,7 +28,7 @@ export default class User {
   @Column({
     type: 'json',
     nullable: true,
-    default: () => `'${JSON.stringify(DEFAULT_WORKFLOW_TOUR)}'`,
+    // default: () => `'${JSON.stringify(DEFAULT_WORKFLOW_TOUR)}'`,
   })
   workflowTour?: WorkflowTour;
 }
