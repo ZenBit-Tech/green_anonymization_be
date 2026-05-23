@@ -22,6 +22,7 @@ import JwtAuthGuard from '@modules/auth/guards/jwt-auth.guard';
 import type { Response } from 'express';
 import FileGenerationService from './file-generation.service';
 import GenerateArchiveRequestDto from './dto/generateArchiveRequest.dto';
+import GenerateTableRequestDto from './dto/generateTableRequest.dto';
 
 @ApiTags('File Generation')
 @Controller('file-generation')
@@ -94,6 +95,47 @@ export default class FileGenerationController {
 
       throw new InternalServerErrorException(
         `Internal server error occured during archive generation`,
+      );
+    }
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('generate-table')
+  async generateTable(
+    @Body() input: GenerateTableRequestDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    try {
+      const { syntheticEntities } = input;
+
+      const table =
+        await this.fileGenerationService.generateTable(syntheticEntities);
+
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="synthetic-data-table.xlsx"`,
+      );
+
+      res.send(table);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw new BadRequestException('Invalid request');
+      }
+
+      if (error instanceof UnauthorizedException) {
+        throw new UnauthorizedException('Unauthorized');
+      }
+
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException('Not found');
+      }
+
+      throw new InternalServerErrorException(
+        `Internal server error occured during table generation`,
       );
     }
   }
