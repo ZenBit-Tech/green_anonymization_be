@@ -1,5 +1,3 @@
-import { WorkflowTour } from '@/modules/user/types/workflowTour';
-
 export const DEFAULT_PORT = 3000;
 export const HELLO_MESSAGE = 'Hello World!';
 export const NODE_ENV = {
@@ -21,7 +19,6 @@ export const PRESIDIO_ANONYMIZER_ANALYZE_ENDPOINT = '/analyze';
 
 export const YEAR_MONTH_FORMAT = '%Y-%m';
 
-// TODO update when more precise list of entity types will be known
 export enum PIIEntityType {
   PERSON = 'PERSON',
   PHONE_NUMBER = 'PHONE_NUMBER',
@@ -107,11 +104,3 @@ export enum FileExtensions {
   PDF = 'pdf',
   DOCX = 'docx',
 }
-
-export const DEFAULT_WORKFLOW_TOUR: WorkflowTour = {
-  skipped: false,
-  dashboard: false,
-  deidentification: false,
-  results: false,
-  synthetic: false,
-};

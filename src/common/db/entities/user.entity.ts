@@ -1,5 +1,5 @@
-import type { WorkflowTour } from '@/modules/user/types/workflowTour';
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
+import type { WorkflowTour } from '@/modules/user/types/workflowTour';
 
 @Entity({ name: 'user' })
 @Index('IDX_USER_EMAIL', ['email'])
@@ -28,7 +28,6 @@ export default class User {
   @Column({
     type: 'json',
     nullable: true,
-    // default: () => `'${JSON.stringify(DEFAULT_WORKFLOW_TOUR)}'`,
   })
   workflowTour?: WorkflowTour;
 }

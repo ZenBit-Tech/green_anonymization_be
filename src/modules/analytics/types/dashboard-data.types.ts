@@ -1,6 +1,7 @@
 export type TrendsData = {
   documentsVsLastMonth: number | null;
   entitiesVsLastMonth: number | null;
+  successRateVsLastMonth: number | null;
 };
 
 export type StatsData = {
