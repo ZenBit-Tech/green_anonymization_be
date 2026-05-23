@@ -141,7 +141,12 @@ export default class FileGenerationService {
     return new Promise<ArchiveEntry>((resolve, reject) => {
       const doc = new PDFDocument();
       const chunks: Buffer[] = [];
-
+      const pdfText = text
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
       doc.on('data', (chunk) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -156,7 +161,7 @@ export default class FileGenerationService {
 
       doc.on('error', reject);
 
-      doc.text(text);
+      doc.text(pdfText);
       doc.end();
     });
   }
