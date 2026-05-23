@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { FileExtensions } from '@common/constants';
+import ExcelJS from 'exceljs';
 import FileGenerationService from './file-generation.service';
 import ArchiveGeneratorService from './archive-generator.service';
 
@@ -12,6 +13,36 @@ jest.mock('archiver', () => {
       finalize: jest.fn().mockResolvedValue(undefined),
       on: jest.fn(),
     })),
+  };
+});
+
+jest.mock('exceljs', () => {
+  const actual = jest.requireActual('exceljs');
+
+  return {
+    ...actual,
+    Workbook: jest.fn().mockImplementation(() => {
+      const worksheet = {
+        addRow: jest.fn(),
+        getRow: jest.fn(() => ({ font: {} })),
+        getColumn: jest.fn(() => ({
+          eachCell: jest.fn((opts, cb) => {
+            cb({ value: 'test' });
+            cb({ value: 'longertext' });
+          }),
+        })),
+        columnCount: 3,
+        views: [],
+        autoFilter: null,
+      };
+
+      return {
+        addWorksheet: jest.fn(() => worksheet),
+        xlsx: {
+          writeBuffer: jest.fn().mockResolvedValue(Buffer.from('excel')),
+        },
+      };
+    }),
   };
 });
 
@@ -112,6 +143,116 @@ describe('FileGenerationService', () => {
         .mock.calls[0][0];
 
       expect(callArg[0].filename).toBe('synthetic-1.docx');
+    });
+  });
+  describe('generateTable', () => {
+    it('should throw BadRequestException when input is empty', async () => {
+      await expect(fileGenerationService.generateTable([])).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should generate Excel table with correct headers', async () => {
+      const input = [
+        [
+          { entity_type: 'PERSON', value: 'John' },
+          { entity_type: 'LOCATION', value: 'London' },
+        ],
+      ];
+
+      const result = await fileGenerationService.generateTable(input);
+
+      expect(result).toBeInstanceOf(Buffer);
+    });
+
+    it('should create correct number of rows', async () => {
+      const input = [
+        [
+          { entity_type: 'PERSON', value: 'A' },
+          { entity_type: 'LOCATION', value: 'B' },
+        ],
+        [
+          { entity_type: 'PERSON', value: 'C' },
+          { entity_type: 'LOCATION', value: 'D' },
+        ],
+      ];
+
+      await fileGenerationService.generateTable(input);
+
+      const workbookMock = (ExcelJS.Workbook as jest.Mock).mock.results[0]
+        .value;
+
+      const worksheet = workbookMock.addWorksheet.mock.results[0].value;
+
+      expect(worksheet.addRow).toHaveBeenCalledWith([
+        'ID',
+        'PERSON',
+        'LOCATION',
+      ]);
+      expect(worksheet.addRow).toHaveBeenCalledWith([1, 'A', 'B']);
+      expect(worksheet.addRow).toHaveBeenCalledWith([2, 'C', 'D']);
+    });
+
+    it('should set header row bold', async () => {
+      const input = [
+        [
+          { entity_type: 'PERSON', value: 'A' },
+          { entity_type: 'LOCATION', value: 'B' },
+        ],
+      ];
+
+      await fileGenerationService.generateTable(input);
+
+      const workbookMock = (ExcelJS.Workbook as jest.Mock).mock.results[0]
+        .value;
+
+      const worksheet = workbookMock.addWorksheet.mock.results[0].value;
+
+      expect(worksheet.getRow).toHaveBeenCalledWith(1);
+    });
+
+    it('should set frozen header and autofilter', async () => {
+      const input = [
+        [
+          { entity_type: 'PERSON', value: 'A' },
+          { entity_type: 'LOCATION', value: 'B' },
+        ],
+      ];
+
+      await fileGenerationService.generateTable(input);
+
+      const workbookMock = (ExcelJS.Workbook as jest.Mock).mock.results[0]
+        .value;
+
+      const worksheet = workbookMock.addWorksheet.mock.results[0].value;
+
+      expect(worksheet.views).toEqual([
+        {
+          state: 'frozen',
+          ySplit: 1,
+        },
+      ]);
+
+      expect(worksheet.autoFilter).toEqual({
+        from: 'A1',
+        to: {
+          row: 1,
+          column: 3,
+        },
+      });
+    });
+
+    it('should return Buffer from workbook', async () => {
+      const input = [
+        [
+          { entity_type: 'PERSON', value: 'A' },
+          { entity_type: 'LOCATION', value: 'B' },
+        ],
+      ];
+
+      const result = await fileGenerationService.generateTable(input);
+
+      expect(result).toBeInstanceOf(Buffer);
     });
   });
 });

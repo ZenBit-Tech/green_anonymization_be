@@ -7,9 +7,11 @@ import { Document, Packer, Paragraph } from 'docx';
 import PDFDocument from 'pdfkit';
 
 import { FileExtensions } from '@common/constants';
+import ExcelJS from 'exceljs';
 import ArchiveGeneratorService, {
   ArchiveEntry,
 } from './archive-generator.service';
+import SyntheticEntityDto from '../synthetic/dto/synthetic-entity.dto';
 
 @Injectable()
 export default class FileGenerationService {
@@ -30,6 +32,74 @@ export default class FileGenerationService {
     );
 
     return ArchiveGeneratorService.generateArchive(files);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  async generateTable(input: SyntheticEntityDto[][]): Promise<Buffer> {
+    if (!input?.length) {
+      throw new BadRequestException('No synthetic entities provided');
+    }
+
+    try {
+      const workbook = new ExcelJS.Workbook();
+
+      const worksheet = workbook.addWorksheet('Synthetic Data');
+
+      const headers = ['ID', ...input[0].map((entity) => entity.entity_type)];
+
+      worksheet.addRow(headers);
+
+      input.forEach((entities, index) => {
+        const row = [index + 1, ...entities.map((entity) => entity.value)];
+
+        worksheet.addRow(row);
+      });
+
+      worksheet.getRow(1).font = {
+        bold: true,
+      };
+
+      worksheet.views = [
+        {
+          state: 'frozen',
+          ySplit: 1,
+        },
+      ];
+
+      worksheet.autoFilter = {
+        from: 'A1',
+        to: {
+          row: 1,
+          column: headers.length,
+        },
+      };
+
+      for (
+        let columnIndex = 1;
+        columnIndex <= worksheet.columnCount;
+        columnIndex += 1
+      ) {
+        const column = worksheet.getColumn(columnIndex);
+
+        let maxLength = 10;
+
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          const value = String(cell.value ?? '');
+
+          maxLength = Math.max(maxLength, value.length);
+        });
+
+        column.width = maxLength + 2;
+      }
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      return Buffer.from(buffer);
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to generate table: ${(error as Error).message}`,
+      );
+    }
   }
 
   // eslint-disable-next-line class-methods-use-this
@@ -71,7 +141,12 @@ export default class FileGenerationService {
     return new Promise<ArchiveEntry>((resolve, reject) => {
       const doc = new PDFDocument();
       const chunks: Buffer[] = [];
-
+      const pdfText = text
+        .replace(/\\r\\n/g, '\n')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\n')
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n');
       doc.on('data', (chunk) => {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
         chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
@@ -86,7 +161,7 @@ export default class FileGenerationService {
 
       doc.on('error', reject);
 
-      doc.text(text);
+      doc.text(pdfText);
       doc.end();
     });
   }
