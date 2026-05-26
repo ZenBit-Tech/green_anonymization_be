@@ -33,6 +33,30 @@ export default class S3Service {
     }
   }
 
+  async uploadImage(
+    key: string,
+    buffer: Buffer,
+    mimeType: string,
+  ): Promise<string> {
+    const client = this.requireClient();
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: this.bucket,
+          Key: key,
+          Body: buffer,
+          ContentType: mimeType,
+        }),
+      );
+      const region = this.config.get<string>('AWS_S3_REGION');
+      return `https://${this.bucket}.s3.${region}.amazonaws.com/${key}`;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `Failed to upload image to S3: ${(err as Error).message}`,
+      );
+    }
+  }
+
   async uploadText(key: string, text: string): Promise<void> {
     const client = this.requireClient();
     try {
