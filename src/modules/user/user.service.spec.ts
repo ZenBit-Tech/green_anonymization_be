@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 
 import User from '@common/db/entities/user.entity';
+import S3Service from '@common/services/s3.service';
 import UserService from './user.service';
 import CreateAccountDto from './dto/createAccount.dto';
 
@@ -63,6 +64,10 @@ describe('UserService', () => {
     return qb as MockQueryBuilder;
   };
 
+  const mockS3Service = {
+    uploadImage: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -70,6 +75,10 @@ describe('UserService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockRepo,
+        },
+        {
+          provide: S3Service,
+          useValue: mockS3Service,
         },
       ],
     }).compile();
