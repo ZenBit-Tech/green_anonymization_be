@@ -37,9 +37,7 @@ import ReturnUserDto from './dto/returnUser.dto';
 import SessionResponseDto from './dto/sessionResponse.dto';
 import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 import AvatarResponseDto from './dto/avatarResponse.dto';
-import UpdateTimezoneDto from './dto/updateTimezone.dto';
 import UpdateProfileDto from './dto/updateProfile.dto';
-import TimezoneResponseDto from './dto/timezoneResponse.dto';
 
 @ApiTags('user')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -167,23 +165,6 @@ export default class UserController {
     @Body() dto: UpdateProfileDto,
   ): Promise<ReturnUserDto> {
     return this.userService.updateProfile(email, dto);
-  }
-
-  @ApiOperation({ summary: 'Update user timezone' })
-  @ApiBody({ type: UpdateTimezoneDto })
-  @ApiOkResponse({ description: 'Timezone updated', type: TimezoneResponseDto })
-  @ApiBadRequestResponse({ description: 'Invalid timezone' })
-  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
-  @ApiNotFoundResponse({ description: 'User not found' })
-  @ApiInternalServerErrorResponse({ description: 'Failed to update timezone' })
-  @ApiBearerAuth('jwt')
-  @Patch('timezone')
-  @UseGuards(JwtAuthGuard)
-  async updateTimezone(
-    @UserEmail() email: string,
-    @Body() dto: UpdateTimezoneDto,
-  ): Promise<TimezoneResponseDto> {
-    return this.userService.updateTimezone(email, dto.timezone);
   }
 
   @ApiOperation({

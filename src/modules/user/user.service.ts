@@ -14,7 +14,6 @@ import UpdateWorkflowTourDto from './dto/updateWorkflowTour.dto';
 import UpdateProfileDto from './dto/updateProfile.dto';
 import ReturnUserDto from './dto/returnUser.dto';
 import AvatarResponseDto from './dto/avatarResponse.dto';
-import TimezoneResponseDto from './dto/timezoneResponse.dto';
 
 @Injectable()
 export default class UserService {
@@ -219,33 +218,6 @@ export default class UserService {
         (err as Error).stack,
       );
       throw new InternalServerErrorException('Failed to update profile');
-    }
-  }
-
-  async updateTimezone(
-    email: string,
-    timezone: string,
-  ): Promise<TimezoneResponseDto> {
-    const user = await this.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-    try {
-      Intl.DateTimeFormat(undefined, { timeZone: timezone });
-    } catch {
-      throw new BadRequestException(`Invalid timezone: ${timezone}`);
-    }
-
-    try {
-      user.timezone = timezone;
-      await this.userRepository.save(user);
-      return { timezone };
-    } catch (err) {
-      this.logger.error(
-        `updateTimezone failed: ${(err as Error).message}`,
-        (err as Error).stack,
-      );
-      throw new InternalServerErrorException('Failed to update timezone');
     }
   }
 
