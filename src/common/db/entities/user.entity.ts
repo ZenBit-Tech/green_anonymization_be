@@ -1,5 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, Index } from 'typeorm';
 import type { WorkflowTour } from '@/modules/user/types/workflowTour';
+import { AuthProviders } from '@/common/constants';
 
 @Entity({ name: 'user' })
 @Index('IDX_USER_EMAIL', ['email'])
@@ -30,4 +31,15 @@ export default class User {
     nullable: true,
   })
   workflowTour?: WorkflowTour;
+
+  @Column({
+    type: 'enum',
+    enum: AuthProviders,
+  })
+  provider: AuthProviders;
+
+  @Column({
+    nullable: true,
+  })
+  providerUserId?: string;
 }

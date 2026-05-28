@@ -104,3 +104,9 @@ export enum FileExtensions {
   PDF = 'pdf',
   DOCX = 'docx',
 }
+
+export enum AuthProviders {
+  MAGIC_LINK = 'magic_link',
+  GOOGLE = 'google',
+  MICROSOFT = 'microsoft',
+}

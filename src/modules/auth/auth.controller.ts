@@ -15,10 +15,13 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
+import GoogleUserDecorator from '@/common/utils/decorators/google-user.decorator';
 import AuthService from './auth.service';
 import LoginRequestDto from './dto/loginRequest.dto';
 import MagicLinkAuthGuard from './guards/magic-link.auth.guard';
 import VerifyResponseDto from './dto/verifyResponse.dto';
+import GoogleOauthGuard from './guards/google-oauth,guard';
+import type { GoogleUser } from './types/GoogleUser';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -76,5 +79,25 @@ export default class AuthController {
     const accessToken = await this.authService.refreshAccessToken(refreshToken);
 
     return { accessToken };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  @Get('google')
+  @UseGuards(GoogleOauthGuard)
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async auth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthCallback(@GoogleUserDecorator() user: GoogleUser) {
+    const { accessToken, refreshToken } =
+      await this.authService.generateAuthTokens(user.email as string);
+    return {
+      message: 'Authenticated successfully',
+      accessToken,
+      refreshToken,
+      firstName: user.firstName,
+      familyName: user.lastName,
+    };
   }
 }
