@@ -2,8 +2,11 @@ import {
   BadRequestException,
   Body,
   Controller,
+  ForbiddenException,
   InternalServerErrorException,
+  NotFoundException,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -15,6 +18,7 @@ import {
   ApiInternalServerErrorResponse,
   ApiNotFoundResponse,
   ApiOperation,
+  ApiQuery,
   ApiResponse,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -70,6 +74,12 @@ export default class ProcessingController {
       },
     },
   })
+  @ApiQuery({
+    name: 'documentId',
+    required: false,
+    description:
+      'Existing document ID. When provided, re-analyses and updates the document instead of creating a new one (counts against daily edit limit, not document limit).',
+  })
   @ApiResponse({
     status: 200,
     description:
@@ -93,6 +103,7 @@ export default class ProcessingController {
   @UseInterceptors(FileInterceptor('file'))
   async anonymize(
     @UserEmail() email: string,
+    @Query('documentId') documentId?: string,
     @UploadedFile() file?: Express.Multer.File,
     @Body() data?: AnonymizeRequestDto,
   ): Promise<AnonymizeResponseDto> {
@@ -125,6 +136,7 @@ export default class ProcessingController {
     } else {
       throw new BadRequestException('No input provided');
     }
+
     let result: ProcessingResult;
     try {
       result = await this.processingService.process(
@@ -132,8 +144,15 @@ export default class ProcessingController {
         input,
         email,
         file?.originalname,
+        documentId,
       );
     } catch (err) {
+      if (
+        err instanceof BadRequestException ||
+        err instanceof NotFoundException ||
+        err instanceof ForbiddenException
+      )
+        throw err;
       throw new InternalServerErrorException('Anonymization processing failed');
     }
 

@@ -11,6 +11,7 @@ import Documents from '@common/db/entities/documents.entity';
 import UserService from '@modules/user/user.service';
 import User from '@common/db/entities/user.entity';
 import {
+  DAILY_EDIT_LIMIT_REACHED_CODE,
   DAILY_LIMIT_REACHED_CODE,
   PlanName,
   SubscriptionStatus,
@@ -22,6 +23,7 @@ const mockFreePlan: Partial<SubscriptionPlan> = {
   name: PlanName.FREE,
   priceCents: 0,
   documentsPerDay: 5,
+  editsPerDay: 3,
   features: ['pii_detection', 'standard_deid'],
   isActive: true,
 };
@@ -31,6 +33,7 @@ const mockProPlan: Partial<SubscriptionPlan> = {
   name: PlanName.PRO,
   priceCents: 4900,
   documentsPerDay: null,
+  editsPerDay: null,
   features: ['pii_detection', 'advanced_deid'],
   isActive: true,
 };
@@ -153,11 +156,13 @@ describe('PricingService', () => {
       );
     });
 
-    it('should return subscription with usedToday and resetAt', async () => {
+    it('should return subscription with usedToday, editsUsedToday and resetAt', async () => {
       const result = await service.getCurrentSubscription('test@test.com');
 
       expect(result.usedToday).toBe(2);
       expect(result.dailyLimit).toBe(5);
+      expect(result.editsPerDay).toBe(3);
+      expect(result.editsUsedToday).toBe(2);
       expect(result.resetAt).not.toBeNull();
       expect(result.plan.name).toBe(PlanName.FREE);
     });
@@ -234,6 +239,56 @@ describe('PricingService', () => {
 
       await expect(
         service.checkDailyLimitByEmail('unknown@test.com'),
+      ).resolves.not.toThrow();
+    });
+  });
+
+  describe('checkDailyReanalysisLimit', () => {
+    it('should not throw when edit limit not reached', async () => {
+      userServiceMock.findByEmail.mockResolvedValue(mockUser);
+      subscriptionRepoMock.findOne.mockResolvedValue(mockFreeSubscription);
+      documentsRepoMock.createQueryBuilder.mockReturnValue(
+        buildQbMock({ count: '1', firstCreatedAt: null }),
+      );
+
+      await expect(
+        service.checkDailyReanalysisLimit('test@test.com'),
+      ).resolves.not.toThrow();
+    });
+
+    it('should throw ForbiddenException with DAILY_EDIT_LIMIT_REACHED_CODE when edit limit reached', async () => {
+      userServiceMock.findByEmail.mockResolvedValue(mockUser);
+      subscriptionRepoMock.findOne.mockResolvedValue(mockFreeSubscription);
+      documentsRepoMock.createQueryBuilder.mockReturnValue(
+        buildQbMock({ count: '3', firstCreatedAt: null }),
+      );
+
+      const error = await service
+        .checkDailyReanalysisLimit('test@test.com')
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(ForbiddenException);
+      expect((error as ForbiddenException).getResponse()).toMatchObject({
+        code: DAILY_EDIT_LIMIT_REACHED_CODE,
+        limit: 3,
+        used: 3,
+      });
+    });
+
+    it('should not throw for Pro plan (unlimited edits)', async () => {
+      userServiceMock.findByEmail.mockResolvedValue(mockUser);
+      subscriptionRepoMock.findOne.mockResolvedValue(mockProSubscription);
+
+      await expect(
+        service.checkDailyReanalysisLimit('test@test.com'),
+      ).resolves.not.toThrow();
+    });
+
+    it('should not throw if user not found', async () => {
+      userServiceMock.findByEmail.mockResolvedValue(null);
+
+      await expect(
+        service.checkDailyReanalysisLimit('unknown@test.com'),
       ).resolves.not.toThrow();
     });
   });
