@@ -6,9 +6,10 @@ export default class SubscriptionLimitGuard implements CanActivate {
   constructor(private readonly pricingService: PricingService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<{ user?: { email: string }; query?: { documentId?: string } }>();
+    const request = context.switchToHttp().getRequest<{
+      user?: { email: string };
+      query?: { documentId?: string };
+    }>();
 
     const email = request.user?.email;
     if (!email) return false;

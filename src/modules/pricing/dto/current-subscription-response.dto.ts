@@ -35,7 +35,10 @@ export default class CurrentSubscriptionResponseDto {
   })
   timezone!: string;
 
-  @ApiProperty({ nullable: true, description: 'Daily re-analysis limit. null = unlimited' })
+  @ApiProperty({
+    nullable: true,
+    description: 'Daily re-analysis limit. null = unlimited',
+  })
   editsPerDay!: number | null;
 
   @ApiProperty({ description: 'Re-analyses performed today' })
