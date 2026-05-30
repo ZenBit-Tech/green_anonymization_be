@@ -28,7 +28,8 @@ export default class AnalyticsController {
   })
   @ApiResponse({ status: 200, type: DashboardResponseDto })
   @ApiBadRequestResponse({
-    description: 'Invalid period parameters (e.g. unsupported days value, missing to when from is provided)',
+    description:
+      'Invalid period parameters (e.g. unsupported days value, missing to when from is provided)',
   })
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT token' })
   @ApiNotFoundResponse({ description: 'User not found' })
