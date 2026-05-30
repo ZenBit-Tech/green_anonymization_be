@@ -31,6 +31,7 @@ import {
   ComplianceUsageData,
   ConfidenceRangeData,
   DashboardData,
+  DateRange,
   DeIdMethodData,
   EntityTypeData,
   ProcessingHistoryData,
@@ -38,8 +39,6 @@ import {
   StatsData,
 } from './types/dashboard-data.types';
 import AnalyticsPeriodDto from './dto/analytics-period.dto';
-
-type DateRange = { startDate: Date; endDate: Date };
 
 @Injectable()
 export default class AnalyticsService {
@@ -464,8 +463,6 @@ export default class AnalyticsService {
   }
 
   private static resolvePeriod(dto: AnalyticsPeriodDto): DateRange {
-    const endDate = new Date();
-
     if (dto.from && dto.to) {
       const from = new Date(dto.from);
       from.setHours(0, 0, 0, 0);
@@ -478,6 +475,8 @@ export default class AnalyticsService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
     return { startDate, endDate };
   }
 }

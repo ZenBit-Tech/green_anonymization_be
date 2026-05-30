@@ -16,7 +16,7 @@ import DashboardResponseDto from './dto/dashboard-response.dto';
 import AnalyticsPeriodDto from './dto/analytics-period.dto';
 
 @ApiTags('Analytics')
-@ApiBearerAuth()
+@ApiBearerAuth('jwt')
 @UseGuards(JwtAuthGuard)
 @Controller('analytics')
 export default class AnalyticsController {
