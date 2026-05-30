@@ -74,6 +74,63 @@ describe('AnalyticsService', () => {
       );
     });
 
+    it('should use default 7-day period when no period provided', async () => {
+      documentsRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([{}]));
+      piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([]));
+
+      const result = await service.getDashboard('test@test.com');
+
+      expect(result).toBeDefined();
+      expect(result.processingHistory).toBeDefined();
+    });
+
+    it('should accept days=14 preset period', async () => {
+      documentsRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([{}]));
+      piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([]));
+
+      const result = await service.getDashboard('test@test.com', { days: 14 });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should accept days=30 preset period', async () => {
+      documentsRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([{}]));
+      piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([]));
+
+      const result = await service.getDashboard('test@test.com', { days: 30 });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should accept custom from/to date range', async () => {
+      documentsRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([{}]));
+      piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([]));
+
+      const result = await service.getDashboard('test@test.com', {
+        from: '2026-04-01',
+        to: '2026-04-30',
+      });
+
+      expect(result).toBeDefined();
+    });
+
+    it('should pass BETWEEN params to queries when custom range provided', async () => {
+      const qbMock = buildQbMock([{}]);
+      documentsRepoMock.createQueryBuilder.mockReturnValue(qbMock);
+      piiEntitiesRepoMock.createQueryBuilder.mockReturnValue(buildQbMock([]));
+
+      await service.getDashboard('test@test.com', {
+        from: '2026-04-01',
+        to: '2026-04-30',
+      });
+
+      const andWhereCalls = qbMock.andWhere.mock.calls as [string, unknown][];
+      const betweenCall = andWhereCalls.find(([query]) =>
+        query.includes('BETWEEN'),
+      );
+      expect(betweenCall).toBeDefined();
+    });
+
     it('should return deIdMethodUsage with aggregated methods', async () => {
       const deIdRows = [
         { method: 'replace', count: '10' },
