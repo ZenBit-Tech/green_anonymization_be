@@ -34,4 +34,13 @@ export default class CurrentSubscriptionResponseDto {
     example: 'Europe/Kiev',
   })
   timezone!: string;
+
+  @ApiProperty({
+    nullable: true,
+    description: 'Daily re-analysis limit. null = unlimited',
+  })
+  editsPerDay!: number | null;
+
+  @ApiProperty({ description: 'Re-analyses performed today' })
+  editsUsedToday!: number;
 }

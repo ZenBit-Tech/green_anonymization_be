@@ -23,6 +23,9 @@ export default class SubscriptionPlan {
   @Column({ type: 'int', name: 'documents_per_day', nullable: true })
   documentsPerDay!: number | null;
 
+  @Column({ type: 'int', name: 'edits_per_day', nullable: true })
+  editsPerDay!: number | null;
+
   @Column({ type: 'json' })
   features: FeatureKey[] = [];
 
