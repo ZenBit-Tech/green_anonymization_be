@@ -115,7 +115,6 @@ export default class ManualGenerationService {
 
         const placeholder =
           PII_PLACEHOLDERS[pii.entityType] ?? `[${pii.entityType}]`;
-
         if (!acc.includes(placeholder)) {
           return acc;
         }
