@@ -4,7 +4,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-google-oauth20';
 
 import { AuthProviders } from '@common/constants';
-import { GoogleUser } from '../types/GoogleUser';
+import { OAuthUser } from '../types';
 
 @Injectable()
 export default class GoogleStrategy extends PassportStrategy(
@@ -28,7 +28,7 @@ export default class GoogleStrategy extends PassportStrategy(
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-  ): Promise<GoogleUser> {
+  ): Promise<OAuthUser> {
     const { id, emails, photos, name } = profile;
 
     const email = emails?.[0]?.value;

@@ -3,6 +3,7 @@ import { PIIEntityType } from '@/common/constants';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PII_PLACEHOLDERS } from '@modules/anonymization/constants/framework-profiles';
 import PIIEntityDto from '@modules/processing/dto/piiEntity.dto';
+import formatDate from '@/common/utils/formatDate';
 import {
   randomPersonNames,
   validUKNINOPrefixes,
@@ -162,7 +163,7 @@ export default class ManualGenerationService {
   private generateDateTime(): string {
     const maxDate = Date.now();
     const timestamp = Math.floor(Math.random() * maxDate);
-    return new Date(timestamp).toISOString();
+    return formatDate(new Date(timestamp));
   }
 
   private generateDate(): string {

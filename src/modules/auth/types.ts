@@ -1,6 +1,6 @@
 import { AuthProviders } from '@/common/constants';
 
-export type GoogleUser = {
+export type OAuthUser = {
   provider: AuthProviders;
   providerId: string;
   email: string;
