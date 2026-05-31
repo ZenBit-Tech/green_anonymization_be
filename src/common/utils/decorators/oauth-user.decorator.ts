@@ -7,7 +7,7 @@ const OAuthUserDecorator = createParamDecorator(
       .switchToHttp()
       .getRequest<Request & { user?: OAuthUser }>();
     if (!request.user) {
-      throw new Error('No Google user found on request');
+      throw new Error('No oatuh user found on request');
     }
     return request.user;
   },
