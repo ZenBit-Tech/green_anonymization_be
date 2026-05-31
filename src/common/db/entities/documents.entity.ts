@@ -40,6 +40,9 @@ export default class Documents {
   @UpdateDateColumn({ type: 'datetime', precision: 6 })
   updatedAt: Date = new Date();
 
+  @Column({ type: 'datetime', nullable: true })
+  lastReanalysedAt!: Date | null;
+
   @OneToMany(() => PIIEntities, (entity) => entity.document)
   piiEntities!: PIIEntities[];
 }

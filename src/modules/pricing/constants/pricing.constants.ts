@@ -19,8 +19,10 @@ export type FeatureKey =
   | 'priority_support';
 
 export const FREE_PLAN_DOCUMENTS_PER_DAY = 5;
+export const FREE_PLAN_EDITS_PER_DAY = 3;
 export const DEFAULT_TIMEZONE = 'UTC';
 export const PRO_PLAN_PRICE_CENTS = 4900;
 export const PRO_PLAN_SUBSCRIPTION_DAYS = 30;
 export const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const DAILY_LIMIT_REACHED_CODE = 'DAILY_LIMIT_REACHED';
+export const DAILY_EDIT_LIMIT_REACHED_CODE = 'DAILY_EDIT_LIMIT_REACHED';

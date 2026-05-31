@@ -40,15 +40,26 @@ export default class DocumentsService {
       throw new NotFoundException('User not found');
     }
 
-    const { page, limit } = query;
-
     try {
-      const [docs, total] = await this.repo.findAndCount({
-        where: { userId: user.uuid },
-        order: { createdAt: 'DESC' },
-        skip: (page - 1) * limit,
-        take: limit,
-      });
+      const { page, limit, search } = query;
+
+      const qb = this.repo
+        .createQueryBuilder('document')
+        .where('document.userId = :userId', {
+          userId: user.uuid,
+        });
+
+      if (search?.trim()) {
+        qb.andWhere('LOWER(document.fileName) LIKE LOWER(:search)', {
+          search: `%${search.trim()}%`,
+        });
+      }
+
+      const [docs, total] = await qb
+        .orderBy('document.createdAt', 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit)
+        .getManyAndCount();
 
       return plainToInstance(
         DocumentListResponseDto,

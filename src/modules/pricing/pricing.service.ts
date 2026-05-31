@@ -11,6 +11,7 @@ import UserSubscription from '@common/db/entities/user-subscription.entity';
 import Documents from '@common/db/entities/documents.entity';
 import UserService from '@modules/user/user.service';
 import {
+  DAILY_EDIT_LIMIT_REACHED_CODE,
   DAILY_LIMIT_REACHED_CODE,
   MS_PER_DAY,
   PlanName,
@@ -58,10 +59,11 @@ export default class PricingService {
       const subscription = await this.findActiveSubscription(user.uuid);
       if (!subscription) throw new NotFoundException(SUBSCRIPTION_NOT_FOUND);
 
-      const { count: usedToday } = await this.countDocumentsToday(
-        user.uuid,
-        user.timezone,
-      );
+      const [{ count: usedToday }, { count: editsUsedToday }] =
+        await Promise.all([
+          this.countDocumentsToday(user.uuid, user.timezone),
+          this.countEditsToday(user.uuid, user.timezone),
+        ]);
       const resetAt = PricingService.calcResetAt(
         subscription.plan.documentsPerDay,
         user.timezone,
@@ -75,6 +77,8 @@ export default class PricingService {
         dailyLimit: subscription.plan.documentsPerDay,
         resetAt,
         timezone: user.timezone,
+        editsPerDay: subscription.plan.editsPerDay,
+        editsUsedToday,
       };
     } catch (err) {
       if (err instanceof NotFoundException) throw err;
@@ -187,6 +191,36 @@ export default class PricingService {
     }
   }
 
+  async checkDailyReanalysisLimit(email: string): Promise<void> {
+    try {
+      const user = await this.userService.findByEmail(email);
+      if (!user) return;
+
+      const subscription = await this.findActiveSubscription(user.uuid);
+      if (!subscription) return;
+
+      const { editsPerDay } = subscription.plan;
+      if (editsPerDay === null) return;
+
+      const { count: editsUsedToday } = await this.countEditsToday(
+        user.uuid,
+        user.timezone,
+      );
+
+      if (editsUsedToday >= editsPerDay) {
+        throw new ForbiddenException({
+          code: DAILY_EDIT_LIMIT_REACHED_CODE,
+          message: `Daily re-analysis limit of ${editsPerDay} reached`,
+          limit: editsPerDay,
+          used: editsUsedToday,
+        });
+      }
+    } catch (err) {
+      if (err instanceof ForbiddenException) throw err;
+      throw new InternalServerErrorException('Failed to check edit limit');
+    }
+  }
+
   private async findActiveSubscription(
     userId: string,
   ): Promise<UserSubscription | null> {
@@ -207,6 +241,22 @@ export default class PricingService {
       .select('COUNT(d.id)', 'count')
       .where('d.userId = :userId', { userId })
       .andWhere('d.createdAt >= :startOfDay', { startOfDay })
+      .getRawOne<{ count: string }>();
+
+    return { count: Number(row?.count ?? 0) };
+  }
+
+  private async countEditsToday(
+    userId: string,
+    timezone: string,
+  ): Promise<{ count: number }> {
+    const startOfDay = PricingService.getStartOfDay(timezone);
+
+    const row = await this.documentsRepo
+      .createQueryBuilder('d')
+      .select('COUNT(d.id)', 'count')
+      .where('d.userId = :userId', { userId })
+      .andWhere('d.lastReanalysedAt >= :startOfDay', { startOfDay })
       .getRawOne<{ count: string }>();
 
     return { count: Number(row?.count ?? 0) };

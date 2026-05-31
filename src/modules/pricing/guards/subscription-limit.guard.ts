@@ -6,14 +6,19 @@ export default class SubscriptionLimitGuard implements CanActivate {
   constructor(private readonly pricingService: PricingService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<{ user?: { email: string } }>();
+    const request = context.switchToHttp().getRequest<{
+      user?: { email: string };
+      query?: { documentId?: string };
+    }>();
 
     const email = request.user?.email;
     if (!email) return false;
 
-    await this.pricingService.checkDailyLimitByEmail(email);
+    if (request.query?.documentId) {
+      await this.pricingService.checkDailyReanalysisLimit(email);
+    } else {
+      await this.pricingService.checkDailyLimitByEmail(email);
+    }
 
     return true;
   }
