@@ -59,7 +59,7 @@ const HIPAA_ANONYMIZERS: Record<string, PresidioOperator> = {
   },
   DATE_TIME: {
     type: 'replace',
-    new_value: PII_PLACEHOLDERS[PIIEntityType.DATE],
+    new_value: PII_PLACEHOLDERS[PIIEntityType.DATE_TIME],
   },
   PHONE_NUMBER: {
     type: 'replace',

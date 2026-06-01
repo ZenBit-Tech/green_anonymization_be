@@ -8,6 +8,8 @@ import AuthService from './auth.service';
 import AuthController from './auth.controller';
 import JwtStrategy from './strategies/jwt.strategy';
 import MagicLoginStrategy from './strategies/magic-link.strategy';
+import GoogleStrategy from './strategies/google.strategy';
+import MicrosoftStrategy from './strategies/microsoft.strategy';
 
 @Module({
   imports: [
@@ -23,7 +25,13 @@ import MagicLoginStrategy from './strategies/magic-link.strategy';
     EmailModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, MagicLoginStrategy, JwtStrategy],
+  providers: [
+    AuthService,
+    MagicLoginStrategy,
+    JwtStrategy,
+    GoogleStrategy,
+    MicrosoftStrategy,
+  ],
   exports: [AuthService],
 })
 export default class AuthModule {}
