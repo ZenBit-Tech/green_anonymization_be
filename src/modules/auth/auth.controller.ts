@@ -131,7 +131,7 @@ export default class AuthController {
       req.headers.origin as string,
     );
     return res.redirect(
-      `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN')}/auth-callback?token=${token}`,
+      `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN').split(',')[0]}/auth-callback?token=${token}`,
     );
   }
 
@@ -177,7 +177,7 @@ export default class AuthController {
       req.headers.origin as string,
     );
     return res.redirect(
-      `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN')}/auth-callback?token=${token}`,
+      `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN').split(',')[0]}/auth-callback?token=${token}`,
     );
   }
 }
