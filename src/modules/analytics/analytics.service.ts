@@ -31,12 +31,14 @@ import {
   ComplianceUsageData,
   ConfidenceRangeData,
   DashboardData,
+  DateRange,
   DeIdMethodData,
   EntityTypeData,
   ProcessingHistoryData,
   RecentActivityData,
   StatsData,
 } from './types/dashboard-data.types';
+import AnalyticsPeriodDto from './dto/analytics-period.dto';
 
 @Injectable()
 export default class AnalyticsService {
@@ -50,11 +52,15 @@ export default class AnalyticsService {
     private readonly userService: UserService,
   ) {}
 
-  async getDashboard(email: string): Promise<DashboardData> {
+  async getDashboard(
+    email: string,
+    period: AnalyticsPeriodDto = {},
+  ): Promise<DashboardData> {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
 
     const { uuid: userId } = user;
+    const range = AnalyticsService.resolvePeriod(period);
 
     const [
       statsResult,
@@ -66,12 +72,16 @@ export default class AnalyticsService {
       deIdMethodUsageResult,
     ] = await Promise.allSettled([
       this.getStats(userId),
-      this.getEntityTypes(userId),
-      this.getComplianceUsage(userId),
-      this.getProcessingHistory(userId, ANALYTICS_HISTORY_DAYS),
-      this.getConfidenceDistribution(userId),
-      this.getRecentActivity(userId, ANALYTICS_RECENT_ACTIVITY_LIMIT),
-      this.getDeIdMethodUsage(userId),
+      this.getEntityTypes(userId, range),
+      this.getComplianceUsage(userId, range),
+      this.getProcessingHistory(userId, range),
+      this.getConfidenceDistribution(userId, range),
+      this.getRecentActivity(
+        userId,
+        period.activityLimit ?? ANALYTICS_RECENT_ACTIVITY_LIMIT,
+        range,
+      ),
+      this.getDeIdMethodUsage(userId, range),
     ]);
 
     if (statsResult.status === 'rejected')
@@ -226,7 +236,10 @@ export default class AnalyticsService {
     }
   }
 
-  private async getEntityTypes(userId: string): Promise<EntityTypeData[]> {
+  private async getEntityTypes(
+    userId: string,
+    range: DateRange,
+  ): Promise<EntityTypeData[]> {
     try {
       const rows = await this.piiEntitiesRepo
         .createQueryBuilder('e')
@@ -234,6 +247,7 @@ export default class AnalyticsService {
         .select('e.entityType', 'entityType')
         .addSelect('COUNT(e.id)', 'count')
         .where('d.userId = :userId', { userId })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .groupBy('e.entityType')
         .orderBy('count', 'DESC')
         .getRawMany<{ entityType: string; count: string }>();
@@ -250,6 +264,7 @@ export default class AnalyticsService {
 
   private async getComplianceUsage(
     userId: string,
+    range: DateRange,
   ): Promise<ComplianceUsageData[]> {
     try {
       const rows = await this.documentsRepo
@@ -257,6 +272,7 @@ export default class AnalyticsService {
         .select('d.chosenCompliance', 'frameworkCode')
         .addSelect('COUNT(d.id)', 'count')
         .where('d.userId = :userId', { userId })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .groupBy('d.chosenCompliance')
         .getRawMany<{ frameworkCode: string; count: string }>();
 
@@ -283,7 +299,7 @@ export default class AnalyticsService {
 
   private async getProcessingHistory(
     userId: string,
-    days: number,
+    range: DateRange,
   ): Promise<ProcessingHistoryData[]> {
     try {
       const rows = await this.documentsRepo
@@ -293,9 +309,7 @@ export default class AnalyticsService {
         .addSelect('COUNT(DISTINCT d.id)', 'docCount')
         .addSelect('COUNT(e.id)', 'entityCount')
         .where('d.userId = :userId', { userId })
-        .andWhere('d.createdAt >= DATE_SUB(NOW(), INTERVAL :days DAY)', {
-          days,
-        })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .groupBy('DATE(d.createdAt)')
         .orderBy('DATE(d.createdAt)', 'ASC')
         .getRawMany<{
@@ -322,6 +336,7 @@ export default class AnalyticsService {
 
   private async getConfidenceDistribution(
     userId: string,
+    range: DateRange,
   ): Promise<ConfidenceRangeData[]> {
     try {
       const rows = await this.piiEntitiesRepo
@@ -339,6 +354,7 @@ export default class AnalyticsService {
         )
         .addSelect('COUNT(e.id)', 'count')
         .where('d.userId = :userId', { userId })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .groupBy('scoreRange')
         .getRawMany<{ scoreRange: string; count: string }>();
 
@@ -360,6 +376,7 @@ export default class AnalyticsService {
   private async getRecentActivity(
     userId: string,
     limit: number,
+    range: DateRange,
   ): Promise<RecentActivityData[]> {
     try {
       const rows = await this.documentsRepo
@@ -371,6 +388,7 @@ export default class AnalyticsService {
         .addSelect('d.createdAt', 'createdAt')
         .addSelect('COUNT(e.id)', 'entityCount')
         .where('d.userId = :userId', { userId })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .groupBy('d.id')
         .addGroupBy('d.fileName')
         .addGroupBy('d.chosenCompliance')
@@ -398,7 +416,10 @@ export default class AnalyticsService {
     }
   }
 
-  private async getDeIdMethodUsage(userId: string): Promise<DeIdMethodData[]> {
+  private async getDeIdMethodUsage(
+    userId: string,
+    range: DateRange,
+  ): Promise<DeIdMethodData[]> {
     try {
       const rows = await this.piiEntitiesRepo
         .createQueryBuilder('e')
@@ -406,6 +427,7 @@ export default class AnalyticsService {
         .select('e.deIdMethod', 'method')
         .addSelect('COUNT(e.id)', 'count')
         .where('d.userId = :userId', { userId })
+        .andWhere('d.createdAt BETWEEN :startDate AND :endDate', range)
         .andWhere('e.deIdMethod IS NOT NULL')
         .groupBy('e.deIdMethod')
         .orderBy('count', 'DESC')
@@ -438,5 +460,23 @@ export default class AnalyticsService {
         ((current - previous) / previous) * ANALYTICS_PERCENTAGE_MULTIPLIER,
       ) / ANALYTICS_PERCENTAGE_DIVISOR
     );
+  }
+
+  private static resolvePeriod(dto: AnalyticsPeriodDto): DateRange {
+    if (dto.from && dto.to) {
+      const from = new Date(dto.from);
+      from.setHours(0, 0, 0, 0);
+      const to = new Date(dto.to);
+      to.setHours(23, 59, 59, 999);
+      return { startDate: from, endDate: to };
+    }
+
+    const days = dto.days ?? ANALYTICS_HISTORY_DAYS;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    return { startDate, endDate };
   }
 }

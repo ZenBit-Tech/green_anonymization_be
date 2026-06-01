@@ -1,3 +1,5 @@
+export type DateRange = { startDate: Date; endDate: Date };
+
 export type TrendsData = {
   documentsVsLastMonth: number | null;
   entitiesVsLastMonth: number | null;
