@@ -19,6 +19,7 @@ describe('AuthService', () => {
   let service: AuthService;
   let jwtService: jest.Mocked<JwtService>;
   let mailService: jest.Mocked<EmailService>;
+  let configService: jest.Mocked<ConfigService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -55,12 +56,13 @@ describe('AuthService', () => {
     service = module.get<AuthService>(AuthService);
     jwtService = module.get(JwtService);
     mailService = module.get(EmailService);
+    configService = module.get(ConfigService);
 
     jest.clearAllMocks();
   });
 
   describe('generateMagicToken', () => {
-    it('should generate token and send email with magic link', async () => {
+    it('should generate a magic token', async () => {
       const email = 'test@example.com';
 
       const token = await service.generateMagicToken(email);
@@ -72,8 +74,58 @@ describe('AuthService', () => {
         { expiresIn: MAGIC_LINK_EXPIRATION },
       );
 
+      expect(mailService.sendMail).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('sendMagicEmail', () => {
+    it('should send magic link email', async () => {
+      const email = 'test@example.com';
+      const token = 'signed-token';
+
+      await service.sendMagicEmail(email, token);
+
       expect(mailService.sendMail).toHaveBeenCalledWith(
         email,
+        'Your Magic Login Link',
+        expect.stringContaining(
+          'http://localhost:3000/auth-callback?token=signed-token',
+        ),
+      );
+    });
+
+    it('should use request origin when it is allowed', async () => {
+      const email = 'test@example.com';
+      const token = 'signed-token';
+
+      (configService.getOrThrow as jest.Mock).mockReturnValue(
+        'http://localhost:3000,http://localhost:5173',
+      );
+
+      await service.sendMagicEmail(email, token, 'http://localhost:5173');
+
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        email,
+        'Your Magic Login Link',
+        expect.stringContaining(
+          'http://localhost:5173/auth-callback?token=signed-token',
+        ),
+      );
+    });
+
+    it('should fall back to first allowed origin', async () => {
+      (configService.getOrThrow as jest.Mock).mockReturnValue(
+        'http://localhost:3000,http://localhost:5173',
+      );
+
+      await service.sendMagicEmail(
+        'test@example.com',
+        'signed-token',
+        'https://evil.com',
+      );
+
+      expect(mailService.sendMail).toHaveBeenCalledWith(
+        'test@example.com',
         'Your Magic Login Link',
         expect.stringContaining(
           'http://localhost:3000/auth-callback?token=signed-token',

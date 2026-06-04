@@ -45,8 +45,10 @@ export default class AuthController {
     @Body() dto: LoginRequestDto,
     @Req() req,
   ): Promise<{ message: string }> {
-    await this.authService.generateMagicToken(
+    const token = await this.authService.generateMagicToken(dto.destination);
+    await this.authService.sendMagicEmail(
       dto.destination,
+      token,
       req.headers.origin as string,
     );
     return { message: 'Magic link sent to email' };
@@ -124,12 +126,8 @@ export default class AuthController {
   async googleAuthCallback(
     @OAuthUserDecorator() user: OAuthUser,
     @Res() res: Response,
-    @Req() req,
   ) {
-    const token = await this.authService.generateMagicToken(
-      user.email as string,
-      req.headers.origin as string,
-    );
+    const token = await this.authService.generateMagicToken(user.email);
     return res.redirect(
       `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN').split(',')[0]}/auth-callback?token=${token}`,
     );
@@ -170,12 +168,8 @@ export default class AuthController {
   async microsoftAuthCallback(
     @OAuthUserDecorator() user: OAuthUser,
     @Res() res: Response,
-    @Req() req,
   ) {
-    const token = await this.authService.generateMagicToken(
-      user.email as string,
-      req.headers.origin as string,
-    );
+    const token = await this.authService.generateMagicToken(user.email);
     return res.redirect(
       `${this.configService.getOrThrow<string>('FRONTEND_ORIGIN').split(',')[0]}/auth-callback?token=${token}`,
     );

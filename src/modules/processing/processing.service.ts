@@ -48,7 +48,6 @@ export default class ProcessingService {
 
     const anonymizationResult: AnonymizationResult =
       await this.anonymizationService.anonymize(compliance, text);
-
     await this.userService.setDefaultFramework(user.email, compliance.code);
 
     try {
