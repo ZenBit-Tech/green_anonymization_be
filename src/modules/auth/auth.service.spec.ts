@@ -114,7 +114,7 @@ describe('AuthService', () => {
     });
 
     it('should fall back to first allowed origin', async () => {
-        (configService.getOrThrow as jest.Mock).mockReturnValue(
+      (configService.getOrThrow as jest.Mock).mockReturnValue(
         'http://localhost:3000,http://localhost:5173',
       );
 
