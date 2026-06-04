@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { DEFAULT_PORT } from '@common/constants';
 import ThrottlerExceptionFilter from '@common/filters/throttler-exception.filter';
+import * as express from 'express';
 import AppModule from './app.module';
 
 async function bootstrap() {
@@ -49,7 +50,8 @@ async function bootstrap() {
     ],
   });
   app.useGlobalFilters(new ThrottlerExceptionFilter());
-
+  app.use(express.json({ limit: '50mb' }));
+  app.use(express.urlencoded({ limit: '50mb', extended: true }));
   await app.listen(configService.getOrThrow<number>('PORT') ?? DEFAULT_PORT);
 }
 

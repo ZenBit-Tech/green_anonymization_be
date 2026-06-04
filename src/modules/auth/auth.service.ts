@@ -23,28 +23,29 @@ export default class AuthService {
     private configService: ConfigService,
   ) {}
 
-  async generateMagicToken(
-    email: string,
-    requestOrigin?: string,
-  ): Promise<string> {
+  async generateMagicToken(email: string): Promise<string> {
     const payload = { email, type: JwtTokenType.MAGIC };
-    const token = this.jwtService.sign(payload, {
+
+    return this.jwtService.sign(payload, {
       expiresIn: MAGIC_LINK_EXPIRATION,
     });
+  }
+
+  async sendMagicEmail(email: string, token: string, requestOrigin?: string) {
     const allowedOrigins = this.configService
       .getOrThrow<string>('FRONTEND_ORIGIN')
       .split(',');
+
     const origin =
       requestOrigin && allowedOrigins.includes(requestOrigin)
         ? requestOrigin
         : allowedOrigins[0];
+
     const magicLink = `${origin}/auth-callback?token=${token}`;
 
     const html = MagicEmailHtml(magicLink);
 
     await this.emailService.sendMail(email, 'Your Magic Login Link', html);
-
-    return token;
   }
 
   async generateAuthTokens(email: string): Promise<AuthTokens> {

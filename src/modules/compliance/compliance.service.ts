@@ -93,7 +93,6 @@ export default class ComplianceService {
   }> {
     try {
       const user = await this.userService.findByEmail(email);
-
       if (!user) {
         throw new NotFoundException(USER_NOT_FOUND_MESSAGE);
       }
