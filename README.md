@@ -1,161 +1,271 @@
-## Description
+# Clinical Data De-Identification Backend
 
-Data Anonymization Backend
+![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs)
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?logo=mysql)
+![AWS](https://img.shields.io/badge/AWS_S3-FF9900?logo=amazonaws)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker)
 
-## Project setup
+Backend service for clinical document de-identification and synthetic data generation.
 
-1. **Install Dependencies**
+The application provides secure document processing, PII detection and anonymization, compliance framework management, synthetic data generation, user authentication, subscription management, and analytics support.
 
-```bash
-$ npm install
-```
+## Supported Compliance Frameworks
 
-2. **Set Up `.env` File (refer to `.env.example`**)
+- HIPAA (US)
+- EU GDPR
+- UK GDPR
+- Swiss FADP
 
-## Infrastructure Setup
+The platform leverages Microsoft Presidio for automated detection and anonymization of personally identifiable information (PII) within clinical documents.
 
-### First Time Setup
+---
 
-1. **Install Docker**
-   - Download and install Docker from [https://www.docker.com/get-started/](https://www.docker.com/products/docker-desktop)
-   - Ensure Docker is running before proceeding
+# Technology Stack
 
-2. **Create & Start Infrastructure**
+## Core
 
-   ```bash
-   $ npm run infrastructure:up
-   ```
+- NestJS
+- TypeScript
+- TypeORM
+- MySQL
 
-3. **Run Database Migrations**
+## Authentication
 
-   ```bash
-   $ npm run migration:run
-   ```
+- JWT Authentication
+- Google OAuth
+- Microsoft OAuth
+- Magic Link Authentication
 
-4. **Start the Application**
-   ```bash
-   $ npm run start
-   ```
+## Data Privacy
 
-### Subsequent Setups (Infrastructure Already Exists)
+- Microsoft Presidio
 
-1. **Start Infrastructure**
+## Infrastructure
 
-   ```bash
-   $ npm run infrastructure:start
-   ```
+- Docker
+- AWS S3
+- Heroku
 
-   - Migrations are already in place, no need to run them again
-   - All data persists from previous sessions
+## Documentation
 
-2. **Start the Application**
-   ```bash
-   $ npm run start
-   ```
+- Swagger
 
-### Infrastructure Management
+---
 
-- **Pause Infrastructure** (data persists)
+# Database Schema
 
-  ```bash
-  $ npm run infrastructure:stop
-  ```
+<p align="center">
+  <img
+    width="100%"
+    alt="DB schema"
+    src="https://github.com/user-attachments/assets/07c6493b-7a3e-4d4d-8ae8-d651f80a9d94"
+  />
+</p>
 
-- **Fully Delete Infrastructure** (removes all data)
-  ```bash
-  $ npm run infrastructure:down
-  ```
+---
 
-### Important Notes
+# API Documentation
 
-- Ensure all ports defined in your `.env` file are not in use by other processes on your machine before starting the infrastructure.
-- Check your `.env` file for the configured ports (`DB_PORT`, `PRESIDIO_ANONYMIZER_PORT`, and `PRESIDIO_ANALYZER_PORT`).
-- If you cannot kill the processes on your machine that are already using the mentioned ports, you need to change the ports in `.env` and `compose.yml`.
-
-## Compile and run the project
+### Local
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+http://localhost:3000/api
 ```
 
-## Run tests
+### Production
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+https://green-anonymization-be-602a891d18c3.herokuapp.com/api
 ```
 
-## API Endpoints
+---
 
-### Rate Limiting
+# Project Setup
+
+## Install Dependencies
+
+```bash
+npm install
+```
+
+## Set Up .env File
+
+Refer to `.env.example`
+
+---
+
+# Infrastructure Setup
+
+## First Time Setup
+
+### Install Docker
+
+Download and install Docker:
+
+https://www.docker.com/get-started/
+
+Ensure Docker is running before proceeding.
+
+### Create & Start Infrastructure
+
+```bash
+npm run infrastructure:up
+```
+
+### Run Database Migrations
+
+```bash
+npm run migration:run
+```
+
+### Start the Application
+
+```bash
+npm run start
+```
+
+---
+
+## Subsequent Setups (Infrastructure Already Exists)
+
+### Start Infrastructure
+
+```bash
+npm run infrastructure:start
+```
+
+Migrations are already in place, no need to run them again.
+
+All data persists from previous sessions.
+
+### Start the Application
+
+```bash
+npm run start
+```
+
+---
+
+# Infrastructure Management
+
+## Pause Infrastructure (data persists)
+
+```bash
+npm run infrastructure:stop
+```
+
+## Fully Delete Infrastructure (removes all data)
+
+```bash
+npm run infrastructure:down
+```
+
+---
+
+# Important Notes
+
+Ensure all ports defined in your `.env` file are not in use by other processes before starting the infrastructure.
+
+Check your `.env` file for configured ports:
+
+- DB_PORT
+- PRESIDIO_ANALYZER_PORT
+- PRESIDIO_ANONYMIZER_PORT
+
+If these ports are already occupied, update both `.env` and `compose.yml`.
+
+---
+
+# Compile and Run the Project
+
+## Development
+
+```bash
+npm run start
+```
+
+## Watch Mode
+
+```bash
+npm run start:dev
+```
+
+## Production Mode
+
+```bash
+npm run start:prod
+```
+
+---
+
+# Run Tests
+
+## Unit Tests
+
+```bash
+npm run test
+```
+
+## E2E Tests
+
+```bash
+npm run test:e2e
+```
+
+## Test Coverage
+
+```bash
+npm run test:cov
+```
+
+---
+
+# Main Modules
+
+- Authentication
+- Users
+- Documents
+- PII Entities
+- Compliance Frameworks
+- Synthetic Data Generation
+- Subscription Plans
+- Contact Messages
+- Analytics
+
+---
+
+# Deployment
+
+## Production Environment
+
+- Heroku
+- AWS S3
+- MySQL
+
+### Build
+
+```bash
+npm run build
+```
+
+### Production Start
+
+```bash
+npm run start:prod
+```
+
+---
+
+# Rate Limiting
 
 All endpoints are protected by rate limiting to prevent abuse.
 
-**Global Rules:**
+## Global Rules
+
 - 100 requests per hour per IP address
-- Rate limits are tracked per IP, not per user
+- Limits are tracked per IP address
 
-**Rate Limit Response (429):**
-```json
-{
-  "statusCode": 429,
-  "message": "Too Many Requests"
-}
-```
-
-**Per-Endpoint Overrides:**
-Some endpoints have stricter limits. See endpoint documentation below.
-
-### Contact Message
-
-Submit a contact us message from the frontend.
-
-**POST** `/contact-messages`
-
-**Rate Limit:** 5 requests per hour per IP address
-
-**Request Body:**
-
-```json
-{
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "phoneNumber": "+15550000000",
-  "message": "Your message here (max 5000 characters)"
-}
-```
-
-**Features:**
-
-- ✅ Input validation (email format, required fields, max lengths)
-- ✅ XSS protection (HTML/JS sanitization via sanitize-html)
-- ✅ Rate limiting (5 requests per hour per IP)
-- ✅ Transaction-safe database operations (all-or-nothing)
-- ✅ Clean, minimal API responses
-
-**Response (201 Created):**
-
-```json
-{
-  "message": "Contact message created successfully"
-}
-```
-
-**Rate Limit Error (429):**
+### Rate Limit Response
 
 ```json
 {
@@ -163,3 +273,6 @@ Submit a contact us message from the frontend.
   "message": "Too Many Requests"
 }
 ```
+
+Some endpoints may have stricter limits.
+
